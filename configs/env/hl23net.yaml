@@ -1,0 +1,92 @@
+name: 'hl23net'
+
+simulation:
+  duration: 30000  #ms
+  obs_win_len: 1000 #1000.0  #ms
+  MDD: True  # healthy OR MDD
+  DRUG: False  # add drugs
+
+ts:
+  apply: True
+  method: 'tdcs'  # 'tacs, tdcs, tms
+  type: 'pulse' #'tdcs'  # tdcs, pulse, sin
+  # run simnibs to generate extracellular current density
+  calc: False
+  simnibs_params:
+    output: ''
+    positions: ['Fz', 'I2']
+    currents: # n actions, Amperes
+      - [0.001, -0.001]   # sum to 0
+      - [0.01, -0.01]
+      - [0.05, -0.05]
+      - [0.1, -0.1]
+    shapes: ['ellipse', 'ellipse']  # Set the shape, default to 'rect'
+    dimensions: [50, 50]  # Set the dimensions, default to 50x50 mm
+    thicknesses: 4  # Set the thickness, default to 4 mm
+
+    # TODO: handling different coordinate systems
+    roi_coordinate:
+      location: [-41, 41, 16]
+      type: 'mni'
+      radius: 20 # mm
+
+  # extracellular position in network: RecExtElectrode
+  electrodeParameters:
+    # get the location < x, y, z in µm > from the network position: network.position
+    r: 20.  # µm; radius of each contact surface
+    n: 50  # number of discrete points used to compute the n-point average potential on each circular contact point
+    sigma: 0.3  # extracellular conductivity in units of (S/m)
+    method: "pointsource"   # soma_as_point (this was replaced in 2.3 by) root_as_point, linesource
+    # switch between the assumption of 'linesource', 'pointsource',
+    # 'root_as_point' to represent each compartment when computing
+    #  extracellular potentials
+
+network:
+  dt: 0.025  # ms
+  tstart: 0
+  v_init: -80.
+  celsius: 34.
+  verbose: False
+
+  position: [0., 0., 78200]  # µm, also used as single dipole reference for EEG/ECoG: 78200
+
+  networkSimulationArguments:
+    rec_imem: True
+    rec_vmem: True
+    rec_ipas: True
+    rec_icap: True
+    rec_isyn: True
+    rec_vmemsyn: True
+    rec_istim: True
+    rec_current_dipole_moment: False
+    rec_pop_contributions: False #True # originally False
+    rec_variables: []
+    to_memory: True
+    to_file: False
+    file_name: 'OUTPUT.h5'
+    dotprodcoeffs: None
+
+# EEG calc
+eeg:
+  measure: True
+  locations: [[0., 0., 90000]]  # µm
+  foursphereheadmodel:
+    radii: [79000., 80000., 85000., 90000.]  # µm ["Brain", "CSF", "Skull", "Scalp"]
+    sigmas: [0.3, 1.5, 0.015, 0.3]  # conductivity: (S/m)
+
+################
+debug_n_neurons:
+  PYR: 2 #80
+  SST: 1 # 5
+  PV: 1 # 7
+  VIP: 1 # 8
+
+networkParameters:
+  dt: ${env.network.dt}
+  tstart: ${env.network.tstart}
+  tstop: ${env.simulation.duration}
+  v_init: ${env.network.v_init}
+  celsius: ${env.network.celsius}
+  OUTPUTPATH: ${experiment.dir}
+  verbose: ${env.network.verbose}
+

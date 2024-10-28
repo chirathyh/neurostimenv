@@ -1,0 +1,8 @@
+NEURON==8.2.3
+LFPy==2.3
+python-decouple==3.4
+mpi4py==3.1.5
+gym==0.9.4
+pandas==2.2.0
+xlrd==2.0.1
+numpy==1.26.3

@@ -1,0 +1,18 @@
+hydra:
+  run:
+    dir: ../results/${experiment.name}
+
+
+experiment:
+  name: 'name'
+  run_name:
+  folder: ${experiment.name}
+  dir: ../results/${experiment.name}
+  device: 'cpu'
+  verbose: True
+  seed: 0
+  debug: True
+
+defaults:
+  - env: hl23net
+  - _self_
