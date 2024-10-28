@@ -2,7 +2,7 @@ name: 'hl23net'
 
 simulation:
   duration: 30000  #ms
-  obs_win_len: 10000 #1000.0  #ms
+  obs_win_len: 1000 #1000.0  #ms
   MDD: True  # healthy OR MDD
   DRUG: False  # add drugs
 

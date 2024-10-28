@@ -53,7 +53,7 @@ def main(cfg: DictConfig) -> None:
         state = np.random.rand(1, 12).astype(np.float32)
         d_freq = []
         COMM.Barrier()
-        for step in range(0, 1):
+        for step in range(0, 6):
             tic_0 = time.perf_counter()
             obs, reward, done, info = env.step(action=action)
             if RANK==0:
