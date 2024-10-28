@@ -14,6 +14,7 @@
 module load python3/3.10.4
 module load openmpi/4.1.1
 source /g/data/ny83/ch9972/NeuroStim/bin/activate
+cd /g/data/ny83/ch9972/NeuroStim/neurostimenv
 
 mpirun -np 72 python3 /g/data/ny83/ch9972/NeuroStim/neurostimenv/experiments/hydra_test.py experiment.name=test33
 wait

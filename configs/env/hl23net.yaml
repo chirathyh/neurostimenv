@@ -2,7 +2,7 @@ name: 'hl23net'
 
 simulation:
   duration: 30000  #ms
-  obs_win_len: 1000 #1000.0  #ms
+  obs_win_len: 8000 #1000.0  #ms
   MDD: True  # healthy OR MDD
   DRUG: False  # add drugs
 
@@ -76,10 +76,10 @@ eeg:
 
 ################
 debug_n_neurons:
-  PYR: 2 #80
-  SST: 1 # 5
-  PV: 1 # 7
-  VIP: 1 # 8
+  PYR: 4 #80
+  SST: 4 # 5
+  PV: 4 # 7
+  VIP: 4 # 8
 
 networkParameters:
   dt: ${env.network.dt}

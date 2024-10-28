@@ -191,39 +191,40 @@ def generateSubPop(args, circuit_params, network, popsize, mname, popargs, Gou, 
 
 def addStimulus(args, network, circuit_params, stimuli, cell_names, MPI_VAR):
     GLOBALSEED = MPI_VAR['GLOBALSEED']
-    # cell_nums = [circuit_params['SING_CELL_PARAM'].at['cell_num', name] for name in cell_names]
-    # for stim in stimuli:
-    #     stim_index = sum(cell_nums[:cell_names.index(stim['cell_name'])]) + stim['num_cells'] + stim['start_index']
-    #     for gid, cell in zip(network.populations[stim['cell_name']].gids, network.populations[stim['cell_name']].cells):
-    #         if gid < stim_index and gid >= sum(cell_nums[:cell_names.index(stim['cell_name'])]) + stim['start_index']:
-                # idx = cell.get_rand_idx_area_norm(section=stim['loc'], nidx=stim['loc_num'])
-                # for i in idx:
-                #     time_d = 0
-                #     syn = Synapse(cell=cell, idx=i, syntype=stim['stim_type'], weight=1, **stim['new_param'])
-                #     while time_d <= 0:
-                #         time_d = np.random.uniform(low=stim['delay'], high=stim['delay']+stim['delay_range'])
-                    # syn.set_spike_times_w_netstim(noise=0, start=(stim['start_time']+time_d), number=stim['num_stim'],
-                    #                             interval=stim['interval'], seed=GLOBALSEED)
+    cell_nums = [circuit_params['SING_CELL_PARAM'].at['cell_num', name] for name in cell_names]
+    for stim in stimuli:
+        stim_index = sum(cell_nums[:cell_names.index(stim['cell_name'])]) + stim['num_cells'] + stim['start_index']
+        for gid, cell in zip(network.populations[stim['cell_name']].gids, network.populations[stim['cell_name']].cells):
+            if gid < stim_index and gid >= sum(cell_nums[:cell_names.index(stim['cell_name'])]) + stim['start_index']:
+                idx = cell.get_rand_idx_area_norm(section=stim['loc'], nidx=stim['loc_num'])
+                for i in idx:
+                    time_d = 0
+                    syn = Synapse(cell=cell, idx=i, syntype=stim['stim_type'], weight=1, **stim['new_param'])
+                    while time_d <= 0:
+                        time_d = np.random.uniform(low=stim['delay'], high=stim['delay']+stim['delay_range'])
+                    syn.set_spike_times_w_netstim(noise=0, start=(stim['start_time']+time_d), number=stim['num_stim'],
+                                                interval=stim['interval'], seed=GLOBALSEED)
 
+                    # testing
                     # syn.set_spike_times_w_netstim(noise=0, start=(0), number=stim['num_stim'],
                     #                             interval=stim['interval'], seed=GLOBALSEED)
-
+                    #
                     # syn.set_spike_times_w_netstim(noise=0, start=(stim['start_time']+time_d),
                     # number=stim['num_stim'], interval=stim['interval'], seed=GLOBALSEED)
                     # syn.set_spike_times_w_netstim(interval=1.,
                     #                           seed=np.random.rand() * 2**32 - 1
                     #                           )
-    population_names = ['HL23PYR', 'HL23SST', 'HL23PV', 'HL23VIP']
-    for name in population_names:
-        for cell in network.populations[name].cells:
-                idx = cell.get_rand_idx_area_norm(section='allsec', nidx=64)
-                for i in idx:
-                    syn = Synapse(cell=cell, idx=i, syntype='Exp2Syn',
-                                  weight=0.001,
-                                  **dict(tau1=0.2, tau2=1.8, e=0.))
-                    syn.set_spike_times_w_netstim(interval=50.,
-                                                  seed=np.random.rand() * 2**32 - 1
-                                                  )
+    # population_names = ['HL23PYR', 'HL23SST', 'HL23PV', 'HL23VIP']
+    # for name in population_names:
+    #     for cell in network.populations[name].cells:
+    #             idx = cell.get_rand_idx_area_norm(section='allsec', nidx=64)
+    #             for i in idx:
+    #                 syn = Synapse(cell=cell, idx=i, syntype='Exp2Syn',
+    #                               weight=0.001,
+    #                               **dict(tau1=0.2, tau2=1.8, e=0.))
+    #                 syn.set_spike_times_w_netstim(interval=50.,
+    #                                               seed=np.random.rand() * 2**32 - 1
+    #                                               )
 
 
 def setup_network(network, args, MPI_VAR):
