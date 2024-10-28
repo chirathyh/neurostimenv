@@ -85,7 +85,7 @@ def main(cfg: DictConfig) -> None:
     f4 = run_experiment(action=[4, 10])
     COMM.Barrier()
 
-
+    exit()
 
     if RANK == 0:
         #dict.update(d1)
@@ -114,7 +114,7 @@ def main(cfg: DictConfig) -> None:
 if __name__ == "__main__":
     main()
 
-# mpirun -np 10 python hydra_test.py experiment.name=test33
+# mpirun -np 10 python hydra_test.py experiment.name=test33 experiment.debug=False
 # mpirun -np 10 python hydra_test.py experiment.name=test33 env=hl23pyrnet
 # killall mpirun
 
