@@ -111,6 +111,10 @@ def load_circuit_params(args, MPI_VAR, local_state):
                        'funweights': [1.]})
         names = ['HL2', 'HL4', 'HL5']
         pop_args[names[i]] = {'radius': 250, 'loc': depths[i], 'scale': rangedepths[i]*4,'cap': rangedepths[i]}
+        #pop_args[names[i]] = {'radius': 100, 'loc': 0, 'scale': 20.}
+        if RANK == 0:
+            print(names[i])
+            print(depths[i], rangedepths[i]*4, rangedepths[i])
 
     MDD = args.env.simulation.MDD
     reduce_inhibition = 0.4
@@ -289,7 +293,7 @@ def setup_network(network, args, MPI_VAR):
     print('Setting up neural populations took ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
     COMM.Barrier()
 
-    addStimulus(args, network, circuit_params, stimuli, cell_names, MPI_VAR)
+    #addStimulus(args, network, circuit_params, stimuli, cell_names, MPI_VAR)
     COMM.Barrier()
     #print('\n ####### not adding the stimulus ####### \n') if RANK == 0 else None
 

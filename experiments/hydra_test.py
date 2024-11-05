@@ -23,6 +23,17 @@ from omegaconf import DictConfig, OmegaConf
 import matplotlib.pyplot as plt
 import json
 
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
+def remove_axis_junk(ax, lines=['right', 'top']):
+    """remove chosen lines from plotting axis"""
+    for loc, spine in ax.spines.items():
+        if loc in lines:
+            spine.set_color('none')
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
+
+
 @hydra.main(version_base=None, config_path="../configs", config_name="config")
 def main(cfg: DictConfig) -> None:
     # set up MPI variables:
@@ -53,7 +64,7 @@ def main(cfg: DictConfig) -> None:
         state = np.random.rand(1, 12).astype(np.float32)
         d_freq = []
         COMM.Barrier()
-        for step in range(0, 6):
+        for step in range(0, 1):
             tic_0 = time.perf_counter()
             obs, reward, done, info = env.step(action=action)
             if RANK==0:
@@ -62,18 +73,38 @@ def main(cfg: DictConfig) -> None:
                 print('Dominant Frequency:', str(info['dom_freq']), 'Hz')
                 print('Run time for simulation step: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes')
                 print('n_step: ', str(info['sim_t']))
-                # print('I_stim: ', str(info['I_stim']))
+
+                print('\nSPIKES: ', str(info['SPIKES']))
                 # print('t_ext: ', str(info['t_ext']))
+
+
+                SPIKES = info['SPIKES']
+                population_names = ['HL23PYR', 'HL23SST', 'HL23PV', 'HL23VIP']
+                fig, ax = plt.subplots(1, 1)
+                for name, spts, gids in zip(population_names, SPIKES['times'], SPIKES['gids']):
+                    t = []
+                    g = []
+                    for spt, gid in zip(spts, gids):
+                        t = np.r_[t, spt]
+                        g = np.r_[g, np.zeros(spt.size) + gid]
+                    ax.plot(t[t >= 200], g[t >= 200], '.', ms=3, label=name)
+                ax.legend(loc=1)
+                remove_axis_junk(ax, lines=['right', 'top'])
+                ax.set_xlabel('t (ms)')
+                ax.set_ylabel('gid')
+                ax.set_title('spike raster')
+                plt.show()
+
+
             COMM.Barrier()
             state = obs
 
-            # if step > 3:
-            #     current = current + 10
-
-            #current = current + 10  # update the control variable
-            # freq = freq + 5
         env.close()
         return d_freq
+
+    run_experiment(action=None)
+    exit()
+
 
     dict = {}
     f1 = run_experiment(action=None)
@@ -82,7 +113,7 @@ def main(cfg: DictConfig) -> None:
     # COMM.Barrier()
     # d3, f3 = run_experiment(current=10, freq=20)
     # COMM.Barrier()
-    f4 = run_experiment(action=[4, 10])
+    f4 = run_experiment(action=[100, 10])
     COMM.Barrier()
 
     exit()
@@ -114,6 +145,7 @@ def main(cfg: DictConfig) -> None:
 if __name__ == "__main__":
     main()
 
+#mpirun -np 10 python hydra_test.py experiment.name=test33 env.network.dt=0.512 env.simulation.obs_win_len=1000
 # mpirun -np 10 python hydra_test.py experiment.name=test33 experiment.debug=False
 # mpirun -np 10 python hydra_test.py experiment.name=test33 env=hl23pyrnet
 # killall mpirun

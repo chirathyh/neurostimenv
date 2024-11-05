@@ -10,13 +10,10 @@ class ExtracellularModels:
         self.stim_electrode = 0  # Electrode position, based on the provided EEG configuration.
         self.stim_type = args.env.ts.type
 
-        electrodeParameters=dict(x=[22.],
-                                    y=[107.6],
-                                    z=[-1312.],
-                                    N=np.array([[0., 0., 1.] for _ in range(1)]),
-            # x=np.array(args.env.network.position[0], dtype=float),  # µm
-            #                      y=np.array(args.env.network.position[1], dtype=float),  # µm
-            #                      z=np.array(args.env.network.position[2], dtype=float),  # µm
+        electrodeParameters=dict(x=np.array(args.env.network.position[0], dtype=float),  # µm
+                                 y=np.array(args.env.network.position[1], dtype=float),  # µm
+                                 z=np.array(args.env.network.position[2], dtype=float),  # µm
+                                 N=np.array([[0., 0., 1.] for _ in range(1)]),
                                  r=args.env.ts.electrodeParameters.r,
                                  n=args.env.ts.electrodeParameters.n,
                                  sigma=args.env.ts.electrodeParameters.sigma,
@@ -58,28 +55,30 @@ class ExtracellularModels:
 
         elif self.stim_type == 'pulse':
             pulse_width = int(self.obs_win_len/total_pulses)
-            # I_stim, t_ext = self.electrode.probe.set_current_pulses(
-            #                      n_pulses=total_pulses,
-            #                      biphasic=True,  # width2=width1, amp2=-amp1
-            #                      width1=pulse_width,
-            #                      amp1=amplitude,  # 3000,  # nA
-            #                      dt=network.dt,
-            #                      t_stop=tstop,
-            #                      interpulse=0,
-            #                      el_id=self.stim_electrode,
-            #                      t_start=tstart)
+            I_stim, t_ext = self.electrode.probe.set_current_pulses(
+                                 n_pulses=total_pulses,
+                                 biphasic=True,  # width2=width1, amp2=-amp1
+                                 width1=pulse_width,
+                                 amp1=amplitude,  # 3000,  # nA
+                                 width2=pulse_width,
+                                 amp2=-amplitude,  # 3000,  # nA
+                                 dt=network.dt,
+                                 t_stop=tstop,
+                                 interpulse=0,
+                                 el_id=self.stim_electrode,
+                                 t_start=tstart)
 
             # examples params in LFPy
-            I_stim, t_ext = self.electrode.probe.set_current_pulses(
-                                    n_pulses=20,
-                                    biphasic=True,  # width2=width1, amp2=-amp1
-                                    width1=5,
-                                    amp1=3000000,  # nA
-                                    dt=network.dt,
-                                    t_stop=tstop,
-                                    interpulse=200,
-                                    el_id=self.stim_electrode,
-                                    t_start=tstart)
+            # I_stim, t_ext = self.electrode.probe.set_current_pulses(
+            #                         n_pulses=20,
+            #                         biphasic=True,  # width2=width1, amp2=-amp1
+            #                         width1=5,
+            #                         amp1=3000,  # nA
+            #                         dt=network.dt,
+            #                         t_stop=tstop,
+            #                         interpulse=200,
+            #                         el_id=self.stim_electrode,
+            #                         t_start=tstart)
 
         # TODO: handle stim_electrode !!! for above methods its given as int; below array ?
         elif self.stim_type == 'sin':

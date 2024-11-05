@@ -1,8 +1,8 @@
-name: 'hl23net'
+name: 'ballnstick'
 
 simulation:
   duration: 30000  #ms
-  obs_win_len: 1000 #1000.0  #ms
+  obs_win_len: 1200 #1000.0  #ms
   MDD: True  # healthy OR MDD
   DRUG: False  # add drugs
 
@@ -35,36 +35,35 @@ ts:
     # get the location < x, y, z in µm > from the network position: network.position
     r: 20.  # µm; radius of each contact surface
     n: 50  # number of discrete points used to compute the n-point average potential on each circular contact point
-    sigma: 0.3  # extracellular conductivity in units of (S/m)
-    method: "pointsource"   # soma_as_point (this was replaced in 2.3 by) root_as_point, linesource
+    sigma: 1  # extracellular conductivity in units of (S/m)
+    method: "linesource"   # soma_as_point (this was replaced in 2.3 by) root_as_point, linesource
     # switch between the assumption of 'linesource', 'pointsource',
     # 'root_as_point' to represent each compartment when computing
     #  extracellular potentials
 
 network:
-  dt: 0.025  # ms
+  dt: 0.0625  # ms
   tstart: 0
-  v_init: -80.
-  celsius: 34.
+  tstop: 1200.
+  v_init: -65.
+  celsius: 36.5
   verbose: False
 
-  position: [0., 0., 78200]  # µm, also used as single dipole reference for EEG/ECoG: 78200
+  position: [0., 0., 0.]  # µm, also used as single dipole reference for EEG/ECoG: 78200
 
   networkSimulationArguments:
     rec_imem: True
     rec_vmem: True
-    rec_ipas: True
+    rec_ipas: False # AttributeError: i_pas, the mechanism does not exist at BallAndStickTemplate[0].soma[0](0.5)
     rec_icap: True
     rec_isyn: True
     rec_vmemsyn: True
     rec_istim: True
-    rec_current_dipole_moment: False
     rec_pop_contributions: False #True # originally False
     rec_variables: []
     to_memory: True
     to_file: False
     file_name: 'OUTPUT.h5'
-    dotprodcoeffs: None
 
 # EEG calc
 eeg:
@@ -84,7 +83,7 @@ debug_n_neurons:
 networkParameters:
   dt: ${env.network.dt}
   tstart: ${env.network.tstart}
-  tstop: ${env.simulation.duration}
+  tstop: ${env.network.tstop}
   v_init: ${env.network.v_init}
   celsius: ${env.network.celsius}
   OUTPUTPATH: ${experiment.dir}

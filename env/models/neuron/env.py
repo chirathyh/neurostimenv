@@ -29,14 +29,51 @@ class NeuronEnv(gym.Env):
         reward, state, done, info = 0, 0, 0, 0
         I_stim, t_ext, eeg_top = [], [], []
 
-        if self.args.env.ts.apply and action is not None:  # add transcranial stimulation
-            print("\nApplying tACS") if RANK == 0 else None
-            I_stim, t_ext = self.extracellular.set_pulse(self.network, self.step_count, action)
-            v_ext = self.network.enable_extracellular_stimulation_mpi(self.extracellular_models[0], self.step_count, t_ext, n=5)
-            # print(v_ext) if RANK == 0 else None
-            # if RANK == 0: # doesn't work.
-            #     I_stim, t_ext = self.extracellular.set_pulse(self.network, self.step_count, action)
-            #v_ext = self.network.enable_extracellular_stimulation(self.extracellular_models[0], t_ext, n=5) if RANK == 0 else None
+        # if self.args.env.ts.apply and action is not None:  # add transcranial stimulation
+        #     print("\nApplying tACS") if RANK == 0 else None
+        #     I_stim, t_ext = self.extracellular.set_pulse(self.network, self.step_count, action)
+        #     v_ext = self.network.enable_extracellular_stimulation_mpi(self.extracellular_models[0], self.step_count, t_ext, n=5)
+        #
+        #     if self.args.experiment.verbose:
+        #         print("\n v_ext stimulation") if RANK == 0 else None
+        #         print(v_ext) if RANK == 0 else None
+        #     # if RANK == 0: # doesn't work.
+        #     #     I_stim, t_ext = self.extracellular.set_pulse(self.network, self.step_count, action)
+        #     #v_ext = self.network.enable_extracellular_stimulation(self.extracellular_models[0], t_ext, n=5) if RANK == 0 else None
+
+
+        I_stim, t_ext = self.extracellular.electrode.probe.set_current_pulses(
+            n_pulses=20,
+            biphasic=True,  # width2=width1, amp2=-amp1
+            width1=5,
+            amp1=3000,  # nA
+            dt=self.network.dt,
+            t_stop=1200.,
+            interpulse=200,
+            el_id=0,
+            t_start=200)
+        print(t_ext)
+        self.network.enable_extracellular_stimulation(self.extracellular.electrode, t_ext, n=5)
+
+
+        # run simulation:
+        SPIKES = self.network.step(
+            probes=[self.extracellular.electrode],
+            **self.args.env.network.networkSimulationArguments
+        )
+
+        #SPIKES, sim_t = self.network.step(probes=[electrode], **self.args.env.network.networkSimulationArguments)
+
+        if RANK == 0:
+            print(self.extracellular.electrode.data['imem'])
+            import matplotlib.pyplot as plt
+            plt.figure()
+            plt.plot(self.extracellular.electrode.data['imem'][0])
+            plt.show()
+
+        exit()
+
+
 
         # simulate the network
         COMM.Barrier()
@@ -44,23 +81,46 @@ class NeuronEnv(gym.Env):
         # Note: SPIKES provides the spike time grouped into populations e.g., [[0, 1, 2, 3] -> PYR, [4]->SST etc]
         COMM.Barrier()
 
-        if self.args.env.eeg.measure:  # calc EEG
-            if RANK == 0:
-                P = self.extracellular_models[1].data['imem']  # numpy array <3, timesteps>
-                pot_db_4s_top = self.four_sphere_top.get_dipole_potential(P, np.array(self.args.env.network.position))  # Units: mV
-                eeg_top = np.array(pot_db_4s_top) * 1e-3  # convert units: V
 
-                print("\n probes data")
-                print(self.extracellular_models[0].data['imem'])
-                print(self.extracellular_models[0].data['ipas'])
-                print(self.extracellular_models[0].data['icap'])
-                print(self.extracellular_models[0].data['isyn_e'])
-                print(self.extracellular_models[0].data['isyn_i'])
-                print("####\n")
 
-                print('EEG: ')
-                print(eeg_top)
-                print(eeg_top.shape)
+        # if self.args.env.eeg.measure:  # calc EEG
+        #     if RANK == 0:
+        #         P = self.extracellular_models[1].data['imem']  # numpy array <3, timesteps>
+        #         pot_db_4s_top = self.four_sphere_top.get_dipole_potential(P, np.array(self.args.env.network.position))  # Units: mV
+        #         eeg_top = np.array(pot_db_4s_top) * 1e-3  # convert units: V
+        #
+        #         if self.args.experiment.verbose:
+        #
+        #             print("\n probes data")
+        #             print("imem")
+        #             print(self.extracellular_models[0].data['imem'])  # membrane current
+        #             print("ipas")
+        #             print(self.extracellular_models[0].data['ipas'])  # passive current
+        #             print("icap")
+        #             print(self.extracellular_models[0].data['icap'])  # capacitative current
+        #             print("isyn_e")
+        #             print(self.extracellular_models[0].data['isyn_e'])  # excitatory synaptic current
+        #             print("isyn_i")
+        #             print(self.extracellular_models[0].data['isyn_i'])  # inhibitory synaptic current
+        #             print("####\n")
+        #
+        #             print('EEG: ')
+        #             print(eeg_top)
+        #             print(eeg_top.shape)
+        #             print("####\n")
+        #
+        #             print("\n Cell vmem")
+        #             for name in self.network.population_names:
+        #                 for cell in self.network.populations[name].cells:
+        #                     print(cell.vmem)
+        #
+        #             print("\n Cell istim")
+        #             for name in self.network.population_names:
+        #                 for cell in self.network.populations[name].cells:
+        #                     if hasattr(cell, 'pointprocesses'):
+        #                         print(f"Cell {cell}: pointprocesses = {cell.pointprocesses}")
+        #                     else:
+        #                         print(f"Cell {cell} has no pointprocesses attached.")
 
         if RANK == 0:  # calc reward and observation space
             reward = features.reward_func_simple(eeg_top, self.sampling_rate)
@@ -104,6 +164,9 @@ class NeuronEnv(gym.Env):
             create_populations_connect(self.network, self.args, self.MPI_VAR)
         if self.args.env.name == 'hl23net':
             from setup.circuits.L23Net.utils import setup_network
+            setup_network(self.network, self.args, self.MPI_VAR)
+        if self.args.env.name == 'ballnstick':
+            from setup.circuits.ballnstick.utils import setup_network
             setup_network(self.network, self.args, self.MPI_VAR)
 
         self.extracellular_models = None

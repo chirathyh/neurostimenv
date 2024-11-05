@@ -9,7 +9,7 @@ experiment:
   folder: ${experiment.name}
   dir: ../results/${experiment.name}
   device: 'cpu'
-  verbose: True
+  verbose: False
   seed: 0
   debug: True
 
