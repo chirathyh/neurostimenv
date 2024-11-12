@@ -1,8 +1,8 @@
 name: 'hl23net'
 
 simulation:
-  duration: 30000  #ms
-  obs_win_len: 1000 #1000.0  #ms
+  duration: 1000  #ms
+  obs_win_len: 100 #1000.0  #ms
   MDD: True  # healthy OR MDD
   DRUG: False  # add drugs
 
@@ -48,7 +48,7 @@ network:
   celsius: 34.
   verbose: False
 
-  position: [0., 0., 78200]  # µm, also used as single dipole reference for EEG/ECoG: 78200
+  position: [0., 0., -725]  # µm, also used as single dipole reference for EEG/ECoG: 78200
 
   networkSimulationArguments:
     rec_imem: True
@@ -58,13 +58,11 @@ network:
     rec_isyn: True
     rec_vmemsyn: True
     rec_istim: True
-    rec_current_dipole_moment: False
     rec_pop_contributions: False #True # originally False
     rec_variables: []
     to_memory: True
     to_file: False
     file_name: 'OUTPUT.h5'
-    dotprodcoeffs: None
 
 # EEG calc
 eeg:

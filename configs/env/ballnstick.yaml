@@ -1,7 +1,7 @@
 name: 'ballnstick'
 
 simulation:
-  duration: 30000  #ms
+  duration: 1200  #ms
   obs_win_len: 1200 #1000.0  #ms
   MDD: True  # healthy OR MDD
   DRUG: False  # add drugs
@@ -44,15 +44,16 @@ ts:
 network:
   dt: 0.0625  # ms
   tstart: 0
-  tstop: 1200.
   v_init: -65.
   celsius: 36.5
   verbose: False
 
-  position: [0., 0., 0.]  # µm, also used as single dipole reference for EEG/ECoG: 78200
+  position: [-10., 0., 0.]  # µm, also used as single dipole reference for EEG/ECoG: 78200
+
+  syn_activity: True
 
   networkSimulationArguments:
-    rec_imem: True
+    rec_imem: False
     rec_vmem: True
     rec_ipas: False # AttributeError: i_pas, the mechanism does not exist at BallAndStickTemplate[0].soma[0](0.5)
     rec_icap: True
@@ -83,7 +84,7 @@ debug_n_neurons:
 networkParameters:
   dt: ${env.network.dt}
   tstart: ${env.network.tstart}
-  tstop: ${env.network.tstop}
+  tstop: ${env.simulation.duration}
   v_init: ${env.network.v_init}
   celsius: ${env.network.celsius}
   OUTPUTPATH: ${experiment.dir}

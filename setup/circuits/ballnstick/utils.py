@@ -22,7 +22,7 @@ def setup_network(network, args, MPI_VAR):
         templateargs=None,
         delete_sections=False,
         dt=2**-4,
-        tstop=2000,
+        tstop=args.env.simulation.duration,
     )
 
     # class NetworkPopulation parameters:
@@ -34,34 +34,6 @@ def setup_network(network, args, MPI_VAR):
             loc=0.,
             scale=20.),
         rotation_args=dict(x=0., y=0.),
-    )
-
-    # class Network parameters:
-    networkParameters = dict(
-        dt=2**-4,
-        tstop=1200.,
-        v_init=-65.,
-        celsius=36.5,
-        OUTPUTPATH=OUTPUTPATH
-    )
-
-    # class RecExtElectrode parameters:
-    electrodeParameters = dict(
-        x=np.array([-100, 0, 100, -100, 0, 100, -100, 0, 100]),
-        y=np.array([100, 100, 100, 0, 0, 0, -100, -100, -100]),
-        z=np.zeros(9),
-        N=np.array([[0., 0., 1.] for _ in range(9)]),
-        r=20.,  # 5um radius
-        n=50,  # nb of discrete point used to compute the potential
-        sigma=1,  # conductivity S/m
-        method="linesource"
-    )
-
-    # method Network.simulate() parameters:
-    networkSimulationArguments = dict(
-        rec_pop_contributions=True,
-        to_memory=True,
-        to_file=False
     )
 
     # population names, sizes and connection probability:
@@ -119,6 +91,19 @@ def setup_network(network, args, MPI_VAR):
         network.create_population(name=name, POP_SIZE=size,
                                   **populationParameters)
 
+        # create excitatory background synaptic activity for each cell
+        # with Poisson statistics
+        if args.env.network.syn_activity:
+            for cell in network.populations[name].cells:
+                idx = cell.get_rand_idx_area_norm(section='allsec', nidx=64)
+                for i in idx:
+                    syn = Synapse(cell=cell, idx=i, syntype='Exp2Syn',
+                                  weight=0.001,
+                                  **dict(tau1=0.2, tau2=1.8, e=0.))
+                    syn.set_spike_times_w_netstim(interval=50.,
+                                                  seed=np.random.rand() * 2**32 - 1
+                                                  )
+
     # create connectivity matrices and connect populations:
     for i, pre in enumerate(population_names):
         for j, post in enumerate(population_names):
@@ -146,3 +131,34 @@ def setup_network(network, args, MPI_VAR):
                 syn_pos_args=synapsePositionArguments[i][j],
                 save_connections=False,
             )
+
+
+
+    # # class Network parameters:
+    # networkParameters = dict(
+    #     dt=2**-4,
+    #     tstop=4800.,
+    #     v_init=-65.,
+    #     celsius=36.5,
+    #     OUTPUTPATH=OUTPUTPATH
+    # )
+    #
+    # # class RecExtElectrode parameters:
+    # electrodeParameters = dict(
+    #     x=np.array([-100, 0, 100, -100, 0, 100, -100, 0, 100]),
+    #     y=np.array([100, 100, 100, 0, 0, 0, -100, -100, -100]),
+    #     z=np.zeros(9),
+    #     N=np.array([[0., 0., 1.] for _ in range(9)]),
+    #     r=20.,  # 5um radius
+    #     n=50,  # nb of discrete point used to compute the potential
+    #     sigma=1,  # conductivity S/m
+    #     method="linesource"
+    # )
+    #
+    # # method Network.simulate() parameters:
+    # # method Network.simulate() parameters
+    # networkSimulationArguments = dict(
+    #     rec_pop_contributions=True,
+    #     to_memory=True,
+    #     to_file=False
+    # )
