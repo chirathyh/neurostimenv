@@ -10,8 +10,6 @@ warnings.simplefilter('ignore', Warning)
 
 from env.models.neuron.env import NeuronEnv
 from utils.utils import setup_folders
-from agent.dqn import DQN, ReplayBuffer
-from agent.mbandit import EpsilonGreedyBandit
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
