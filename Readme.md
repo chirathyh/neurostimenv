@@ -53,5 +53,7 @@ Install (prepare a requirements.txt file)
 - pandas==2.2.0
 - xlrd==2.0.1
 - numpy==1.26.3
+- hydra-core==1.3.2
+
 
 There is a conflict for scipy and numpy, fix
