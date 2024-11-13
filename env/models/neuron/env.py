@@ -49,7 +49,7 @@ class NeuronEnv(gym.Env):
             eeg_top = np.array(pot_db_4s_top) * 1e-3  # convert units: V
             print(eeg_top)
             plt.figure()
-            plt.plot(eeg_top[0])
+            plt.plot(eeg_top[0][-40000:])
             plt.savefig(self.args.experiment.dir+"/eeg_top_plot.png")  # You can specify the file format and path here
             plt.close()
 
