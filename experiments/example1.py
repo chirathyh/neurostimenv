@@ -13,12 +13,6 @@ from utils.utils import setup_folders
 from agent.dqn import DQN, ReplayBuffer
 from agent.mbandit import EpsilonGreedyBandit
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import numpy as np
-import random
-
 import hydra
 from omegaconf import DictConfig, OmegaConf
 import matplotlib.pyplot as plt
@@ -71,4 +65,4 @@ if __name__ == "__main__":
 # python example1.py experiment.name=test9 env=ballnstick env.network.syn_activity=Tru
 # killall mpirun
 
-
+# mpirun -np 32 python example1.py experiment.name=test1 env=hl23net env.network.dt=0.025 env.simulation.obs_win_len=100 experiment.debug=True

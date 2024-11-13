@@ -13,12 +13,6 @@ from utils.utils import setup_folders
 from agent.dqn import DQN, ReplayBuffer
 from agent.mbandit import EpsilonGreedyBandit
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import numpy as np
-import random
-
 import hydra
 from omegaconf import DictConfig, OmegaConf
 import matplotlib.pyplot as plt
