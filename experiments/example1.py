@@ -53,7 +53,7 @@ def main(cfg: DictConfig) -> None:
         return reward
 
     run_experiment(action=None)  # [mA, Hz]  -> 3000 nA
-    print("done")
+    print("done") if RANK==0 else None
     #run_experiment(action=[1e-3, 4])  # [mA, Hz]  -> 3000 nA
 
 
