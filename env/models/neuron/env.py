@@ -49,10 +49,9 @@ class NeuronEnv(gym.Env):
             eeg_top = np.array(pot_db_4s_top) * 1e-3  # convert units: V
             print(eeg_top)
             plt.figure()
-            # plt.plot(self.extracellular.electrode.data['imem'][0], 'r')
             plt.plot(eeg_top[0])
-            plt.show()
-            # exit()
+            plt.savefig(self.args.experiment.dir+"/eeg_top_plot.png")  # You can specify the file format and path here
+            plt.close()
 
         if RANK == 0:  # calc reward and observation space
             reward = features.reward_func_simple(eeg_top, self.sampling_rate)

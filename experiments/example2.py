@@ -60,7 +60,7 @@ def main(cfg: DictConfig) -> None:
         print('simulation Time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
         return reward
 
-    run_experiment(action=None)  # [mA, Hz]  -> 3000 nA
+    run_experiment(action=[1e-3, 4])  # [mA, Hz]  -> 3000 nA
     print("done")
     #run_experiment(action=[1e-3, 4])  # [mA, Hz]  -> 3000 nA
 
