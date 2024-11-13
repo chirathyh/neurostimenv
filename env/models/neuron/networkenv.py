@@ -436,7 +436,7 @@ class NetworkEnv(Network):
             ``v_ext = {'pop1': np.ndarray[cell, cell_seg,t_ext]}``
         """
         # self.lfpy_state.restore()
-        print(self.tstop)
+        # print(self.tstop)
         v_ext = {}
         for popname in self.populations.keys():
             cells = self.populations[popname].cells
