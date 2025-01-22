@@ -42,7 +42,7 @@ ts:
     #  extracellular potentials
 
 network:
-  dt: 0.025  # ms
+  dt: 2**-4  # ms
   tstart: 0
   v_init: -65.
   celsius: 6.5.

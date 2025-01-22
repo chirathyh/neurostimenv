@@ -40,12 +40,12 @@ def time_domain_features(signal):
     zcr = ((signal[:-1] * signal[1:]) < 0).sum() / len(signal)
 
     return {
-        "Mean": mean,
-        "Variance": variance,
-        "Standard Deviation": std_dev,
-        "Skewness": skewness,
-        "Kurtosis": kurtosis,
-        "Zero Crossing Rate": zcr
+        "mean": mean,
+        "var": variance,
+        "stdDev": std_dev,
+        "skewness": skewness,
+        "kurtosis": kurtosis,
+        "zeroCrossingRate": zcr
     }
 
 
@@ -74,12 +74,12 @@ def frequency_domain_features(eeg, fs):
     dominant_freq = freqs[np.argmax(psd)]
 
     return {
-        "Delta Power": delta_power,
-        "Theta Power": theta_power,
-        "Alpha Power": alpha_power,
-        "Beta Power": beta_power,
-        "Gamma Power": gamma_power,
-        "Dominant Frequency": dominant_freq
+        "deltaPower": delta_power,
+        "thetaPower": theta_power,
+        "alphaPower": alpha_power,
+        "betaPower": beta_power,
+        "gammaPower": gamma_power,
+        "dominantFreq": dominant_freq
     }
 
 

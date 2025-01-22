@@ -9,8 +9,12 @@ import warnings
 warnings.simplefilter('ignore', Warning)
 
 from env.models.neuron.env import NeuronEnv
+from agent.iql import IQL
 from utils.utils import setup_folders
+from utils.buffers import ReplayMemory
 
+
+import random
 import hydra
 from omegaconf import DictConfig, OmegaConf
 import matplotlib.pyplot as plt
@@ -18,16 +22,17 @@ import json
 
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
-def remove_axis_junk(ax, lines=['right', 'top']):
-    """remove chosen lines from plotting axis"""
-    for loc, spine in ax.spines.items():
-        if loc in lines:
-            spine.set_color('none')
-    ax.xaxis.set_ticks_position('bottom')
-    ax.yaxis.set_ticks_position('left')
 
 
-@hydra.main(version_base=None, config_path="../configs", config_name="config")
+class Policy():
+    def __init__(self, actions=2):
+        self.n_actions=actions
+
+    def get_action(self, cur_state=None):
+        return random.choice([[6e-3, 4], [3e-3, 8]])
+
+
+@hydra.main(version_base=None, config_path="../../configs", config_name="config")
 def main(cfg: DictConfig) -> None:
     # set up MPI variables:
     COMM = MPI.COMM_WORLD
@@ -45,12 +50,21 @@ def main(cfg: DictConfig) -> None:
     def run_experiment(action=None):
         tic_0 = time.perf_counter()
         env = NeuronEnv(cfg, MPI_VAR)
-        obs, reward, done, info = env.exploration_rollout(action=[[6e-3, 4], [3e-3, 8]], steps=2)
+
+        # policy = Policy()
+        buffer = ReplayMemory(cfg.agent)
+        iql_agent = IQL(cfg.agent)
+
+        # action_sequence = [[6e-3, 4], [3e-3, 8], [3e-3, 8]]  # TODO: can be requested from policy. , [3e-3, 8], [6e-3, 4]
+        # env.exploration_rollout(policy_seq=action_sequence, buffer=buffer, steps=3)
+        # iql_agent.train(buffer, epochs=10)
+
+        # on-line evaluation.
+        env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=3)
+
         env.close()
-        print('Dominant Frequency:', str(info['dom_freq']), 'Hz') if RANK==0 else None
-        print('Reward:', str(reward)) if RANK==0 else None
         print('simulation Time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
-        return reward
+        # return reward
 
     run_experiment(action=None)  # [mA, Hz]  -> 3000 nA
     print("done") if RANK==0 else None
@@ -60,7 +74,5 @@ def main(cfg: DictConfig) -> None:
 if __name__ == "__main__":
     main()
 
-# python example1.py experiment.name=test9 env=ballnstick env.network.syn_activity=True
+# python offline_rl_example.py experiment.name=test9 env=ballnstick env.network.syn_activity=True
 # killall mpirun
-
-# mpirun -np 32 python example1.py experiment.name=test1 env=hl23net env.network.dt=0.025 env.simulation.obs_win_len=100 experiment.debug=True

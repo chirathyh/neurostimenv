@@ -336,8 +336,6 @@ class NetworkEnv(Network):
                 if self._RANK == 0:
                     print('t = {} ms'.format(neuron.h.t))
 
-
-
     def run_simulation_with_probes_loop(self, t_ext,
                                         probes=None,
                                         variable_dt=False,

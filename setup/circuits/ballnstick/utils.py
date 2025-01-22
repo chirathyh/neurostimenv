@@ -10,6 +10,7 @@ from mpi4py import MPI
 import neuron
 from LFPy import NetworkCell, Network, Synapse, RecExtElectrode, \
     CurrentDipoleMoment
+from utils.utils import generate_spike_train
 
 def setup_network(network, args, MPI_VAR):
     OUTPUTPATH = 'example_network_stim_outputx'
@@ -21,7 +22,7 @@ def setup_network(network, args, MPI_VAR):
         templatename='BallAndStickTemplate',
         templateargs=None,
         delete_sections=False,
-        dt=2**-4,
+        dt=args.env.network.dt,
         tstop=args.env.simulation.duration,
     )
 
@@ -100,9 +101,10 @@ def setup_network(network, args, MPI_VAR):
                     syn = Synapse(cell=cell, idx=i, syntype='Exp2Syn',
                                   weight=0.001,
                                   **dict(tau1=0.2, tau2=1.8, e=0.))
-                    syn.set_spike_times_w_netstim(interval=50.,
-                                                  seed=np.random.rand() * 2**32 - 1
-                                                  )
+                    # syn.set_spike_times_w_netstim(interval=50.,
+                    #                               seed=np.random.rand() * 2**32 - 1
+                    #                               )
+                    syn.set_spike_times(generate_spike_train(interval=50.))
 
     # create connectivity matrices and connect populations:
     for i, pre in enumerate(population_names):

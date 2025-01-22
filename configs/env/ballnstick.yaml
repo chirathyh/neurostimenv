@@ -1,10 +1,26 @@
 name: 'ballnstick'
 
 simulation:
-  duration: 1200  #ms
-  obs_win_len: 1200 #1000.0  #ms
+  duration: 5500  #ms
+  obs_win_len: 500 #1000.0  #ms
   MDD: True  # healthy OR MDD
   DRUG: False  # add drugs
+
+features:
+  - 'mean'
+  - 'var'
+  - 'stdDev'
+  - 'skewness'
+  - 'kurtosis'
+  - 'zeroCrossingRate'
+  - 'deltaPower'
+  - 'thetaPower'
+  - 'alphaPower'
+  - 'betaPower'
+  - 'gammaPower'
+  - 'dominantFreq'
+#  - 'stimAmplitude'
+#  - 'stimFreq'
 
 ts:
   apply: True
@@ -48,7 +64,7 @@ network:
   celsius: 36.5
   verbose: False
 
-  position: [-10., 0., 0.]  # µm, also used as single dipole reference for EEG/ECoG: 78200
+  position: [0., 0., 0.]  # µm, also used as single dipole reference for EEG/ECoG: 78200
 
   syn_activity: True
 

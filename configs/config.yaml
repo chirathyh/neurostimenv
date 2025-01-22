@@ -15,4 +15,8 @@ experiment:
 
 defaults:
   - env: hl23net
+  - agent: iql
   - _self_
+
+agent:
+  device: ${experiment.device}

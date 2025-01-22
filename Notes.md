@@ -40,6 +40,8 @@ Then we have to provide the x,y,z coordinates for the EEG placement along with s
 --oversubscribe fore more processes and physical cores.
 -->
 
+nrniv -gdb python example_network_stim.py
+
 
 Notes:
 - Simulations tend to take a long time when recording LFP and DIPOLE.

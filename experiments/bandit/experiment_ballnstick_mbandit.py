@@ -64,7 +64,7 @@ def main(cfg: DictConfig) -> None:
     #run_experiment(action=[3e-3, 1])  # [mA, Hz]  -> 3000 nA
 
     # Example Usage
-    n_steps = 100
+    n_steps = 4
     n_arms = 8
     true_means = np.random.rand(n_arms)  # True mean rewards for each arm (hidden from the agent)
     bandit = EpsilonGreedyBandit(n_arms, epsilon=0.1)
@@ -101,7 +101,7 @@ def main(cfg: DictConfig) -> None:
 if __name__ == "__main__":
     main()
 
-# python example1.py experiment.name=test9 env=ballnstick env.network.syn_activity=Tru
+# python example1.py experiment.name=test9 env=ballnstick env.network.syn_activity=True
 # killall mpirun
 
 

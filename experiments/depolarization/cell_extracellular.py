@@ -55,7 +55,7 @@ def simulate(stimulation=False, tstop = 200):
             n_pulses=2,
             biphasic=True,  # width2=width1, amp2=-amp1
             width1=5,
-            amp1=1,  # nA
+            amp1=3,  # nA
             dt=cell.dt,
             t_stop=110.,
             interpulse=0,
