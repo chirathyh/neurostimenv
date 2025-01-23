@@ -1,11 +1,12 @@
 agent: 'a2c'
 debug: False
 
-state_dim: 12
+state_dim: 14
 action_dim: 2
+
 gamma: 0.99
 beta: 0.1
 lr: 1e-3
 
 batch_size: 2 # the mini_batch size
-replay_buffer_size: 3 # total <s,a,r,s'> pairs
+replay_buffer_size: 16 # total <s,a,r,s'> pairs

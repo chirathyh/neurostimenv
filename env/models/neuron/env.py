@@ -27,40 +27,48 @@ class NeuronEnv(gym.Env):
         self._reset()
 
     def evaluation_rollout(self, policy, buffer, steps):
+        RANK = self.MPI_VAR['RANK']
+        COMM = self.MPI_VAR['COMM']
         # TODO: this is inefficient!. doing this way due to limitations of NEURON to pause/restart simulations when extracellular mechanisms are used.
         # NOTES:
         #  - Extracellular mechanisms are added at initialization (Play Vector).
         #  - SaveState() can't be used because extra-mech has dynamics objects.
         #  - Therefore in this approach have to ensure simulations are "deterministic". e.g., adding "Synapse Activity".
+        eval_reward = 0
+
         sim_data = []
         action, cur_state = [], []
         for i in range(0, steps):
-            cur_action = [0., 1.] if i == 0 else policy.get_action(cur_state)
-            action.append(cur_action)
-            cur_steps = i+1
-            self.network.tstart, self.network.tstop = 0., self.args.env.simulation.obs_win_len * cur_steps
-            i_stim, t_stim = prep_stim_seq(action=action, step_size=self.args.env.simulation.obs_win_len, steps=cur_steps, dt=self.network.dt)
+            if RANK == 0:
+                cur_action = [0., 1.] if i == 0 else policy.get_action(cur_state)
+                action.append(cur_action)
+                cur_steps = i+1
+
+                self.network.tstart, self.network.tstop = 0., self.args.env.simulation.obs_win_len * cur_steps
+                i_stim, t_stim = prep_stim_seq(action=action, step_size=self.args.env.simulation.obs_win_len, steps=cur_steps, dt=self.network.dt)
+
+            COMM.Barrier()
             eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
+            COMM.Barrier()
 
-            # slice cur_eeg; apply feature/obs calc ;obtain cur_state
-            chunk_size = int(len(eeg[0]) / cur_steps)
-            chunked_eeg = [eeg[0][i:i + chunk_size] for i in range(0, len(eeg[0])-1, chunk_size)]
-            reward = features.reward_func_simple(np.array([chunked_eeg[-1]]), self.sampling_rate)  # reward for next state
-            obs = features.feature_space(eeg=np.array([chunked_eeg[-1]]), fs=self.sampling_rate)  # obs of next state
-            states = [obs[key].item() if isinstance(obs[key], np.ndarray) else obs[key] for key in obs]
-            next_state = np.array(states)
+            if RANK == 0:
+                # slice cur_eeg; apply feature/obs calc ;obtain cur_state
+                chunk_size = int(len(eeg[0]) / cur_steps)
+                chunked_eeg = [eeg[0][i:i + chunk_size] for i in range(0, len(eeg[0])-1, chunk_size)]
+                reward = features.reward_func_simple(np.array([chunked_eeg[-1]]), self.sampling_rate)  # reward for next state
+                obs = features.feature_space(eeg=np.array([chunked_eeg[-1]]), fs=self.sampling_rate, ts=cur_action)  # obs of next state
+                states = [obs[key].item() if isinstance(obs[key], np.ndarray) else obs[key] for key in obs]
+                next_state = np.array(states)
 
-            if i > 0:  # start saving transitions, avoid first
-                buffer.store(cur_state, cur_action, reward, next_state, 0.)
+                eval_reward += reward
 
-            cur_state = next_state
+                if i > 0:  # start saving transitions, avoid first
+                    buffer.store(cur_state, cur_action, reward, next_state, 0.)
 
-            sim_data.append(eeg)
-            sim_data.append([i_stim])
+                cur_state = next_state
 
-        temp = buffer.get()
-        print(temp)
-        exit()
+                sim_data.append(eeg)
+                sim_data.append([i_stim])
 
         # for testing only:
         # max_length = max(len(arr[0]) for arr in sim_data)
@@ -79,59 +87,60 @@ class NeuronEnv(gym.Env):
         # plt.show()
         # exit()
 
+        return eval_reward
+
     def exploration_rollout(self, policy_seq, buffer, steps):
+        RANK = self.MPI_VAR['RANK']
         # TODO: this is inefficient. e.g., for an episilon-greedy algo exploration required "evaluation_rollout"
         # NOTE: Therefore; can explore offline RL algorithms which would be more suitable.
         self.network.tstart, self.network.tstop = 0., self.args.env.simulation.obs_win_len * steps
         i_stim, t_stim = prep_stim_seq(action=policy_seq, step_size=self.args.env.simulation.obs_win_len, steps=steps, dt=self.network.dt)
         full_eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
 
-        # for testing
-        sim_data = []
-        sim_data.append(full_eeg)
-        sim_data.append([i_stim])
+        if RANK == 0:
+            # for testing
+            sim_data = []
+            sim_data.append(full_eeg)
+            sim_data.append([i_stim])
 
-        chunk_size = int(len(full_eeg[0]) / steps)
-        chunked_eeg = [full_eeg[0][i:i + chunk_size] for i in range(0, len(full_eeg[0])-1, chunk_size)]
+            chunk_size = int(len(full_eeg[0]) / steps)
+            chunked_eeg = [full_eeg[0][i:i + chunk_size] for i in range(0, len(full_eeg[0])-1, chunk_size)]
 
-        cur_state, cur_action = [], []
-        for c in range(0, len(chunked_eeg)):
-            cur_action = policy_seq[c]
-            reward = features.reward_func_simple(np.array([chunked_eeg[c]]), self.sampling_rate)
-            obs = features.feature_space(eeg=np.array([chunked_eeg[c]]), fs=self.sampling_rate)
-            states = [obs[key].item() if isinstance(obs[key], np.ndarray) else obs[key] for key in obs]
-            next_state = np.array(states)
+            cur_state, cur_action = [], []
+            for c in range(0, len(chunked_eeg)):
+                cur_action = policy_seq[c]
+                reward = features.reward_func_simple(np.array([chunked_eeg[c]]), self.sampling_rate)
+                obs = features.feature_space(eeg=np.array([chunked_eeg[c]]), fs=self.sampling_rate, ts=cur_action)
+                states = [obs[key].item() if isinstance(obs[key], np.ndarray) else obs[key] for key in obs]
+                next_state = np.array(states)
 
-            if c > 0:  # start saving transitions, avoid first
-                buffer.store(cur_state, cur_action, torch.tensor([reward]), next_state, torch.tensor([0.]))
-            cur_state = next_state
+                if c > 0:  # start saving transitions, avoid first
+                    buffer.store(cur_state, cur_action, torch.tensor([reward]), next_state, torch.tensor([0.]))
+                cur_state = next_state
 
-        # temp = buffer.get()
-        # print(temp)
-        # exit()
+            # max_length = max(len(arr[0]) for arr in sim_data)
+            # fig, axes = plt.subplots(len(sim_data), 1, figsize=(16, len(sim_data) * 2))
+            # # Plot each array in a subplot
+            # for i, arr in enumerate(sim_data):
+            #     ax = axes[i] if len(sim_data) > 1 else axes  # Handle single subplot case
+            #     ax.plot(range(1, len(arr[0]) + 1), arr[0], label=f"Array {i+1}")
+            #     ax.set_xlim(1, max_length)  # Set x-axis limit to the maximum length
+            #     ax.set_title(f"Plot of Array {i+1}")
+            #     ax.set_xlabel("Index")
+            #     ax.set_ylabel("Value")
+            #     ax.legend()
+            #     ax.grid(True)
+            # plt.tight_layout()
+            # plt.show()
 
-        # max_length = max(len(arr[0]) for arr in sim_data)
-        # fig, axes = plt.subplots(len(sim_data), 1, figsize=(16, len(sim_data) * 2))
-        # # Plot each array in a subplot
-        # for i, arr in enumerate(sim_data):
-        #     ax = axes[i] if len(sim_data) > 1 else axes  # Handle single subplot case
-        #     ax.plot(range(1, len(arr[0]) + 1), arr[0], label=f"Array {i+1}")
-        #     ax.set_xlim(1, max_length)  # Set x-axis limit to the maximum length
-        #     ax.set_title(f"Plot of Array {i+1}")
-        #     ax.set_xlabel("Index")
-        #     ax.set_ylabel("Value")
-        #     ax.legend()
-        #     ax.grid(True)
-        # plt.tight_layout()
-        # plt.show()
-
-
-    def step_n(self, I_stim, t_ext, stim_elec):
+    def step_n(self, i_stim, t_ext, stim_elec):
+        eeg = 0
         COMM = self.MPI_VAR['COMM']
         RANK = self.MPI_VAR['RANK']
         if self.args.env.ts.apply:
-            self.extracellular_models[0].probe.set_current(stim_elec, I_stim)
-            self.network.enable_extracellular_stimulation(self.extracellular_models[0], t_ext, n=5)
+            self.extracellular_models[0].probe.set_current(stim_elec, i_stim)
+            # self.network.enable_extracellular_stimulation(self.extracellular_models[0], t_ext, n=5)
+            self.network.enable_extracellular_stimulation_mpi(self.extracellular_models[0], t_ext, n=5)  # using because issue with mpi and L23Net
         COMM.Barrier()
         SPIKES = self.network.simulate(probes=self.extracellular_models, **self.args.env.network.networkSimulationArguments)
         COMM.Barrier()

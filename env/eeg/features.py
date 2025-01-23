@@ -22,12 +22,15 @@ def reward_func_simple(eeg_top, fs):
     return reward
 
 
-def feature_space(eeg, fs):
+def feature_space(eeg, fs, ts=None):
     obs = {}
     tf = time_domain_features(eeg)
     ff = frequency_domain_features(eeg, fs)
     obs.update(tf)
     obs.update(ff)
+    if not None:
+        tsf = {"stimAmplitude": ts[0], "stimFreq": ts[1]}
+        obs.update(tsf)
     return obs
 
 # Time-Domain Features

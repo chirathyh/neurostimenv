@@ -1,8 +1,8 @@
 name: 'hl23net'
 
 simulation:
-  duration: 10000  #ms
-  obs_win_len: 100 #1000.0  #ms
+  duration: 5000  #ms
+  obs_win_len: 500 #1000.0  #ms
   MDD: True  # healthy OR MDD
   DRUG: False  # add drugs
 
@@ -42,11 +42,13 @@ ts:
     #  extracellular potentials
 
 network:
-  dt: 0.025  # ms
+  dt: 0.0625 #0.025  # ms
   tstart: 0
   v_init: -80.
   celsius: 34.
   verbose: False
+
+  syn_activity: True
 
   position: [0., 0., -725]  # µm, also used as single dipole reference for EEG/ECoG: 78200
 
@@ -74,10 +76,10 @@ eeg:
 
 ################
 debug_n_neurons:
-  PYR: 80
-  SST: 5
-  PV: 7
-  VIP: 8
+  PYR: 2 #0
+  SST: 2
+  PV: 2
+  VIP: 2
 
 networkParameters:
   dt: ${env.network.dt}

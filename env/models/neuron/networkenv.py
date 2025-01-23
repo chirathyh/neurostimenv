@@ -393,7 +393,7 @@ class NetworkEnv(Network):
                 if self._RANK == 0:
                     print('t = {} ms'.format(neuron.h.t))
 
-    def enable_extracellular_stimulation_mpi(self, electrode, _step, t_ext=None, n=1, model='inf'):
+    def enable_extracellular_stimulation_mpi(self, electrode, t_ext=None, n=1, model='inf'):
         """
         Enable extracellular stimulation with NEURON's `extracellular`
         mechanism. Extracellular potentials are computed from electrode

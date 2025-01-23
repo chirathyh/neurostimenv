@@ -19,8 +19,8 @@ features:
   - 'betaPower'
   - 'gammaPower'
   - 'dominantFreq'
-#  - 'stimAmplitude'
-#  - 'stimFreq'
+  - 'stimAmplitude'
+  - 'stimFreq'
 
 ts:
   apply: True

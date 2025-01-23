@@ -68,6 +68,11 @@ def prep_stim_seq(action, step_size, steps, dt):
         freq = action[i][1]
         total_cycles = freq * (step_size/1000)
         total_pulses = 2 * total_cycles
+
+        # print("debug")
+        # print(step_size)
+        # print(total_pulses)
+
         pulse_width = int(step_size/total_pulses)
 
         I_stim_cur, t_ext_cur = set_rollout_current_pulses(n_pulses=total_pulses, biphasic=True,

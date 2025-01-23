@@ -13,7 +13,7 @@ from agent.iql import IQL
 from utils.utils import setup_folders
 from utils.buffers import ReplayMemory
 
-
+import numpy as np
 import random
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -47,22 +47,50 @@ def main(cfg: DictConfig) -> None:
         cfg = setup_folders(cfg)
     COMM.Barrier()
 
+    def sample_random_actions(simulation_steps):
+        amp_min = 1e-3
+        amp_max = 10e-3
+        freq_min = 1
+        freq_max = 20
+        amp_samples = np.random.uniform(amp_min, amp_max, size=simulation_steps)
+        freq_samples = np.random.uniform(freq_min, freq_max, size=simulation_steps)
+        return [[amp, freq] for amp, freq in zip(amp_samples, freq_samples)]
+
+
     def run_experiment(action=None):
         tic_0 = time.perf_counter()
         env = NeuronEnv(cfg, MPI_VAR)
 
         # policy = Policy()
-        buffer = ReplayMemory(cfg.agent)
+        buffer = ReplayMemory(cfg.agent, bufferid="ballnstick_f0_r0")
         iql_agent = IQL(cfg.agent)
 
-        # action_sequence = [[6e-3, 4], [3e-3, 8], [3e-3, 8]]  # TODO: can be requested from policy. , [3e-3, 8], [6e-3, 4]
-        # env.exploration_rollout(policy_seq=action_sequence, buffer=buffer, steps=3)
-        # iql_agent.train(buffer, epochs=10)
+        exploration_steps = 4
+        evaluation_steps = 3
+
+        # test buffer
+        # print(len(buffer))
+        # action_seq = sample_random_actions(exploration_steps)
+        # env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=exploration_steps)
+        # print(len(buffer))
+        # buffer.close()
+
+        print(buffer.get())
+        exit()
+
+        # exit()
+        # for i in range(0, 5):  # collect data <S, A, R, S', Done>
+        #     action_seq = sample_random_actions(exploration_steps)
+        #     env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=exploration_steps)
+
+        iql_agent.train(buffer, epochs=20)
 
         # on-line evaluation.
-        env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=3)
+        reward = env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=evaluation_steps)
+        print(reward)
 
         env.close()
+        buffer.close()
         print('simulation Time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
         # return reward
 
@@ -75,4 +103,5 @@ if __name__ == "__main__":
     main()
 
 # python offline_rl_example.py experiment.name=test9 env=ballnstick env.network.syn_activity=True
+# mpirun -np 8 python offline_rl_example.py experiment.name=test9 env=hl23net env.network.syn_activity=True experiment.debug=True
 # killall mpirun
