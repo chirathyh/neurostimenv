@@ -24,14 +24,6 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
 
-class Policy():
-    def __init__(self, actions=2):
-        self.n_actions=actions
-
-    def get_action(self, cur_state=None):
-        return random.choice([[6e-3, 4], [3e-3, 8]])
-
-
 @hydra.main(version_base=None, config_path="../../configs", config_name="config")
 def main(cfg: DictConfig) -> None:
     # set up MPI variables:
@@ -56,47 +48,45 @@ def main(cfg: DictConfig) -> None:
         freq_samples = np.random.uniform(freq_min, freq_max, size=simulation_steps)
         return [[amp, freq] for amp, freq in zip(amp_samples, freq_samples)]
 
-
-    def run_experiment(action=None):
+    def run_experiment():
         tic_0 = time.perf_counter()
         env = NeuronEnv(cfg, MPI_VAR)
 
-        # policy = Policy()
         buffer = ReplayMemory(cfg.agent, bufferid="ballnstick_f0_r0")
         iql_agent = IQL(cfg.agent)
 
-        exploration_steps = 4
+        print(len(buffer))
+
+        exploration_steps = 10
         evaluation_steps = 3
 
-        # test buffer
-        # print(len(buffer))
-        # action_seq = sample_random_actions(exploration_steps)
-        # env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=exploration_steps)
-        # print(len(buffer))
-        # buffer.close()
+        rew = []
 
-        print(buffer.get())
-        exit()
+        for i in range(0, 5):  # collect data <S, A, R, S', Done>
+            action_seq = sample_random_actions(exploration_steps)
+            env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=exploration_steps)
+            iql_agent.train(buffer, epochs=10)
+            reward = env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=evaluation_steps)
+            print(reward)
+            rew.append(reward)
 
-        # exit()
-        # for i in range(0, 5):  # collect data <S, A, R, S', Done>
-        #     action_seq = sample_random_actions(exploration_steps)
-        #     env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=exploration_steps)
-
-        iql_agent.train(buffer, epochs=20)
+        #iql_agent.train(buffer, epochs=40)
 
         # on-line evaluation.
-        reward = env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=evaluation_steps)
-        print(reward)
+        # reward = env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=evaluation_steps)
+        # print(reward)
 
         env.close()
         buffer.close()
+
+        plt.plot(rew)
+        plt.show()
+
         print('simulation Time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
         # return reward
 
-    run_experiment(action=None)  # [mA, Hz]  -> 3000 nA
+    run_experiment()  # [mA, Hz]  -> 3000 nA
     print("done") if RANK==0 else None
-    #run_experiment(action=[1e-3, 4])  # [mA, Hz]  -> 3000 nA
 
 
 if __name__ == "__main__":
