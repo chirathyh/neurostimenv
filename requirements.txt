@@ -6,3 +6,4 @@ gym==0.9.4
 pandas==2.2.0
 xlrd==2.0.1
 numpy==1.26.3
+torch==2.4.1
