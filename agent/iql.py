@@ -5,25 +5,27 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 
+from agent.models.q import QNetwork
+from agent.models.value import ValueNetwork
+from agent.models.policy import PolicyNetwork
+
 
 class IQL:
     def __init__(self, args):
-        self.state_dim = args.state_dim
-        self.action_dim = args.action_dim
-        self.gamma = args.gamma
-        self.beta = args.beta
-        self.device = args.device
-        self.batch_size = args.batch_size
+        self.gamma = args.agent.gamma
+        self.beta = args.agent.beta
+        self.device = args.agent.device
+        self.batch_size = args.agent.batch_size
 
         # Initialize networks
-        self.q_network = QNetwork(args.state_dim, args.action_dim)
-        self.value_network = ValueNetwork(args.state_dim)
-        self.policy_network = PolicyNetwork(args.state_dim, args.action_dim)
+        self.q_network = QNetwork(args)
+        self.value_network = ValueNetwork(args)
+        self.policy_network = PolicyNetwork(args)
 
         # Initialize optimizers
-        self.q_optimizer = optim.Adam(self.q_network.parameters(), lr=args.lr)
-        self.v_optimizer = optim.Adam(self.value_network.parameters(), lr=args.lr)
-        self.policy_optimizer = optim.Adam(self.policy_network.parameters(), lr=args.lr)
+        self.q_optimizer = optim.Adam(self.q_network.parameters(), lr=args.agent.lr)
+        self.v_optimizer = optim.Adam(self.value_network.parameters(), lr=args.agent.lr)
+        self.policy_optimizer = optim.Adam(self.policy_network.parameters(), lr=args.agent.lr)
 
         # Loss function
         self.mse_loss = nn.MSELoss()
@@ -65,6 +67,12 @@ class IQL:
         return self.policy_network(torch.as_tensor(state, dtype=torch.float32, device=self.device)).detach().cpu().numpy()
 
     def train(self, replay_memory, epochs=100):
+
+        # for testing
+        q_losses = []
+        v_losses = []
+        policy_losses = []
+
         for epoch in range(epochs):
             if len(replay_memory) < replay_memory.batch_size:
                 continue  # Skip if not enough samples in memory
@@ -84,36 +92,35 @@ class IQL:
             #if (epoch + 1) % 10 == 0:
             print(f"Epoch {epoch + 1}: Q Loss = {q_loss:.4f}, V Loss = {v_loss:.4f}, Policy Loss = {policy_loss:.4f}")
 
+            # Store losses for plotting
+            q_losses.append(q_loss)
+            v_losses.append(v_loss)
+            policy_losses.append(policy_loss)
 
-# Neural Network Definitions
-class QNetwork(nn.Module):
-    def __init__(self, state_dim, action_dim):
-        super(QNetwork, self).__init__()
-        self.fc = nn.Linear(state_dim + action_dim, 16)
-        self.output = nn.Linear(16, 1)  # Final output layer for Q-value
+        # for testing
+        import matplotlib.pyplot as plt
+        # Scale the losses for visibility
+        q_losses_scaled = q_losses / (np.max(q_losses) + 1e-8)
+        v_losses_scaled = v_losses / (np.max(v_losses) + 1e-8)
+        policy_losses_scaled = policy_losses / (np.max(policy_losses) + 1e-8)
 
-    def forward(self, state, action):
-        x = torch.relu(self.fc(torch.cat([state, action], dim=-1)))
-        return self.output(x)  # Output shape: [batch_size, 1]
-
-
-class ValueNetwork(nn.Module):
-    def __init__(self, state_dim):
-        super(ValueNetwork, self).__init__()
-        self.fc = nn.Linear(state_dim, 16)
-        self.output = nn.Linear(16, 1)  # Final output layer for V-value
-
-    def forward(self, state):
-        x = torch.relu(self.fc(state))
-        return self.output(x)  # Output shape: [batch_size, 1]
+        # Plot the scaled losses
+        plt.figure(figsize=(10, 6))
+        plt.plot(q_losses_scaled, label="Q Loss (scaled)")
+        plt.plot(v_losses_scaled, label="V Loss (scaled)")
+        plt.plot(policy_losses_scaled, label="Policy Loss (scaled)")
+        plt.xlabel("Epoch")
+        plt.ylabel("Scaled Loss")
+        plt.title("Scaled Loss Values Over Epochs")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
 
-class PolicyNetwork(nn.Module):
-    def __init__(self, state_dim, action_dim):
-        super(PolicyNetwork, self).__init__()
-        self.fc = nn.Linear(state_dim, 16)
-        self.output = nn.Linear(16, action_dim)  # Match action_dim
 
-    def forward(self, state):
-        x = torch.relu(self.fc(state))
-        return self.output(x)  # Shape: [batch_size, action_dim]
+
+
+
+
+
+

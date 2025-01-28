@@ -1,9 +1,6 @@
 agent: 'a2c'
 debug: False
 
-state_dim: 14
-action_dim: 2
-
 gamma: 0.99
 beta: 0.1
 lr: 1e-3

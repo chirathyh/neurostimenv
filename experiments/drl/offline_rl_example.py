@@ -39,13 +39,9 @@ def main(cfg: DictConfig) -> None:
         cfg = setup_folders(cfg)
     COMM.Barrier()
 
-    def sample_random_actions(simulation_steps):
-        amp_min = 1e-3
-        amp_max = 10e-3
-        freq_min = 1
-        freq_max = 20
-        amp_samples = np.random.uniform(amp_min, amp_max, size=simulation_steps)
-        freq_samples = np.random.uniform(freq_min, freq_max, size=simulation_steps)
+    def sample_random_actions(cfg, simulation_steps):
+        amp_samples = np.random.uniform(cfg.env.stimAmplitude_min, cfg.env.stimAmplitude_min, size=simulation_steps)
+        freq_samples = np.random.uniform(cfg.env.stimFreq_min, cfg.env.stimFreq_max, size=simulation_steps)
         return [[amp, freq] for amp, freq in zip(amp_samples, freq_samples)]
 
     def run_experiment():
@@ -53,19 +49,19 @@ def main(cfg: DictConfig) -> None:
         env = NeuronEnv(cfg, MPI_VAR)
 
         buffer = ReplayMemory(cfg.agent, bufferid="ballnstick_f0_r0")
-        iql_agent = IQL(cfg.agent)
+        iql_agent = IQL(cfg)
 
         print(len(buffer))
 
         exploration_steps = 10
-        evaluation_steps = 3
+        evaluation_steps = 2
 
         rew = []
 
-        for i in range(0, 5):  # collect data <S, A, R, S', Done>
-            action_seq = sample_random_actions(exploration_steps)
+        for i in range(0, 1):  # collect data <S, A, R, S', Done>
+            action_seq = sample_random_actions(cfg, exploration_steps)
             env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=exploration_steps)
-            iql_agent.train(buffer, epochs=10)
+            iql_agent.train(buffer, epochs=50)
             reward = env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=evaluation_steps)
             print(reward)
             rew.append(reward)

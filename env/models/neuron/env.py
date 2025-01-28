@@ -40,7 +40,8 @@ class NeuronEnv(gym.Env):
         action, cur_state = [], []
         for i in range(0, steps):
             if RANK == 0:
-                cur_action = [0., 1.] if i == 0 else policy.get_action(cur_state)
+                cur_action = [[0., 1.]] if i == 0 else policy.get_action([cur_state])
+                cur_action = cur_action[0]
                 action.append(cur_action)
                 cur_steps = i+1
 
@@ -60,10 +61,9 @@ class NeuronEnv(gym.Env):
                 states = [obs[key].item() if isinstance(obs[key], np.ndarray) else obs[key] for key in obs]
                 next_state = np.array(states)
 
-                eval_reward += reward
-
                 if i > 0:  # start saving transitions, avoid first
                     buffer.store(cur_state, cur_action, reward, next_state, 0.)
+                    eval_reward += reward
 
                 cur_state = next_state
 

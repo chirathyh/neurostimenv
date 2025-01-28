@@ -6,6 +6,9 @@ simulation:
   MDD: True  # healthy OR MDD
   DRUG: False  # add drugs
 
+state_dim: 14
+action_dim: 2
+
 features:
   - 'mean'
   - 'var'
@@ -21,6 +24,11 @@ features:
   - 'dominantFreq'
   - 'stimAmplitude'
   - 'stimFreq'
+
+stimAmplitude_min: 0.001  # 1e-3
+stimAmplitude_max: 0.01  # 10e-3
+stimFreq_min: 1
+stimFreq_max: 20
 
 ts:
   apply: True
