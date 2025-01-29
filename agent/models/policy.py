@@ -7,9 +7,9 @@ class PolicyNetwork(nn.Module):
     def __init__(self, args):
         super(PolicyNetwork, self).__init__()
         self.args = args
-        self.fc = nn.Linear(args.env.state_dim, 16)
-        self.layer_norm = nn.LayerNorm(16)
-        self.output = NormedLinear(16, args.env.action_dim)  # Match action_dim
+        self.fc = nn.Linear(args.env.state_dim, args.agent.n_fc_hidden)
+        self.layer_norm = nn.LayerNorm(args.agent.n_fc_hidden)
+        self.output = NormedLinear(args.agent.n_fc_hidden, args.env.action_dim)  # Match action_dim
 
     def forward(self, state):
         x = torch.relu(self.fc(state))

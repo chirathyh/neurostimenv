@@ -57,26 +57,19 @@ def main(cfg: DictConfig) -> None:
         evaluation_steps = 2
 
         rew = []
-
         for i in range(0, 1):  # collect data <S, A, R, S', Done>
-            action_seq = sample_random_actions(cfg, exploration_steps)
-            env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=exploration_steps)
-            iql_agent.train(buffer, epochs=50)
-            reward = env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=evaluation_steps)
-            print(reward)
-            rew.append(reward)
-
-        #iql_agent.train(buffer, epochs=40)
-
-        # on-line evaluation.
-        # reward = env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=evaluation_steps)
-        # print(reward)
+            # action_seq = sample_random_actions(cfg, exploration_steps)
+            # env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=exploration_steps)  # off-line
+            iql_agent.train(buffer, epochs=300)
+            # reward = env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=evaluation_steps)  # on-line
+            # print(reward)
+            # rew.append(reward)
 
         env.close()
         buffer.close()
 
-        plt.plot(rew)
-        plt.show()
+        # plt.plot(rew)
+        # plt.show()
 
         print('simulation Time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
         # return reward

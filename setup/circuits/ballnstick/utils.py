@@ -24,6 +24,7 @@ def setup_network(network, args, MPI_VAR):
         delete_sections=False,
         dt=args.env.network.dt,
         tstop=args.env.simulation.duration,
+        verbose=False
     )
 
     # class NetworkPopulation parameters:

@@ -1,5 +1,7 @@
 import os
+import re
 import sys
+from tqdm import tqdm
 from decouple import config
 import torch
 
@@ -16,6 +18,7 @@ from env.models.neuron.networkenv import NetworkEnv
 from env.models.neuron.extracellular import ExtracellularModels
 from env.eeg import features
 from utils.utils import prep_stim_seq
+from visualiser.core import plot_episode
 import matplotlib.pyplot as plt
 
 
@@ -34,14 +37,12 @@ class NeuronEnv(gym.Env):
         #  - Extracellular mechanisms are added at initialization (Play Vector).
         #  - SaveState() can't be used because extra-mech has dynamics objects.
         #  - Therefore in this approach have to ensure simulations are "deterministic". e.g., adding "Synapse Activity".
-        eval_reward = 0
-
-        sim_data = []
-        action, cur_state = [], []
-        for i in range(0, steps):
+        eval_reward, cur_steps = 0, 0
+        action, cur_state, i_stim, t_stim, cur_action, eeg = [], [], [], [], [], [[]]
+        for i in tqdm(range(0, steps), desc="Evaluation Progress", unit="step"):
             if RANK == 0:
                 cur_action = [[0., 1.]] if i == 0 else policy.get_action([cur_state])
-                cur_action = cur_action[0]
+                cur_action = cur_action[0]  # remove batch dimension
                 action.append(cur_action)
                 cur_steps = i+1
 
@@ -62,31 +63,12 @@ class NeuronEnv(gym.Env):
                 next_state = np.array(states)
 
                 if i > 0:  # start saving transitions, avoid first
-                    buffer.store(cur_state, cur_action, reward, next_state, 0.)
+                    buffer.store(cur_state, cur_action, torch.tensor([reward]), next_state, torch.tensor([0.]))
                     eval_reward += reward
 
                 cur_state = next_state
 
-                sim_data.append(eeg)
-                sim_data.append([i_stim])
-
-        # for testing only:
-        # max_length = max(len(arr[0]) for arr in sim_data)
-        # fig, axes = plt.subplots(len(sim_data), 1, figsize=(16, len(sim_data) * 2))
-        # # Plot each array in a subplot
-        # for i, arr in enumerate(sim_data):
-        #     ax = axes[i] if len(sim_data) > 1 else axes  # Handle single subplot case
-        #     ax.plot(range(1, len(arr[0]) + 1), arr[0], label=f"Array {i+1}")
-        #     ax.set_xlim(1, max_length)  # Set x-axis limit to the maximum length
-        #     ax.set_title(f"Plot of Array {i+1}")
-        #     ax.set_xlabel("Index")
-        #     ax.set_ylabel("Value")
-        #     ax.legend()
-        #     ax.grid(True)
-        # plt.tight_layout()
-        # plt.show()
-        # exit()
-
+        plot_episode(self.args, eeg, i_stim, t_stim, cur_action)
         return eval_reward
 
     def exploration_rollout(self, policy_seq, buffer, steps):
@@ -95,7 +77,30 @@ class NeuronEnv(gym.Env):
         # NOTE: Therefore; can explore offline RL algorithms which would be more suitable.
         self.network.tstart, self.network.tstop = 0., self.args.env.simulation.obs_win_len * steps
         i_stim, t_stim = prep_stim_seq(action=policy_seq, step_size=self.args.env.simulation.obs_win_len, steps=steps, dt=self.network.dt)
-        full_eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
+
+        # Redirect NEURON output to the log file and use tqdm progress bar.
+        time_pattern = re.compile(r"t = (\d+\.\d+) ms")
+        log_file_path = self.args.experiment.dir+'/neuron_output.log'
+        with open(log_file_path, "w") as log_file:
+            original_stdout = sys.stdout  # Save the original stdout
+            sys.stdout = log_file
+            try:
+                with tqdm(total=self.network.tstop, unit="ms", desc="Simulation Progress") as pbar:
+                    full_eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
+                    log_file.flush()  # Ensure file buffer is written
+                    sys.stdout = original_stdout  # Restore stdout temporarily
+                    with open(log_file_path, "r") as log_reader:
+                        last_time = 0
+                        for line in log_reader:
+                            match = time_pattern.search(line)
+                            if match:
+                                t_current = float(match.group(1))
+                                pbar.update(t_current - last_time)  # Update progress bar
+                                last_time = t_current
+                    sys.stdout = log_file  # Redirect back to log file
+            finally:
+                sys.stdout = original_stdout  # Restore original stdout
+        # full_eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
 
         if RANK == 0:
             # for testing
@@ -118,21 +123,6 @@ class NeuronEnv(gym.Env):
                     buffer.store(cur_state, cur_action, torch.tensor([reward]), next_state, torch.tensor([0.]))
                 cur_state = next_state
 
-            # max_length = max(len(arr[0]) for arr in sim_data)
-            # fig, axes = plt.subplots(len(sim_data), 1, figsize=(16, len(sim_data) * 2))
-            # # Plot each array in a subplot
-            # for i, arr in enumerate(sim_data):
-            #     ax = axes[i] if len(sim_data) > 1 else axes  # Handle single subplot case
-            #     ax.plot(range(1, len(arr[0]) + 1), arr[0], label=f"Array {i+1}")
-            #     ax.set_xlim(1, max_length)  # Set x-axis limit to the maximum length
-            #     ax.set_title(f"Plot of Array {i+1}")
-            #     ax.set_xlabel("Index")
-            #     ax.set_ylabel("Value")
-            #     ax.legend()
-            #     ax.grid(True)
-            # plt.tight_layout()
-            # plt.show()
-
     def step_n(self, i_stim, t_ext, stim_elec):
         eeg = 0
         COMM = self.MPI_VAR['COMM']
@@ -141,148 +131,18 @@ class NeuronEnv(gym.Env):
             self.extracellular_models[0].probe.set_current(stim_elec, i_stim)
             # self.network.enable_extracellular_stimulation(self.extracellular_models[0], t_ext, n=5)
             self.network.enable_extracellular_stimulation_mpi(self.extracellular_models[0], t_ext, n=5)  # using because issue with mpi and L23Net
+
         COMM.Barrier()
         SPIKES = self.network.simulate(probes=self.extracellular_models, **self.args.env.network.networkSimulationArguments)
         COMM.Barrier()
+
         if RANK == 0:
             P = self.extracellular_models[1].data['imem']  # numpy array <3, timesteps>
             pot_db_4s_top = self.four_sphere_top.get_dipole_potential(P, np.array([-10., 0., 0.]))  # Units: mV
             eeg = np.array(pot_db_4s_top) * 1e-3  # convert units: V
         return eeg
 
-    def test_multiple_steps(self, action, steps):
-
-        def customise_set_current_pulses(amp1, width1, interpulse, t_stop, dt,
-                                 biphasic=False, interphase=None, n_pulses=None, n_bursts=None, interburst=None, amp2=None,
-                                 width2=None, t_start=None):
-            '''
-            Computes and sets pulsed currents on specified electrode.
-
-            Parameters
-            ----------
-            el_id: int
-                Electrode index
-            amp1: float
-                Amplitude of stimulation. If 'biphasic', amplitude of the first phase.
-            width1: float
-                Duration of the pulse in ms. If 'biphasic', duration of the first phase.
-            interpulse: float
-                Interpulse interval in ms
-            t_stop: float
-                Stop time in ms
-            dt: float
-                Sampling period in ms
-            biphasic: bool
-                If True, biphasic pulses are used
-            amp2: float
-                Amplitude of second phase stimulation (when 'biphasic'). If None, this amplitude is the opposite of 'amp1'
-            width2: float
-                Duration of the pulse of the second phase in ms (when 'biphasic'). If None, it is the same as 'width1'
-            interphase: float
-                For biphasic stimulation, duration between two phases in ms
-            n_pulses: int
-                Number of pulses. If 'interburst' is given, this indicates the number of pulses in a burst
-            interburst: float
-                Inter burst interval in ms
-            n_bursts: int
-                Total number of burst (if None, no limit is used).
-            t_start: float
-                Start of the stimulation in ms
-
-            Returns
-            -------
-            current: np.array
-                Array of current values
-            t_ext: np.array
-                timestamps of computed currents
-            '''
-            if biphasic:
-                if amp2 is None:
-                    amp2 = -amp1
-                if width2 is None:
-                    width2 = width1
-                if interphase is None:
-                    interphase = 0
-            if t_start is None:
-                t_start = 0
-            t_ext = np.arange(t_start, t_stop, dt)
-            current_values = np.zeros(len(t_ext))
-
-            if interburst is not None:
-                assert n_pulses is not None, "For bursting pulses provide 'n_pulses' per burst"
-
-            if n_pulses is None:
-                n_pulses = np.inf
-            if n_bursts is None:
-                n_bursts = np.inf
-
-            t_pulse = t_start
-            n_p = 0
-            n_b = 0
-            while t_pulse < t_stop and n_p < n_pulses and n_b < n_bursts:
-                pulse_idxs = np.where((t_ext > t_pulse) & (t_ext <= t_pulse + width1))
-                current_values[pulse_idxs] = amp1
-                if biphasic:
-                    t_pulse2 = t_pulse + width1 + interphase
-                    pulse2_idxs = np.where((t_ext > t_pulse2) & (t_ext <= t_pulse2 + width2))
-                    current_values[pulse2_idxs] = amp2
-                    t_pulse_end = t_pulse2 + width2
-                else:
-                    t_pulse_end = t_pulse + width1
-                n_p += 1
-
-                if interburst:
-                    if n_p == n_pulses:
-                        n_p = 0
-                        t_pulse = t_pulse_end + interburst
-                        n_b += 1
-                    else:
-                        t_pulse = t_pulse_end + interpulse
-                else:
-                    t_pulse = t_pulse_end + interpulse
-
-            return current_values, t_ext
-
-        stim_elec = 0
-        step_size = 500.
-        t_start_stim = 0.
-        I_stim, t_ext = np.array([]), np.array([])
-
-        self.network.tstart = 0.
-        self.network.tstop = step_size
-
-        sim_data = []
-
-        for i in range(0, steps):
-
-            I_stim_cur, t_ext_cur = customise_set_current_pulses(n_pulses=20, biphasic=True, width1=5, amp1=6000,
-                                                                 dt=self.network.dt, interpulse=200, t_stop=self.network.tstop, t_start=t_start_stim)
-            I_stim = np.concatenate((I_stim, I_stim_cur))
-            t_ext = np.concatenate((t_ext, t_ext_cur))
-
-            eeg = self.step_n(stim_elec, I_stim, t_ext)
-            sim_data.append(eeg)
-            sim_data.append([I_stim])
-
-            t_start_stim += step_size
-            self.network.tstop += step_size
-
-        max_length = max(len(arr[0]) for arr in sim_data)
-        fig, axes = plt.subplots(len(sim_data), 1, figsize=(16, len(sim_data) * 2))
-        # Plot each array in a subplot
-        for i, arr in enumerate(sim_data):
-            ax = axes[i] if len(sim_data) > 1 else axes  # Handle single subplot case
-            ax.plot(range(1, len(arr[0]) + 1), arr[0], label=f"Array {i+1}")
-            ax.set_xlim(1, max_length)  # Set x-axis limit to the maximum length
-            ax.set_title(f"Plot of Array {i+1}")
-            ax.set_xlabel("Index")
-            ax.set_ylabel("Value")
-            ax.legend()
-            ax.grid(True)
-        plt.tight_layout()
-        plt.show()
-        exit()
-
+    # TODO: _step is old and broken, and follows old structure.
     def _step(self, action):
         COMM = self.MPI_VAR['COMM']
         RANK = self.MPI_VAR['RANK']
