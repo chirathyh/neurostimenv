@@ -19,19 +19,18 @@ class ReplayMemory(object):
         self.file_path = os.path.join("data", "transitions", f"{bufferid}.h5")
         os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
         # Load the buffer if the file exists, otherwise create an empty file
-        if os.path.exists(self.file_path):
-            self.load_from_file(self.file_path)
-            if self._RANK == 0:
+        if self._RANK == 0:
+            if os.path.exists(self.file_path):
+                self.load_from_file(self.file_path)
                 print(f"Loading buffer from {self.file_path}. Buffer length: {len(self.memory)}")
-        else:
-            if self._RANK == 0:
+            else:
                 print(f"Creating new buffer file at {self.file_path}...")
-            with h5py.File(self.file_path, 'w') as f:
-                # Save initial metadata
-                meta_group = f.create_group("metadata")
-                meta_group.attrs["device"] = self.args.device
-                meta_group.attrs["batch_size"] = self.args.batch_size
-                meta_group.attrs["replay_buffer_size"] = self.args.replay_buffer_size
+                with h5py.File(self.file_path, 'w') as f:
+                    # Save initial metadata
+                    meta_group = f.create_group("metadata")
+                    meta_group.attrs["device"] = self.args.device
+                    meta_group.attrs["batch_size"] = self.args.batch_size
+                    meta_group.attrs["replay_buffer_size"] = self.args.replay_buffer_size
 
     def store(self, *args):
         """Save a transition, convert to tensors"""
@@ -49,7 +48,8 @@ class ReplayMemory(object):
         return Transition(*zip(*transitions))
 
     def close(self):
-        self.save_to_file()
+        if self._RANK == 0:
+            self.save_to_file()
 
     def save_to_file(self, file_path=None):
         """Save the buffer to a file in HDF5 format."""

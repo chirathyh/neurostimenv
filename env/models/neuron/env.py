@@ -41,6 +41,7 @@ class NeuronEnv(gym.Env):
         #  - Therefore in this approach have to ensure simulations are "deterministic". e.g., adding "Synapse Activity".
         eval_reward, cur_steps = 0, 0
         action, cur_state, i_stim, t_stim, cur_action, eeg = [], [], [], [], [], [[]]
+
         #for i in tqdm(range(0, steps), desc="Evaluation Progress", unit="step", disable=not self.args.experiment.tqdm):
         for i in range(0, steps):
             if RANK == 0:
@@ -60,10 +61,30 @@ class NeuronEnv(gym.Env):
             self.network.tstart, self.network.tstop = 0., self.args.env.simulation.obs_win_len * (i+1)
 
             COMM.Barrier()
-            #print(f"Rank {RANK} reached first barrier before step_n", flush=True)
-            eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
+            # Redirect NEURON output to the log file and use tqdm progress bar.
+            time_pattern = re.compile(r"t = (\d+\.\d+) ms")
+            log_file_path = self.args.experiment.dir+'/neuron_evaluation_sim_output.log'
+            with open(log_file_path, "a") as log_file:
+                original_stdout = sys.stdout  # Save the original stdout
+                sys.stdout = log_file
+                try:
+                    with tqdm(total=self.network.tstop, unit="ms", desc="Simulation Progress", disable=not self.args.experiment.tqdm) as pbar:
+                        eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
+                        log_file.flush()  # Ensure file buffer is written
+                        sys.stdout = original_stdout  # Restore stdout temporarily
+                        with open(log_file_path, "r") as log_reader:
+                            last_time = 0
+                            for line in log_reader:
+                                match = time_pattern.search(line)
+                                if match:
+                                    t_current = float(match.group(1))
+                                    pbar.update(t_current - last_time)  # Update progress bar
+                                    last_time = t_current
+                        sys.stdout = log_file  # Redirect back to log file
+                finally:
+                    sys.stdout = original_stdout  # Restore original stdout
+            #eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
             COMM.Barrier()
-            #print(f"Rank {RANK} reached second barrier after step_n", flush=True)
 
             if RANK == 0:
                 # slice cur_eeg; apply feature/obs calc ;obtain cur_state
@@ -96,7 +117,7 @@ class NeuronEnv(gym.Env):
 
         # Redirect NEURON output to the log file and use tqdm progress bar.
         time_pattern = re.compile(r"t = (\d+\.\d+) ms")
-        log_file_path = self.args.experiment.dir+'/neuron_output.log'
+        log_file_path = self.args.experiment.dir+'/neuron_exploration_sim_output.log'
         with open(log_file_path, "w") as log_file:
             original_stdout = sys.stdout  # Save the original stdout
             sys.stdout = log_file

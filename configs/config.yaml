@@ -5,7 +5,10 @@ hydra:
 
 experiment:
   name: 'name'
-  bufferid: 'test' #'ballnstick_f0_r0_v2'
+  ss: 'f0'
+  rf: 'r0'
+  version: 'v2'
+
   run_name:
   folder: ${experiment.name}
   dir: ../results/${experiment.name}
@@ -22,3 +25,4 @@ defaults:
 
 agent:
   device: ${experiment.device}
+  bufferid: ${env.name}_${experiment.ss}_${experiment.rf}_${experiment.version} # 'ballnstick_f0_r0_v2'

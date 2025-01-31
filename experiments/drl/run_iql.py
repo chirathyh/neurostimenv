@@ -48,10 +48,10 @@ def main(cfg: DictConfig) -> None:
 
     def run_experiment():
         tic_0 = time.perf_counter()
-        buffer = ReplayMemory(cfg.agent, bufferid=cfg.experiment.bufferid, MPI_VAR=MPI_VAR)
+        buffer = ReplayMemory(cfg.agent, bufferid=cfg.agent.bufferid, MPI_VAR=MPI_VAR)
         iql_agent = IQL(cfg)
 
-        exploration_steps = 2
+        exploration_steps = 10
         evaluation_steps = 2
         rew = []
 
@@ -60,12 +60,17 @@ def main(cfg: DictConfig) -> None:
         env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=exploration_steps)  # off-line
         env.close()
 
+        COMM.Barrier()
+        if RANK==0:
+            print("\n==> Training RL agent...")
+            iql_agent.train(buffer, epochs=200)
+        COMM.Barrier()
+
         eval_env = NeuronEnv(cfg, MPI_VAR)
         reward = eval_env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=evaluation_steps)  # on-line
         eval_env.close()
 
-        if RANK == 0:
-            buffer.close()
+        buffer.close()
 
 
         # print(reward)
@@ -91,11 +96,11 @@ def main(cfg: DictConfig) -> None:
         # plt.plot(rew)
         # plt.show()
 
-        print('simulation Time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
+        print('\n### Simulation Time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
         # return reward
 
     run_experiment()  # [mA, Hz]  -> 3000 nA
-    print("done") if RANK==0 else None
+    print("### Experiment completed.") if RANK==0 else None
 
 
 if __name__ == "__main__":
