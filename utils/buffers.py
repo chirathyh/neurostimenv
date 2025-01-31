@@ -10,8 +10,9 @@ Transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state'
 
 class ReplayMemory(object):
 
-    def __init__(self, args, bufferid):
+    def __init__(self, args, bufferid, MPI_VAR):
         self.args = args
+        self._RANK = MPI_VAR['RANK']
         self.memory = deque([], maxlen=args.replay_buffer_size)
         self.batch_size = args.batch_size
 
@@ -19,10 +20,12 @@ class ReplayMemory(object):
         os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
         # Load the buffer if the file exists, otherwise create an empty file
         if os.path.exists(self.file_path):
-            print(f"Loading buffer from {self.file_path}...")
             self.load_from_file(self.file_path)
+            if self._RANK == 0:
+                print(f"Loading buffer from {self.file_path}. Buffer length: {len(self.memory)}")
         else:
-            print(f"Creating new buffer file at {self.file_path}...")
+            if self._RANK == 0:
+                print(f"Creating new buffer file at {self.file_path}...")
             with h5py.File(self.file_path, 'w') as f:
                 # Save initial metadata
                 meta_group = f.create_group("metadata")
@@ -73,7 +76,8 @@ class ReplayMemory(object):
             # Update replay buffer size to the larger value
             self.args.replay_buffer_size = max(self.args.replay_buffer_size, saved_replay_buffer_size)
             self.memory = deque([], maxlen=self.args.replay_buffer_size)
-            print(f"Updated replay_buffer_size to {self.args.replay_buffer_size}.")
+            if self._RANK == 0:
+                print(f"Updated replay_buffer_size to {self.args.replay_buffer_size}.")
 
             self.memory.clear()
             for transition_name in f.keys():

@@ -1,14 +1,14 @@
 agent: 'a2c'
 debug: False
 
-n_fc_hidden: 64
+n_fc_hidden: 32
 
 max_steps: 1e6
 alpha: 0.005
 tau: 0.7
-gamma: 0.997
+gamma: 0.99
 beta: 3.0
-lr: 3e-4
+lr: 3e-3
 
-batch_size: 16 # the mini_batch size
-replay_buffer_size: 1024 # total <s,a,r,s'> pairs
+batch_size: 128 # the mini_batch size
+replay_buffer_size: 2048 # total <s,a,r,s'> pairs

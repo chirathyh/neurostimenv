@@ -63,4 +63,4 @@ if __name__ == "__main__":
 # python example1.py experiment.name=test9 env=ballnstick env.network.syn_activity=True
 # killall mpirun
 
-# mpirun -np 32 python example1.py experiment.name=test1 env=hl23net env.network.dt=0.025 env.simulation.obs_win_len=100 experiment.debug=True
+# mpirun -np 2 python example1.py experiment.name=test1 env=hl23net env.network.dt=0.025 env.simulation.obs_win_len=100 experiment.debug=True

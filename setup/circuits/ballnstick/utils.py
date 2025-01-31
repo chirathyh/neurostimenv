@@ -105,7 +105,7 @@ def setup_network(network, args, MPI_VAR):
                     # syn.set_spike_times_w_netstim(interval=50.,
                     #                               seed=np.random.rand() * 2**32 - 1
                     #                               )
-                    syn.set_spike_times(generate_spike_train(interval=50.))
+                    syn.set_spike_times(generate_spike_train(interval=10.))
 
     # create connectivity matrices and connect populations:
     for i, pre in enumerate(population_names):

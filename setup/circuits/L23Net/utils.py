@@ -11,6 +11,7 @@ from neuron import h
 import pandas as pd
 import LFPy
 from LFPy import Synapse
+from utils.utils import generate_spike_train
 
 
 def load_circuit_params(args, MPI_VAR, local_state):
@@ -70,7 +71,7 @@ def load_circuit_params(args, MPI_VAR, local_state):
         circuit_params['SING_CELL_PARAM'].at['cell_num', 'HL23SST'] = args.env.debug_n_neurons['SST']
         circuit_params['SING_CELL_PARAM'].at['cell_num', 'HL23PV'] = args.env.debug_n_neurons['PV']
         circuit_params['SING_CELL_PARAM'].at['cell_num', 'HL23VIP'] = args.env.debug_n_neurons['VIP']
-        print('\nRunning test...') if RANK==0 else None
+        print('\n!!! This is the TEST version of L23Net!!!\n') if RANK==0 else None
     else:
         print('\nRunning full simulation...') if RANK==0 else None
 
@@ -206,8 +207,12 @@ def addStimulus(args, network, circuit_params, stimuli, cell_names, MPI_VAR):
                     syn = Synapse(cell=cell, idx=i, syntype=stim['stim_type'], weight=1, **stim['new_param'])
                     while time_d <= 0:
                         time_d = np.random.uniform(low=stim['delay'], high=stim['delay']+stim['delay_range'])
-                    syn.set_spike_times_w_netstim(noise=0, start=(stim['start_time']+time_d), number=stim['num_stim'],
-                                                interval=stim['interval'], seed=GLOBALSEED)
+
+                    syn.set_spike_times(generate_spike_train(interval=10.))
+                    # syn.set_spike_times(generate_spike_train(start=stim['start_time']+time_d, interval=stim['interval'],
+                    #                                          number=stim['num_stim'], noise=0.0))
+                    # syn.set_spike_times_w_netstim(noise=0, start=(stim['start_time']+time_d), number=stim['num_stim'],
+                    #                             interval=stim['interval'], seed=GLOBALSEED)
 
                     # testing
                     # syn.set_spike_times_w_netstim(noise=0, start=(0), number=stim['num_stim'],
@@ -297,4 +302,4 @@ def setup_network(network, args, MPI_VAR):
     COMM.Barrier()
     #print('\n ####### not adding the stimulus ####### \n') if RANK == 0 else None
 
-    print('\nDone setting up the network.') if RANK == 0 else None
+    print('### Done setting up the network.') if RANK == 0 else None

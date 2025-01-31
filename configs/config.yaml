@@ -5,6 +5,7 @@ hydra:
 
 experiment:
   name: 'name'
+  bufferid: 'test' #'ballnstick_f0_r0_v2'
   run_name:
   folder: ${experiment.name}
   dir: ../results/${experiment.name}
@@ -12,6 +13,7 @@ experiment:
   verbose: False
   seed: 0
   debug: True
+  tqdm: True
 
 defaults:
   - env: hl23net

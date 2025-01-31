@@ -309,7 +309,12 @@ if __name__ == '__main__':
         if stimulate:
             electrode.probe.set_current(stim_elec, I_stim)
             network.enable_extracellular_stimulation(electrode, t_ext, n=5)
+
+        print(f"Rank {RANK} starting simulation", flush=True)
         SPIKES = network.simulate(probes=[electrode, current_dipole_moment],**networkSimulationArguments)
+        print(f"Rank {RANK} completed simulation", flush=True)
+
+        # exit()
         P = current_dipole_moment.data['imem']  # numpy array <3, timesteps>
         pot_db_4s_top = four_sphere_top.get_dipole_potential(P, np.array([-10., 0., 0.]))  # Units: mV
         eeg_top = np.array(pot_db_4s_top) * 1e-3  # convert units: V

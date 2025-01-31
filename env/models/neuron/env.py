@@ -32,6 +32,8 @@ class NeuronEnv(gym.Env):
     def evaluation_rollout(self, policy, buffer, steps):
         RANK = self.MPI_VAR['RANK']
         COMM = self.MPI_VAR['COMM']
+        if RANK == 0:
+            print("\n==> Running evaluation simulations...")
         # TODO: this is inefficient!. doing this way due to limitations of NEURON to pause/restart simulations when extracellular mechanisms are used.
         # NOTES:
         #  - Extracellular mechanisms are added at initialization (Play Vector).
@@ -39,19 +41,29 @@ class NeuronEnv(gym.Env):
         #  - Therefore in this approach have to ensure simulations are "deterministic". e.g., adding "Synapse Activity".
         eval_reward, cur_steps = 0, 0
         action, cur_state, i_stim, t_stim, cur_action, eeg = [], [], [], [], [], [[]]
-        for i in tqdm(range(0, steps), desc="Evaluation Progress", unit="step"):
+        #for i in tqdm(range(0, steps), desc="Evaluation Progress", unit="step", disable=not self.args.experiment.tqdm):
+        for i in range(0, steps):
             if RANK == 0:
                 cur_action = [[0., 1.]] if i == 0 else policy.get_action([cur_state])
                 cur_action = cur_action[0]  # remove batch dimension
                 action.append(cur_action)
                 cur_steps = i+1
-
-                self.network.tstart, self.network.tstop = 0., self.args.env.simulation.obs_win_len * cur_steps
                 i_stim, t_stim = prep_stim_seq(action=action, step_size=self.args.env.simulation.obs_win_len, steps=cur_steps, dt=self.network.dt)
+            else:
+                cur_action, i_stim, t_stim = None, None, None
+
+            # Broadcast to all ranks
+            i_stim = COMM.bcast(i_stim, root=0)
+            t_stim = COMM.bcast(t_stim, root=0)
+            cur_action = COMM.bcast(cur_action, root=0)
+
+            self.network.tstart, self.network.tstop = 0., self.args.env.simulation.obs_win_len * (i+1)
 
             COMM.Barrier()
+            #print(f"Rank {RANK} reached first barrier before step_n", flush=True)
             eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
             COMM.Barrier()
+            #print(f"Rank {RANK} reached second barrier after step_n", flush=True)
 
             if RANK == 0:
                 # slice cur_eeg; apply feature/obs calc ;obtain cur_state
@@ -68,11 +80,15 @@ class NeuronEnv(gym.Env):
 
                 cur_state = next_state
 
-        plot_episode(self.args, eeg, i_stim, t_stim, cur_action)
+        if RANK == 0:
+            print("### Evaluation rollout successfully completed.\n")
+            plot_episode(self.args, eeg, i_stim, t_stim, cur_action)
         return eval_reward
 
     def exploration_rollout(self, policy_seq, buffer, steps):
         RANK = self.MPI_VAR['RANK']
+        if RANK == 0:
+            print("\n==> Running exploration simulations...")
         # TODO: this is inefficient. e.g., for an episilon-greedy algo exploration required "evaluation_rollout"
         # NOTE: Therefore; can explore offline RL algorithms which would be more suitable.
         self.network.tstart, self.network.tstop = 0., self.args.env.simulation.obs_win_len * steps
@@ -85,7 +101,7 @@ class NeuronEnv(gym.Env):
             original_stdout = sys.stdout  # Save the original stdout
             sys.stdout = log_file
             try:
-                with tqdm(total=self.network.tstop, unit="ms", desc="Simulation Progress") as pbar:
+                with tqdm(total=self.network.tstop, unit="ms", desc="Simulation Progress", disable=not self.args.experiment.tqdm) as pbar:
                     full_eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
                     log_file.flush()  # Ensure file buffer is written
                     sys.stdout = original_stdout  # Restore stdout temporarily
@@ -100,7 +116,7 @@ class NeuronEnv(gym.Env):
                     sys.stdout = log_file  # Redirect back to log file
             finally:
                 sys.stdout = original_stdout  # Restore original stdout
-        # full_eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
+        #full_eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
 
         if RANK == 0:
             # for testing
@@ -121,25 +137,30 @@ class NeuronEnv(gym.Env):
 
                 if c > 0:  # start saving transitions, avoid first
                     buffer.store(cur_state, cur_action, torch.tensor([reward]), next_state, torch.tensor([0.]))
+                    # print(reward, cur_action)
                 cur_state = next_state
+            print("Exploration rollout successfully completed.\n")
 
     def step_n(self, i_stim, t_ext, stim_elec):
-        eeg = 0
         COMM = self.MPI_VAR['COMM']
         RANK = self.MPI_VAR['RANK']
+        eeg = None
         if self.args.env.ts.apply:
             self.extracellular_models[0].probe.set_current(stim_elec, i_stim)
-            # self.network.enable_extracellular_stimulation(self.extracellular_models[0], t_ext, n=5)
+            #self.network.enable_extracellular_stimulation(self.extracellular_models[0], t_ext, n=5)
             self.network.enable_extracellular_stimulation_mpi(self.extracellular_models[0], t_ext, n=5)  # using because issue with mpi and L23Net
 
         COMM.Barrier()
+        #print(f"Rank {RANK} starting simulation", flush=True)
         SPIKES = self.network.simulate(probes=self.extracellular_models, **self.args.env.network.networkSimulationArguments)
+        #print(f"Rank {RANK} completed simulation", flush=True)
         COMM.Barrier()
 
         if RANK == 0:
             P = self.extracellular_models[1].data['imem']  # numpy array <3, timesteps>
             pot_db_4s_top = self.four_sphere_top.get_dipole_potential(P, np.array([-10., 0., 0.]))  # Units: mV
             eeg = np.array(pot_db_4s_top) * 1e-3  # convert units: V
+        eeg = COMM.bcast(eeg, root=0)
         return eeg
 
     # TODO: _step is old and broken, and follows old structure.
@@ -206,6 +227,8 @@ class NeuronEnv(gym.Env):
         neuron.h('forall delete_section()')
 
     def _reset(self):
+        if self.MPI_VAR['RANK'] == 0:
+            print("\n==> Initialising microcircuit...")
         self.network = NetworkEnv(**self.args.env.networkParameters)
         # create populations, setup synapses, and connections.
         if self.args.env.name == 'hl23pyrnet':
