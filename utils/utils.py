@@ -12,11 +12,14 @@ warnings.filterwarnings('ignore')
 def setup_folders(args):
     # create the folder which will save experiment data.
     LOG_DIR = args.experiment.dir
-    CHECK_FOLDER = os.path.isdir(LOG_DIR)
-    if CHECK_FOLDER:
-        shutil.rmtree(LOG_DIR)
-    else:
-        os.makedirs(LOG_DIR)
+    if os.path.exists(LOG_DIR):
+        print(f"Removing existing log directory: {LOG_DIR}")
+        try:
+            shutil.rmtree(LOG_DIR, ignore_errors=True)  # Add ignore_errors=True
+        except Exception as e:
+            print(f"Error deleting {LOG_DIR}: {e}")
+
+    os.makedirs(LOG_DIR, exist_ok=True)  # Ensure directory exists
     return args
 
 
