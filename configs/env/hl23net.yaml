@@ -100,10 +100,10 @@ eeg:
 
 ################
 debug_n_neurons:
-  PYR: 2 #0
-  SST: 2
-  PV: 2
-  VIP: 2
+  PYR: 80 #0
+  SST: 5
+  PV: 7
+  VIP: 8
 
 networkParameters:
   dt: ${env.network.dt}

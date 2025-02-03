@@ -53,10 +53,10 @@ def main(cfg: DictConfig) -> None:
 
         rew = []
 
-        env = NeuronEnv(cfg, MPI_VAR)
-        action_seq = sample_random_actions(cfg, cfg.agent.n_expl_steps)
-        env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=cfg.agent.n_expl_steps)  # off-line
-        env.close()
+        # env = NeuronEnv(cfg, MPI_VAR)
+        # action_seq = sample_random_actions(cfg, cfg.agent.n_expl_steps)
+        # env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=cfg.agent.n_expl_steps)  # off-line
+        # env.close()
         #
         # COMM.Barrier()
         # if RANK==0:
@@ -73,11 +73,11 @@ def main(cfg: DictConfig) -> None:
         # print(reward)
         # rew.append(reward)
 
-        # for i in range(0, 20):  # collect data <S, A, R, S', Done>
-        #     # env = NeuronEnv(cfg, MPI_VAR)
-        #     # action_seq = sample_random_actions(cfg, exploration_steps)
-        #     # env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=exploration_steps)  # off-line
-        #     # env.close()
+        for i in range(0, 5):  # collect data <S, A, R, S', Done>
+            env = NeuronEnv(cfg, MPI_VAR)
+            action_seq = sample_random_actions(cfg, cfg.agent.n_expl_steps)
+            env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=cfg.agent.n_expl_steps)  # off-line
+            env.close()
         #
         #     iql_agent.train(buffer, epochs=25)
         #     #
@@ -87,8 +87,8 @@ def main(cfg: DictConfig) -> None:
         #     print(reward)
         #     rew.append(reward)
 
-        # if RANK==0:
-        #     buffer.close()
+        if RANK==0:
+            buffer.close()
 
         # plt.plot(rew)
         # plt.show()
