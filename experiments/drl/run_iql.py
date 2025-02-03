@@ -51,26 +51,23 @@ def main(cfg: DictConfig) -> None:
         buffer = ReplayMemory(cfg.agent, bufferid=cfg.agent.bufferid, MPI_VAR=MPI_VAR)
         iql_agent = IQL(cfg)
 
-        exploration_steps = 10
-        evaluation_steps = 2
         rew = []
 
         env = NeuronEnv(cfg, MPI_VAR)
-        action_seq = sample_random_actions(cfg, exploration_steps)
-        env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=exploration_steps)  # off-line
+        action_seq = sample_random_actions(cfg, cfg.agent.n_expl_steps)
+        env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=cfg.agent.n_expl_steps)  # off-line
         env.close()
+        #
+        # COMM.Barrier()
+        # if RANK==0:
+        #     print("\n==> Training RL agent...")
+        #     iql_agent.train(buffer, epochs=cfg.agent.n_epochs)
+        # COMM.Barrier()
 
-        COMM.Barrier()
-        if RANK==0:
-            print("\n==> Training RL agent...")
-            iql_agent.train(buffer, epochs=200)
-        COMM.Barrier()
-
-        eval_env = NeuronEnv(cfg, MPI_VAR)
-        reward = eval_env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=evaluation_steps)  # on-line
-        eval_env.close()
-
-        buffer.close()
+        # eval_env = NeuronEnv(cfg, MPI_VAR)
+        # reward = eval_env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=cfg.agent.n_eval_steps)  # on-line
+        # eval_env.close()
+        # buffer.close()
 
 
         # print(reward)
@@ -111,5 +108,6 @@ if __name__ == "__main__":
 
 # python run_iql.py experiment.name=test9 env=hl23net env.network.syn_activity=True experiment.debug=True experiment.tqdm=False
 # mpirun -np 2 python offline_rl_example.py experiment.name=test9 env=hl23net env.network.syn_activity=True experiment.debug=True experiment.tqdm=False
+# mpirun -np 2 python offline_rl_example.py experiment.name=test9 env=hl23net env.network.syn_activity=True experiment.debug=True experiment.tqdm=False experiment.plot=False
 
 # killall mpirun

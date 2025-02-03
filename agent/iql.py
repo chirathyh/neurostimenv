@@ -21,6 +21,7 @@ def asymmetric_l2_loss(u, tau):
 
 class IQL:
     def __init__(self, args):
+        self.args = args
         self.gamma = args.agent.gamma
         self.beta = args.agent.beta
         self.device = args.agent.device
@@ -131,17 +132,18 @@ class IQL:
         v_losses_scaled = v_losses / (np.max(v_losses) + 1e-8)
         policy_losses_scaled = policy_losses / (np.max(policy_losses) + 1e-8)
 
-        # Plot the scaled losses
-        plt.figure(figsize=(10, 6))
-        plt.plot(q_losses_scaled, label="Q Loss (scaled)")
-        plt.plot(v_losses_scaled, label="V Loss (scaled)")
-        plt.plot(policy_losses_scaled, label="Policy Loss (scaled)")
-        plt.xlabel("Epoch")
-        plt.ylabel("Scaled Loss")
-        plt.title("Scaled Loss Values Over Epochs")
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+        if self.args.experiment.plot:
+            # Plot the scaled losses
+            plt.figure(figsize=(10, 6))
+            plt.plot(q_losses_scaled, label="Q Loss (scaled)")
+            plt.plot(v_losses_scaled, label="V Loss (scaled)")
+            plt.plot(policy_losses_scaled, label="Policy Loss (scaled)")
+            plt.xlabel("Epoch")
+            plt.ylabel("Scaled Loss")
+            plt.title("Scaled Loss Values Over Epochs")
+            plt.legend()
+            plt.grid(True)
+            plt.show()
 
 
 

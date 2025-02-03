@@ -45,7 +45,7 @@ class NeuronEnv(gym.Env):
         #for i in tqdm(range(0, steps), desc="Evaluation Progress", unit="step", disable=not self.args.experiment.tqdm):
         for i in range(0, steps):
             if RANK == 0:
-                cur_action = [[0., 1.]] if i == 0 else policy.get_action([cur_state])
+                cur_action = [[0., 1.]] if i < 2 else policy.get_action([cur_state])  # first two actions are default.
                 cur_action = cur_action[0]  # remove batch dimension
                 action.append(cur_action)
                 cur_steps = i+1
@@ -95,7 +95,7 @@ class NeuronEnv(gym.Env):
                 states = [obs[key].item() if isinstance(obs[key], np.ndarray) else obs[key] for key in obs]
                 next_state = np.array(states)
 
-                if i > 0:  # start saving transitions, avoid first
+                if i > 1:  # start saving transitions, avoid first and second. first is transient.
                     buffer.store(cur_state, cur_action, torch.tensor([reward]), next_state, torch.tensor([0.]))
                     eval_reward += reward
 
@@ -103,7 +103,7 @@ class NeuronEnv(gym.Env):
 
         if RANK == 0:
             print("### Evaluation rollout successfully completed.\n")
-            plot_episode(self.args, eeg, i_stim, t_stim, cur_action)
+            plot_episode(self.args, eeg, i_stim, t_stim, cur_action, steps) if self.args.experiment.plot else None
         return eval_reward
 
     def exploration_rollout(self, policy_seq, buffer, steps):
@@ -156,7 +156,7 @@ class NeuronEnv(gym.Env):
                 states = [obs[key].item() if isinstance(obs[key], np.ndarray) else obs[key] for key in obs]
                 next_state = np.array(states)
 
-                if c > 0:  # start saving transitions, avoid first
+                if c > 1:  # start saving transitions, avoid first and second
                     buffer.store(cur_state, cur_action, torch.tensor([reward]), next_state, torch.tensor([0.]))
                     # print(reward, cur_action)
                 cur_state = next_state

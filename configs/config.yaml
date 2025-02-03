@@ -9,6 +9,8 @@ experiment:
   rf: 'r0'
   version: 'v2'
 
+  plot: True
+
   run_name:
   folder: ${experiment.name}
   dir: ../results/${experiment.name}

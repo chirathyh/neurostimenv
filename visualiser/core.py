@@ -10,12 +10,19 @@ FREQ_MIN = 0
 FREQ_MAX = 50
 
 
-def plot_episode(cfg, eeg, ts, t, ts_params):
+def plot_episode(cfg, eeg, ts, t, ts_params, steps):
     # TODO: improve the handling of data. EEG output is 16001, when t is 16000
+    # TODO: only handles when exploration steps == 3
+
     # preprocessing
     eeg = eeg[0]  # remove multiple channels
+    chunk_size = int(len(eeg) / steps)
+    eeg = eeg[chunk_size:]
     eeg = eeg[:-1]  # remove last element
+
     ts[:] = [x / 1e6 for x in ts]  # rescale to mA
+    ts = ts[chunk_size:]
+    t = t[chunk_size:]
 
     target_peak_freq = 8
 
