@@ -48,7 +48,7 @@ def main(cfg: DictConfig) -> None:
 
     def run_experiment():
         tic_0 = time.perf_counter()
-        buffer = ReplayMemory(cfg.agent, bufferid=cfg.agent.bufferid, MPI_VAR=MPI_VAR)
+        buffer = ReplayMemory(cfg.agent, bufferid=cfg.experiment.bufferid, MPI_VAR=MPI_VAR)
         iql_agent = IQL(cfg)
 
         rew = []
