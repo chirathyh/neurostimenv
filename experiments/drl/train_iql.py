@@ -57,7 +57,13 @@ def main(cfg: DictConfig) -> None:
             # action_seq = sample_random_actions(cfg, cfg.agent.n_expl_steps)
             # env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=cfg.agent.n_expl_steps)  # off-line
             # env.close()
-            iql_agent.train(buffer, epochs=25)
+
+            COMM.Barrier()
+            if RANK==0:
+                print("\n==> Training RL agent...")
+                iql_agent.train(buffer, epochs=cfg.agent.n_epochs)
+            COMM.Barrier()
+
             #
             eval_env = NeuronEnv(cfg, MPI_VAR)
             reward = eval_env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=evaluation_steps)  # on-line
