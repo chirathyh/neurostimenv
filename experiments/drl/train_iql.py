@@ -66,7 +66,7 @@ def main(cfg: DictConfig) -> None:
 
             #
             eval_env = NeuronEnv(cfg, MPI_VAR)
-            reward = eval_env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=evaluation_steps)  # on-line
+            reward = eval_env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=cfg.agent.n_expl_steps)  # on-line
             eval_env.close()
             print(reward)
             rew.append(reward)
