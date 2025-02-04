@@ -68,14 +68,15 @@ def main(cfg: DictConfig) -> None:
             eval_env = NeuronEnv(cfg, MPI_VAR)
             reward = eval_env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=cfg.agent.n_eval_steps)  # on-line
             eval_env.close()
-            print(reward)
-            rew.append(reward)
+
+            if RANK==0:
+                print(reward)
+                rew.append(reward)
 
         if RANK==0:
             buffer.close()
-
-        plt.plot(rew)
-        plt.show()
+            plt.plot(rew)
+            plt.show()
 
         print('\n### Simulation Time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
         # return reward
