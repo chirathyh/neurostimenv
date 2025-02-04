@@ -80,6 +80,7 @@ def plot_episode(cfg, eeg, ts, t, ts_params, steps):
     ax4.set_title('With Stimulation')
     ax.grid()
     plt.tight_layout()
+    plt.savefig("example.png")
     plt.show()
 
 

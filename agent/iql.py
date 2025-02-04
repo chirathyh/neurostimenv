@@ -143,6 +143,7 @@ class IQL:
             plt.title("Scaled Loss Values Over Epochs")
             plt.legend()
             plt.grid(True)
+            plt.savefig("example_rl_train.png")
             plt.show()
 
 
