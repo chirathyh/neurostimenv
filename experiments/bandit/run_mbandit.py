@@ -88,8 +88,8 @@ if __name__ == "__main__":
 # python run_bandit.py experiment.name=test9 env=ballnstick agent=mbandit env.network.syn_activity=True
 # mpirun -np 2 python run_mbandit.py experiment.name=test9 env=ballnstick agent=mbandit env.network.syn_activity=True experiment.tqdm=False
 
-# python run_bandit.py experiment.name=mtest9 env=hl23net agent=mbandit env.network.syn_activity=True
-# mpirun -np 64 python run_mbandit.py experiment.name=mtest9 env=hl23net agent=mbandit env.network.syn_activity=True experiment.tqdm=False
+# python run_bandit.py experiment.name=mtest9 env=hl23net agent=mbandit experiment.debug=True env.network.syn_activity=True
+# mpirun -np 64 python run_mbandit.py experiment.name=mtest9 env=hl23net agent=mbandit experiment.debug=True env.network.syn_activity=True experiment.tqdm=False
 
 # killall mpirun
 
