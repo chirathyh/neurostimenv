@@ -7,7 +7,7 @@ experiment:
   name: 'name'
   ss: 'f0'
   rf: 'r0'
-  version: 'n100'
+  version: 'v2' #'n100'
 
   plot: True
 

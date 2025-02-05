@@ -95,7 +95,7 @@ class NeuronEnv(gym.Env):
                 states = [obs[key].item() if isinstance(obs[key], np.ndarray) else obs[key] for key in obs]
                 next_state = np.array(states)
 
-                if i > 1:  # start saving transitions, avoid first and second. first is transient.
+                if i > 1 and buffer is not None:  # start saving transitions, avoid first and second. first is transient.
                     buffer.store(cur_state, cur_action, torch.tensor([reward]), next_state, torch.tensor([0.]))
                     eval_reward += reward
 
@@ -114,7 +114,7 @@ class NeuronEnv(gym.Env):
         # NOTE: Therefore; can explore offline RL algorithms which would be more suitable.
         self.network.tstart, self.network.tstop = 0., self.args.env.simulation.obs_win_len * steps
         i_stim, t_stim = prep_stim_seq(action=policy_seq, step_size=self.args.env.simulation.obs_win_len, steps=steps, dt=self.network.dt)
-
+        reward = -1
         # Redirect NEURON output to the log file and use tqdm progress bar.
         time_pattern = re.compile(r"t = (\d+\.\d+) ms")
         log_file_path = self.args.experiment.dir+'/neuron_exploration_sim_output.log'
@@ -156,11 +156,12 @@ class NeuronEnv(gym.Env):
                 states = [obs[key].item() if isinstance(obs[key], np.ndarray) else obs[key] for key in obs]
                 next_state = np.array(states)
 
-                if c > 1:  # start saving transitions, avoid first and second
+                if c > 1 and buffer is not None:  # start saving transitions, avoid first and second
                     buffer.store(cur_state, cur_action, torch.tensor([reward]), next_state, torch.tensor([0.]))
                     # print(reward, cur_action)
                 cur_state = next_state
             print("Exploration rollout successfully completed.\n")
+        return reward
 
     def step_n(self, i_stim, t_ext, stim_elec):
         COMM = self.MPI_VAR['COMM']
@@ -168,13 +169,11 @@ class NeuronEnv(gym.Env):
         eeg = None
         if self.args.env.ts.apply:
             self.extracellular_models[0].probe.set_current(stim_elec, i_stim)
-            #self.network.enable_extracellular_stimulation(self.extracellular_models[0], t_ext, n=5)
             self.network.enable_extracellular_stimulation_mpi(self.extracellular_models[0], t_ext, n=5)  # using because issue with mpi and L23Net
+            #self.network.enable_extracellular_stimulation(self.extracellular_models[0], t_ext, n=5)
 
         COMM.Barrier()
-        #print(f"Rank {RANK} starting simulation", flush=True)
         SPIKES = self.network.simulate(probes=self.extracellular_models, **self.args.env.network.networkSimulationArguments)
-        #print(f"Rank {RANK} completed simulation", flush=True)
         COMM.Barrier()
 
         if RANK == 0:
@@ -185,7 +184,31 @@ class NeuronEnv(gym.Env):
         return eeg
 
     # TODO: _step is old and broken, and follows old structure.
-    def _step(self, action):
+    def _step(self, action, stim_elec=0):
+        COMM = self.MPI_VAR['COMM']
+        RANK = self.MPI_VAR['RANK']
+        i_stim, t_ext, eeg, reward = [], [], [[]], -1
+        cur_steps = 1
+
+        if RANK == 0:
+            i_stim, t_stim = prep_stim_seq(action=[action], step_size=self.args.env.simulation.obs_win_len, steps=cur_steps, dt=self.network.dt)
+
+        COMM.Barrier()
+        if self.args.env.ts.apply and action is not None:  # add transcranial stimulation
+            self.extracellular_models[0].probe.set_current(stim_elec, i_stim)
+            self.network.enable_extracellular_stimulation_mpi(self.extracellular_models[0], t_ext, n=5)
+        SPIKES = self.network.simulate(probes=self.extracellular_models, **self.args.env.network.networkSimulationArguments)
+        COMM.Barrier()
+
+        if RANK == 0:
+            P = self.extracellular_models[1].data['imem']  # numpy array <3, timesteps>
+            pot_db_4s_top = self.four_sphere_top.get_dipole_potential(P, np.array([-10., 0., 0.]))  # Units: mV
+            eeg = np.array(pot_db_4s_top) * 1e-3  # convert units: V
+            reward = features.reward_func_simple(eeg, self.sampling_rate)
+
+        return reward
+
+    def _step_old(self, action):
         COMM = self.MPI_VAR['COMM']
         RANK = self.MPI_VAR['RANK']
         reward, state, done, info = 0, 0, 0, 0

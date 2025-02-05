@@ -1,4 +1,4 @@
-agent: 'a2c'
+agent: 'iql'
 debug: False
 
 n_epochs: 20

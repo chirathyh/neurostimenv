@@ -1,0 +1,5 @@
+agent: 'mbandit'
+debug: False
+
+n_arms: 10
+n_trials: 100
