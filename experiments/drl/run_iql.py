@@ -42,9 +42,11 @@ def main(cfg: DictConfig) -> None:
     COMM.Barrier()
 
     def sample_random_actions(cfg, simulation_steps):
-        amp_samples = np.random.uniform(cfg.env.stimAmplitude_min, cfg.env.stimAmplitude_max, size=simulation_steps)
-        freq_samples = np.random.uniform(cfg.env.stimFreq_min, cfg.env.stimFreq_max, size=simulation_steps)
-        return [[amp, freq] for amp, freq in zip(amp_samples, freq_samples)]
+        # the first action is set to [0., 1.] for the transient.
+        amp_samples = np.random.uniform(cfg.env.stimAmplitude_min, cfg.env.stimAmplitude_max, size=simulation_steps-1)
+        freq_samples = np.random.uniform(cfg.env.stimFreq_min, cfg.env.stimFreq_max, size=simulation_steps-1)
+        actions = [[amp, freq] for amp, freq in zip(amp_samples, freq_samples)]
+        return [[0., 1.]] + actions
 
     def run_experiment():
         tic_0 = time.perf_counter()
@@ -103,9 +105,11 @@ def main(cfg: DictConfig) -> None:
 if __name__ == "__main__":
     main()
 
+# ballnstick
 # python run_iql.py experiment.name=test9 env=ballnstick env.network.syn_activity=True
 # mpirun -np 2 python run_iql.py experiment.name=test9 env=ballnstick env.network.syn_activity=True experiment.tqdm=False
 
+# hl23ney
 # python run_iql.py experiment.name=test9 env=hl23net env.network.syn_activity=True experiment.debug=True experiment.tqdm=False
 # mpirun -np 2 python offline_rl_example.py experiment.name=test9 env=hl23net env.network.syn_activity=True experiment.debug=True experiment.tqdm=False
 # mpirun -np 2 python offline_rl_example.py experiment.name=test9 env=hl23net env.network.syn_activity=True experiment.debug=True experiment.tqdm=False experiment.plot=False
