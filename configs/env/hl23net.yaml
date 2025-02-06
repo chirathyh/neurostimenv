@@ -25,10 +25,10 @@ features:
   - 'stimAmplitude'
   - 'stimFreq'
 
-stimAmplitude_min: 0.001  # 1e-3
-stimAmplitude_max: 0.01  # 10e-3
-stimFreq_min: 1
-stimFreq_max: 20
+stimAmplitude_min: 1  # 1e-3 mA
+stimAmplitude_max: 4  # 10e-3 mA
+stimFreq_min: 1  # Hz
+stimFreq_max: 50  # 20 Hz
 
 ts:
   apply: True

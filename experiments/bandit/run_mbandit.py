@@ -46,6 +46,7 @@ def main(cfg: DictConfig) -> None:
         print("\n")
         cfg = setup_folders(cfg)
     COMM.Barrier()
+    tic_0 = time.perf_counter()
 
     def bandit_actions(cfg):
         amps = np.linspace(cfg.env.stimAmplitude_min, cfg.env.stimAmplitude_max, cfg.agent.n_arms)
@@ -81,6 +82,8 @@ def main(cfg: DictConfig) -> None:
         plt.savefig("mbandit_result.png")
         plt.show()
 
+    print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
+    print("### Experiment completed.") if RANK==0 else None
 
 if __name__ == "__main__":
     main()

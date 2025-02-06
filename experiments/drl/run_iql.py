@@ -93,7 +93,7 @@ def main(cfg: DictConfig) -> None:
         # plt.plot(rew)
         # plt.show()
 
-        print('\n### Simulation Time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
+        print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
         # return reward
 
     run_experiment()  # [mA, Hz]  -> 3000 nA
