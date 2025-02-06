@@ -74,7 +74,7 @@ network:
 
   syn_activity: True
 
-  position: [0., 0., -725]  # µm, also used as single dipole reference for EEG/ECoG: 78200
+  position: [0., 0., 78200]  # µm, also used as single dipole reference for EEG/ECoG: 78200; -725
 
   networkSimulationArguments:
     rec_imem: True
@@ -93,7 +93,7 @@ network:
 # EEG calc
 eeg:
   measure: True
-  locations: [[0., 0., 90000]]  # µm
+  locations: [[0., 0., 90000.]]  # µm
   foursphereheadmodel:
     radii: [79000., 80000., 85000., 90000.]  # µm ["Brain", "CSF", "Skull", "Scalp"]
     sigmas: [0.3, 1.5, 0.015, 0.3]  # conductivity: (S/m)

@@ -178,7 +178,7 @@ class NeuronEnv(gym.Env):
 
         if RANK == 0:
             P = self.extracellular_models[1].data['imem']  # numpy array <3, timesteps>
-            pot_db_4s_top = self.four_sphere_top.get_dipole_potential(P, np.array([-10., 0., 0.]))  # Units: mV
+            pot_db_4s_top = self.four_sphere_top.get_dipole_potential(P, np.array(self.args.env.network.position))  # Units: mV
             eeg = np.array(pot_db_4s_top) * 1e-3  # convert units: V
         eeg = COMM.bcast(eeg, root=0)
         return eeg
@@ -202,7 +202,7 @@ class NeuronEnv(gym.Env):
 
         if RANK == 0:
             P = self.extracellular_models[1].data['imem']  # numpy array <3, timesteps>
-            pot_db_4s_top = self.four_sphere_top.get_dipole_potential(P, np.array([-10., 0., 0.]))  # Units: mV
+            pot_db_4s_top = self.four_sphere_top.get_dipole_potential(P, np.array(self.args.env.network.position))  # Units: mV
             eeg = np.array(pot_db_4s_top) * 1e-3  # convert units: V
             reward = features.reward_func_simple(eeg, self.sampling_rate)
 
