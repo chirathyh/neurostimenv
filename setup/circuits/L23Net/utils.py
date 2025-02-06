@@ -208,9 +208,21 @@ def addStimulus(args, network, circuit_params, stimuli, cell_names, MPI_VAR):
                     while time_d <= 0:
                         time_d = np.random.uniform(low=stim['delay'], high=stim['delay']+stim['delay_range'])
 
-                    syn.set_spike_times(generate_spike_train(interval=10.))
-                    # syn.set_spike_times(generate_spike_train(start=stim['start_time']+time_d, interval=stim['interval'],
-                    #                                          number=stim['num_stim'], noise=0.0))
+                    # Note: when using "set_spike_times_w_netstim" there is an issue when running multiple simulation after initialising the circuit.
+                    # Therefore, using a custom function "generate_spike_train", same functionality as above. but not a NetStim object
+                    if args.experiment.debug:
+                        # syn.set_spike_times(generate_spike_train(interval=10.))
+                        time_d = 0.
+                        syn.set_spike_times(generate_spike_train(start=args.env.network.synapse.start+time_d,
+                                                             interval=args.env.network.synapse.interval,
+                                                             number=args.env.network.synapse.number,
+                                                             noise=args.env.network.synapse.noise,
+                                                             GLOBALSEED=GLOBALSEED))
+                    else:
+                        syn.set_spike_times(generate_spike_train(start=stim['start_time']+time_d, interval=stim['interval'],
+                                                                 number=stim['num_stim'], noise=0.0,
+                                                                 GLOBALSEED=GLOBALSEED))
+
                     # syn.set_spike_times_w_netstim(noise=0, start=(stim['start_time']+time_d), number=stim['num_stim'],
                     #                             interval=stim['interval'], seed=GLOBALSEED)
 
@@ -223,17 +235,6 @@ def addStimulus(args, network, circuit_params, stimuli, cell_names, MPI_VAR):
                     # syn.set_spike_times_w_netstim(interval=1.,
                     #                           seed=np.random.rand() * 2**32 - 1
                     #                           )
-    # population_names = ['HL23PYR', 'HL23SST', 'HL23PV', 'HL23VIP']
-    # for name in population_names:
-    #     for cell in network.populations[name].cells:
-    #             idx = cell.get_rand_idx_area_norm(section='allsec', nidx=64)
-    #             for i in idx:
-    #                 syn = Synapse(cell=cell, idx=i, syntype='Exp2Syn',
-    #                               weight=0.001,
-    #                               **dict(tau1=0.2, tau2=1.8, e=0.))
-    #                 syn.set_spike_times_w_netstim(interval=50.,
-    #                                               seed=np.random.rand() * 2**32 - 1
-    #                                               )
 
 
 def setup_network(network, args, MPI_VAR):

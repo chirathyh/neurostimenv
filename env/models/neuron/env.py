@@ -23,9 +23,11 @@ import matplotlib.pyplot as plt
 
 
 class NeuronEnv(gym.Env):
-    def __init__(self, args, MPI_VAR):
+    def __init__(self, args, MPI_VAR, ENV_SEED=0):
         self.args = args
         self.MPI_VAR = MPI_VAR
+        self.MPI_VAR['GLOBALSEED'] = self.MPI_VAR['GLOBALSEED'] + ENV_SEED
+        self.MPI_VAR['SEED'] = self.MPI_VAR['SEED'] + ENV_SEED
         self.sampling_rate = (1 / args.env.network.dt) * 1000
         self._reset()
 

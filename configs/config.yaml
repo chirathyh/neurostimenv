@@ -16,7 +16,7 @@ experiment:
   dir: ../results/${experiment.name}
   device: 'cpu'
   verbose: False
-  seed: 0
+  seed: 1
   debug: True
   tqdm: True
 

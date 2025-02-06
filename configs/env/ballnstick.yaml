@@ -75,6 +75,11 @@ network:
   position: [-10., 0., 0.]  # µm, also used as single dipole reference for EEG/ECoG: 78200
 
   syn_activity: True
+  synapse:
+    start: 0.
+    interval: 10.
+    number: 1000
+    noise: 1.0
 
   networkSimulationArguments:
     rec_imem: False

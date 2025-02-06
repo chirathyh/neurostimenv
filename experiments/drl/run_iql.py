@@ -54,32 +54,13 @@ def main(cfg: DictConfig) -> None:
         iql_agent = IQL(cfg)
 
         rew = []
-
-        # env = NeuronEnv(cfg, MPI_VAR)
-        # action_seq = sample_random_actions(cfg, cfg.agent.n_expl_steps)
-        # env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=cfg.agent.n_expl_steps)  # off-line
-        # env.close()
-        #
-        # COMM.Barrier()
-        # if RANK==0:
-        #     print("\n==> Training RL agent...")
-        #     iql_agent.train(buffer, epochs=cfg.agent.n_epochs)
-        # COMM.Barrier()
-
-        # eval_env = NeuronEnv(cfg, MPI_VAR)
-        # reward = eval_env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=cfg.agent.n_eval_steps)  # on-line
-        # eval_env.close()
-        # buffer.close()
-
-
-        # print(reward)
-        # rew.append(reward)
-
-        for i in range(0, 5):  # collect data <S, A, R, S', Done>
-            env = NeuronEnv(cfg, MPI_VAR)
+        for i in range(0, 3):  # collect data <S, A, R, S', Done>
+            env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=i)
             action_seq = sample_random_actions(cfg, cfg.agent.n_expl_steps)
             env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=cfg.agent.n_expl_steps)  # off-line
             env.close()
+
+
         #
         #     iql_agent.train(buffer, epochs=25)
         #     #
@@ -88,6 +69,8 @@ def main(cfg: DictConfig) -> None:
         #     eval_env.close()
         #     print(reward)
         #     rew.append(reward)
+
+        exit()
 
         if RANK==0:
             buffer.close()

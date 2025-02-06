@@ -37,7 +37,7 @@ def run_experiment(args, MPI_VAR, tACS=None):
     return obs
 
 
-def generate_spike_train(start=0., interval=10., number=1E3, noise=1.0):
+def generate_spike_train(start=0., interval=10., number=1E3, noise=1.0, GLOBALSEED=None):
         """
         Generates a spike train with deterministic or stochastic intervals.
 
@@ -50,6 +50,9 @@ def generate_spike_train(start=0., interval=10., number=1E3, noise=1.0):
         Returns:
             np.ndarray: Array of spike times in ms.
         """
+        if GLOBALSEED is not None:
+            np.random.seed(GLOBALSEED)
+
         # Generate deterministic spike times
         number = int(number)
         spike_times = start + np.arange(number) * interval

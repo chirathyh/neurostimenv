@@ -13,6 +13,7 @@ from LFPy import NetworkCell, Network, Synapse, RecExtElectrode, \
 from utils.utils import generate_spike_train
 
 def setup_network(network, args, MPI_VAR):
+    GLOBALSEED = MPI_VAR['GLOBALSEED']
     OUTPUTPATH = 'example_network_stim_outputx'
 
     # class NetworkCell parameters:
@@ -105,7 +106,13 @@ def setup_network(network, args, MPI_VAR):
                     # syn.set_spike_times_w_netstim(interval=50.,
                     #                               seed=np.random.rand() * 2**32 - 1
                     #                               )
-                    syn.set_spike_times(generate_spike_train(interval=10.))
+                    # syn.set_spike_times(generate_spike_train(interval=10.))
+                    time_d = 0.
+                    syn.set_spike_times(generate_spike_train(start=args.env.network.synapse.start+time_d,
+                                                             interval=args.env.network.synapse.interval,
+                                                             number=args.env.network.synapse.number,
+                                                             noise=args.env.network.synapse.noise,
+                                                             GLOBALSEED=GLOBALSEED))
 
     # create connectivity matrices and connect populations:
     for i, pre in enumerate(population_names):
