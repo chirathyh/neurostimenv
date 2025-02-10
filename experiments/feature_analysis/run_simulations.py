@@ -41,6 +41,8 @@ def main(cfg: DictConfig) -> None:
         cfg = setup_folders(cfg)
     COMM.Barrier()
 
+    tic_0 = time.perf_counter()
+
     for i in range(0, 2):
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=i)
         EEG = env.step_n(i_stim=None, t_ext=None, stim_elec=None) # no stimulation.
@@ -48,6 +50,9 @@ def main(cfg: DictConfig) -> None:
         FILE = cfg.experiment.dir+"/EEG"+CIRCUIT+str(i)+".csv"
         np.savetxt(FILE, EEG, delimiter=",") if RANK == 0 else None
         env.close()
+
+    print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
+    print("### Experiment completed.") if RANK==0 else None
 
 
 if __name__ == "__main__":

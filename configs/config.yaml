@@ -13,7 +13,7 @@ experiment:
 
   run_name:
   folder: ${experiment.name}
-  dir: ../../results/${experiment.name}
+  dir: ../results/${experiment.name}
   device: 'cpu'
   verbose: False
   seed: 1
