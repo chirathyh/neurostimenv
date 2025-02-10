@@ -41,13 +41,13 @@ def main(cfg: DictConfig) -> None:
         cfg = setup_folders(cfg)
     COMM.Barrier()
 
-
-    i = 0
-    env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=i)
-    EEG = env.step_n(i_stim=None, t_ext=None, stim_elec=None) # no stimulation.
-    FILE = "data/EEG"+str(i)+".csv"
-    np.savetxt(FILE, EEG, delimiter=",") if RANK==0 else None
-    env.close()
+    for i in range(0, 2):
+        env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=i)
+        EEG = env.step_n(i_stim=None, t_ext=None, stim_elec=None) # no stimulation.
+        CIRCUIT = "_MDD_" if cfg.env.simulation.MDD else "_HEALTHY_"
+        FILE = cfg.experiment.dir+"/EEG"+CIRCUIT+str(i)+".csv"
+        np.savetxt(FILE, EEG, delimiter=",") if RANK == 0 else None
+        env.close()
 
 
 if __name__ == "__main__":
