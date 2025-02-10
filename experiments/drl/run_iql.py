@@ -60,8 +60,6 @@ def main(cfg: DictConfig) -> None:
             env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=cfg.agent.n_expl_steps)  # off-line
             env.close()
 
-
-        #
         #     iql_agent.train(buffer, epochs=25)
         #     #
         #     eval_env = NeuronEnv(cfg, MPI_VAR)
@@ -69,8 +67,6 @@ def main(cfg: DictConfig) -> None:
         #     eval_env.close()
         #     print(reward)
         #     rew.append(reward)
-
-        exit()
 
         if RANK==0:
             buffer.close()
