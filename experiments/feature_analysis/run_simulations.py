@@ -43,16 +43,17 @@ def main(cfg: DictConfig) -> None:
 
     tic_0 = time.perf_counter()
 
-    for i in range(0, 2):
+    for i in range(0, 1):
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=i)
         EEG = env.step_n(i_stim=None, t_ext=None, stim_elec=None) # no stimulation.
-        CIRCUIT = "_MDD_" if cfg.env.simulation.MDD else "_HEALTHY_"
-        FILE = cfg.experiment.dir+"/EEG"+CIRCUIT+str(i)+".csv"
-        np.savetxt(FILE, EEG, delimiter=",") if RANK == 0 else None
+        if RANK == 0:
+            CIRCUIT = "_MDD_" if cfg.env.simulation.MDD else "_HEALTHY_"
+            FILE = cfg.experiment.dir+"/EEG"+CIRCUIT+str(i)+".csv"
+            np.savetxt(FILE, EEG, delimiter=",")
         env.close()
 
     print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
-    print("### Experiment completed.") if RANK==0 else None
+    print("### Experiment completed.") if RANK == 0 else None
 
 
 if __name__ == "__main__":
