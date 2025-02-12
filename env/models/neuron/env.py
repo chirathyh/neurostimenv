@@ -14,7 +14,10 @@ import numpy as np
 import scipy.signal as ss
 
 from lfpykit.eegmegcalc import FourSphereVolumeConductor
+
 from env.models.neuron.networkenv import NetworkEnv
+#from LFPy import Network
+
 from env.models.neuron.extracellular import ExtracellularModels
 from env.eeg import features
 from utils.utils import prep_stim_seq
@@ -56,9 +59,9 @@ class NeuronEnv(gym.Env):
                 cur_action, i_stim, t_stim = None, None, None
 
             # Broadcast to all ranks
-            i_stim = COMM.bcast(i_stim, root=0)
-            t_stim = COMM.bcast(t_stim, root=0)
-            cur_action = COMM.bcast(cur_action, root=0)
+            # i_stim = COMM.bcast(i_stim, root=0)
+            # t_stim = COMM.bcast(t_stim, root=0)
+            # cur_action = COMM.bcast(cur_action, root=0)
 
             self.network.tstart, self.network.tstop = 0., self.args.env.simulation.obs_win_len * (i+1)
 
@@ -182,7 +185,7 @@ class NeuronEnv(gym.Env):
             P = self.extracellular_models[1].data['imem']  # numpy array <3, timesteps>
             pot_db_4s_top = self.four_sphere_top.get_dipole_potential(P, np.array(self.args.env.network.position))  # Units: mV
             eeg = np.array(pot_db_4s_top) * 1e-3  # convert units: V
-        eeg = COMM.bcast(eeg, root=0)
+        # eeg = COMM.bcast(eeg, root=0)
         return eeg
 
     # TODO: _step is old and broken, and follows old structure.
@@ -275,7 +278,10 @@ class NeuronEnv(gym.Env):
     def _reset(self):
         if self.MPI_VAR['RANK'] == 0:
             print("\n==> Initialising microcircuit...")
+
         self.network = NetworkEnv(**self.args.env.networkParameters)
+        #self.network = Network(**self.args.env.networkParameters)
+
         # create populations, setup synapses, and connections.
         if self.args.env.name == 'hl23pyrnet':
             from setup.circuits.hl23pyrnet.utils import create_populations_connect
