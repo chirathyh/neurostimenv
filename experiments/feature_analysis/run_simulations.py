@@ -34,16 +34,22 @@ def main(cfg: DictConfig) -> None:
     COMM.Barrier()
 
     tic_0 = time.perf_counter()
-
-    for i in range(0, 3):
+    N_TRIALS = 3
+    for i in range(0, N_TRIALS):
         ENVSEED = cfg.experiment.seed + i
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
         EEG = env.step_n(i_stim=None, t_ext=None, stim_elec=None) # no stimulation.
+
+        COMM.Barrier()
         if RANK == 0:
             CIRCUIT = "_MDD_" if cfg.env.simulation.MDD else "_HEALTHY_"
             FILE = cfg.experiment.dir+"/EEG"+CIRCUIT+str(ENVSEED)+".csv"
             np.savetxt(FILE, EEG, delimiter=",")
+            print("### EEG Saved.") if RANK == 0 else None
+        COMM.Barrier()
+
         env.close()
+        COMM.Barrier()
 
     print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
     print("### Experiment completed.") if RANK == 0 else None

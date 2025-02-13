@@ -16,6 +16,6 @@ module load openmpi/5.0.5
 source /g/data/ny83/ch9972/NeuroStim/bin/activate
 cd /g/data/ny83/ch9972/NeuroStim/neurostimenv/experiments/feature_analysis
 
-mpirun -np 512 python3 run_simulations.py experiment.name=t1 experiment.seed=10 env=hl23net env.simulation.duration=1000 env.network.dt=0.025 env.simulation.MDD=True env.ts.apply=False env.network.syn_activity=True experiment.debug=False
+mpirun -np 512 python3 run_simulations.py experiment.name=mdd experiment.seed=10 env=hl23net env.simulation.duration=100.0 env.network.dt=0.025 env.simulation.MDD=True env.ts.apply=False env.network.syn_activity=True experiment.debug=False
 
 wait
