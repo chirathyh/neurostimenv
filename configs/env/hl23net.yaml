@@ -67,7 +67,7 @@ ts:
 
 network:
   dt: 0.0625 #0.025  # ms
-  tstart: 0
+  tstart: 0.
   v_init: -80.
   celsius: 34.
   verbose: False
@@ -82,13 +82,13 @@ network:
     noise: 1.0
 
   networkSimulationArguments:
-    rec_imem: True
-    rec_vmem: True
-    rec_ipas: True
-    rec_icap: True
-    rec_isyn: True
-    rec_vmemsyn: True
-    rec_istim: True
+    rec_imem: False
+    rec_vmem: False
+    rec_ipas: False
+    rec_icap: False
+    rec_isyn: False
+    rec_vmemsyn: False
+    rec_istim: False
     rec_pop_contributions: False #True # originally False
     rec_variables: []
     to_memory: True

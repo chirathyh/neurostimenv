@@ -9,19 +9,11 @@ import warnings
 warnings.simplefilter('ignore', Warning)
 
 from env.models.neuron.env import NeuronEnv
-from agent.iql import IQL
 from utils.utils import setup_folders
-from utils.buffers import ReplayMemory
 
 import numpy as np
-import random
 import hydra
 from omegaconf import DictConfig, OmegaConf
-import matplotlib.pyplot as plt
-import json
-
-import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
 
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="config")
@@ -43,12 +35,13 @@ def main(cfg: DictConfig) -> None:
 
     tic_0 = time.perf_counter()
 
-    for i in range(0, 1):
-        env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=i)
+    for i in range(0, 3):
+        ENVSEED = cfg.experiment.seed + i
+        env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
         EEG = env.step_n(i_stim=None, t_ext=None, stim_elec=None) # no stimulation.
         if RANK == 0:
             CIRCUIT = "_MDD_" if cfg.env.simulation.MDD else "_HEALTHY_"
-            FILE = cfg.experiment.dir+"/EEG"+CIRCUIT+str(i)+".csv"
+            FILE = cfg.experiment.dir+"/EEG"+CIRCUIT+str(ENVSEED)+".csv"
             np.savetxt(FILE, EEG, delimiter=",")
         env.close()
 

@@ -112,10 +112,6 @@ def load_circuit_params(args, MPI_VAR, local_state):
                        'funweights': [1.]})
         names = ['HL2', 'HL4', 'HL5']
         pop_args[names[i]] = {'radius': 250, 'loc': depths[i], 'scale': rangedepths[i]*4,'cap': rangedepths[i]}
-        #pop_args[names[i]] = {'radius': 100, 'loc': 0, 'scale': 20.}
-        # if RANK == 0:
-        #     print(names[i])
-        #     print(depths[i], rangedepths[i]*4, rangedepths[i])
 
     MDD = args.env.simulation.MDD
     reduce_inhibition = 0.4

@@ -12,7 +12,8 @@ from LFPy import NetworkCell, Network, Synapse, RecExtElectrode, \
     CurrentDipoleMoment
 from utils.utils import generate_spike_train
 
-def setup_network(network, args, MPI_VAR):
+
+def setup_network_ballnstick(network, args, MPI_VAR):
     GLOBALSEED = MPI_VAR['GLOBALSEED']
     OUTPUTPATH = 'example_network_stim_outputx'
 
