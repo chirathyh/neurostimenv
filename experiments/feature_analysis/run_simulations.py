@@ -34,7 +34,7 @@ def main(cfg: DictConfig) -> None:
     COMM.Barrier()
 
     tic_0 = time.perf_counter()
-    N_TRIALS = 60
+    N_TRIALS = 4
     for i in range(0, N_TRIALS):
         ENVSEED = cfg.experiment.seed + i
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
