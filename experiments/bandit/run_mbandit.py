@@ -9,23 +9,14 @@ import warnings
 warnings.simplefilter('ignore', Warning)
 
 from env.models.neuron.env import NeuronEnv
-from utils.utils import setup_folders
-from agent.dqn import DQN, ReplayBuffer
 from agent.mbandit import EpsilonGreedyBandit
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
 import numpy as np
 import random
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
-import json
-
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
-
 from utils.utils import setup_folders
 
 
@@ -79,11 +70,19 @@ def main(cfg: DictConfig) -> None:
         plt.xlabel("Trials")        # Label for x-axis
         plt.ylabel("Reward")
         plt.grid(True)
-        plt.savefig("mbandit_result.png")
-        plt.show()
+        plt.savefig(cfg.experiment.dir+"/mbandit_result.png")
+        plt.close()
+
+    # evaluate
+    print("### Evaluating the best treatment...") if RANK==0 else None
+    best_arm = bandit.select_best_arm()
+    env = NeuronEnv(cfg, MPI_VAR)
+    _ = env.exploration_rollout(policy_seq=[[0., 1.], [amps[best_arm], freqs[best_arm]]], buffer=None, steps=2, plot=True)  # off-line
+    env.close()
 
     print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
     print("### Experiment completed.") if RANK==0 else None
+
 
 if __name__ == "__main__":
     main()

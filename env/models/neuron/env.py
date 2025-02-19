@@ -63,9 +63,9 @@ class NeuronEnv(gym.Env):
                 cur_action, i_stim, t_stim = None, None, None
 
             # Broadcast to all ranks
-            # i_stim = COMM.bcast(i_stim, root=0)
-            # t_stim = COMM.bcast(t_stim, root=0)
-            # cur_action = COMM.bcast(cur_action, root=0)
+            i_stim = COMM.bcast(i_stim, root=0)
+            t_stim = COMM.bcast(t_stim, root=0)
+            cur_action = COMM.bcast(cur_action, root=0)
 
             self.network.tstart, self.network.tstop = 0., self.args.env.simulation.obs_win_len * (i+1)
 
@@ -115,7 +115,7 @@ class NeuronEnv(gym.Env):
             plot_episode(self.args, eeg, i_stim, t_stim, cur_action, steps) if self.args.experiment.plot else None
         return eval_reward
 
-    def exploration_rollout(self, policy_seq, buffer, steps):
+    def exploration_rollout(self, policy_seq, buffer, steps, **kwargs):
         RANK = self.MPI_VAR['RANK']
         if RANK == 0:
             print("\n==> Running exploration simulations...")
@@ -154,6 +154,12 @@ class NeuronEnv(gym.Env):
             sim_data.append(full_eeg)
             sim_data.append([i_stim])
 
+            plot = kwargs.get("plot", False)
+            if self.args.agent.agent == 'mbandit' and plot:
+                FILE = self.args.experiment.dir+"/EEG_BANDIT.csv"    # save the EEG signal
+                np.savetxt(FILE, full_eeg, delimiter=",")
+                print("### EEG Saved.")
+
             chunk_size = int(len(full_eeg[0]) / steps)
             chunked_eeg = [full_eeg[0][i:i + chunk_size] for i in range(0, len(full_eeg[0])-1, chunk_size)]
 
@@ -189,6 +195,8 @@ class NeuronEnv(gym.Env):
             P = self.extracellular_models[1].data['imem']  # numpy array <3, timesteps>
             pot_db_4s_top = self.four_sphere_top.get_dipole_potential(P, np.array(self.args.env.network.position))  # Units: mV
             eeg = np.array(pot_db_4s_top) * 1e-3  # convert units: V
+            # FILE = self.args.experiment.dir+"/dipole"
+            # np.save(FILE, P)
         # eeg = COMM.bcast(eeg, root=0)
         return eeg
 

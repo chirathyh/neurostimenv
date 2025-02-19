@@ -145,6 +145,7 @@ class IQL:
             plt.grid(True)
             plt.savefig("example_rl_train.png")
             plt.show()
+            plt.close()
 
 
 

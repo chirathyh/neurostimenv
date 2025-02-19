@@ -81,7 +81,7 @@ def plot_episode(cfg, eeg, ts, t, ts_params, steps):
     ax.grid()
     plt.tight_layout()
     plt.savefig("example.png")
-    plt.show()
+    plt.close()
 
 
 # def plot_n_episodes():

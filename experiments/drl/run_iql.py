@@ -55,25 +55,25 @@ def main(cfg: DictConfig) -> None:
 
         rew = []
         for i in range(0, 1):  # collect data <S, A, R, S', Done>
-            env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=i)
-            action_seq = sample_random_actions(cfg, cfg.agent.n_expl_steps)
-            env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=cfg.agent.n_expl_steps)  # off-line
-            env.close()
-
-            print('\n### Exploration run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
-            tic_1 = time.perf_counter()
-
-            COMM.Barrier()
-            if RANK==0:
-                print("\n==> Training RL agent...")
-                iql_agent.train(buffer, epochs=25)
-            COMM.Barrier()
+            # env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=i)
+            # action_seq = sample_random_actions(cfg, cfg.agent.n_expl_steps)
+            # env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=cfg.agent.n_expl_steps)  # off-line
+            # env.close()
+            #
+            # print('\n### Exploration run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
+            # tic_1 = time.perf_counter()
+            #
+            # COMM.Barrier()
+            # if RANK==0:
+            #     print("\n==> Training RL agent...")
+            #     iql_agent.train(buffer, epochs=25)
+            # COMM.Barrier()
 
             eval_env = NeuronEnv(cfg, MPI_VAR)
             reward = eval_env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=cfg.agent.n_eval_steps)  # on-line
             eval_env.close()
 
-            print('\n### Evaluation run time: ', str((time.perf_counter() - tic_1)/60)[:5], 'minutes') if RANK==0 else None
+            # print('\n### Evaluation run time: ', str((time.perf_counter() - tic_1)/60)[:5], 'minutes') if RANK==0 else None
 
         if RANK==0:
             buffer.close()

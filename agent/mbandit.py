@@ -26,6 +26,9 @@ class EpsilonGreedyBandit:
             # Exploitation: choose the arm with the highest estimated reward
             return np.argmax(self.values)
 
+    def select_best_arm(self):
+        return np.argmax(self.values)
+
     def update(self, chosen_arm, reward):
         """
         Update the estimated value of the chosen arm after receiving a reward.

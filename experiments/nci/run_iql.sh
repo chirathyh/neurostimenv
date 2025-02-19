@@ -7,8 +7,8 @@
 #PBS -l ncpus=528
 #PBS -M chirath.hettiarachchi@anu.edu.au
 #PBS -l storage=gdata/ny83
-#PBS -o out_mdd.txt
-#PBS -e err_mdd.txt
+#PBS -o out_iql.txt
+#PBS -e err_iql.txt
 #PBS -l software=python
 
 module load python3/3.10.4
