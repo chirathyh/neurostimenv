@@ -5,7 +5,7 @@
 #PBS -l jobfs=2GB
 #PBS -q copyq
 #PBS -l walltime=02:00:00
-#PBS -l storage=scratch/ny83
+#PBS -l storage=gdata/ny83
 #PBS -l wd
 #PBS -o out11.txt
 #PBS -e err11.txt

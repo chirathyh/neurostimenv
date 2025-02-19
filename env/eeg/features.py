@@ -10,9 +10,6 @@ from scipy.fft import fft
 # eeg_signal = np.random.randn(1000)  # Replace with your EEG data
 # fs = 1000  # Sampling frequency (in Hz), modify according to your data
 
-DEPRESSION = 4.781662697628607e-19
-HEALTHY = 3.3783662121573373e-19
-TARGET_BAND = (4, 16)
 
 
 def bandpower(freqs, psd, band):
@@ -21,6 +18,56 @@ def bandpower(freqs, psd, band):
 
 
 def reward_func_simple(eeg_top, fs):
+
+    # Define frequency bands (in Hz)
+    FREQ_BANDS = {
+        "theta": (4, 8),
+        "alpha": (8, 12),
+        "beta": (12, 16),
+    }
+    # Define weights for each band (you can tune these)
+    BAND_WEIGHTS = {
+        "theta": 1.0,
+        "alpha": 1.0,
+        "beta": 0.25,
+    }
+    HEALTHY = {
+         "theta": 1.4401906273680963e-19,
+        "alpha": 1.3428366620075392e-19,
+        "beta": 5.953389227817006e-20,
+    }
+    DEPRESSION = {
+        "theta": 1.8922723690645009e-19,
+        "alpha": 1.8980323747960788e-19,
+        "beta": 9.913579537680276e-20,
+    }
+
+    freqs, psd = ss.welch(eeg_top, fs=fs, nperseg=int(fs/2))
+    psd = psd.flatten()
+
+    total_reward = 0
+
+    for band, limits in FREQ_BANDS.items():
+        calc_power = bandpower(freqs, psd, limits)
+
+        # Normalize power between depression & healthy values
+        norm_power = (calc_power - DEPRESSION[band]) / (HEALTHY[band] - DEPRESSION[band])
+        norm_power = np.clip(norm_power, 0, 1)  # Ensure in [0,1]
+
+        # Compute reward (higher when closer to HEALTHY)
+        reward = 1 - abs(norm_power - 1)
+
+        # Weighted sum of rewards from all bands
+        total_reward += BAND_WEIGHTS[band] * reward
+
+    return total_reward
+
+
+def reward_func_simple_2(eeg_top, fs):
+
+    DEPRESSION = 4.781662697628607e-19
+    HEALTHY = 3.3783662121573373e-19
+    TARGET_BAND = (4, 16)
 
     freqs, psd = ss.welch(eeg_top, fs=fs, nperseg=int(fs/2))
     psd = psd.flatten()
