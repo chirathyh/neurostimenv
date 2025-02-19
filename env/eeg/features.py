@@ -10,8 +10,30 @@ from scipy.fft import fft
 # eeg_signal = np.random.randn(1000)  # Replace with your EEG data
 # fs = 1000  # Sampling frequency (in Hz), modify according to your data
 
+DEPRESSION = 4.781662697628607e-19
+HEALTHY = 3.3783662121573373e-19
+TARGET_BAND = (4, 16)
+
+
+def bandpower(freqs, psd, band):
+    idx_band = np.logical_and(freqs >= band[0], freqs <= band[1])
+    return np.trapz(psd[idx_band], freqs[idx_band])
+
 
 def reward_func_simple(eeg_top, fs):
+
+    freqs, psd = ss.welch(eeg_top, fs=fs, nperseg=int(fs/2))
+    psd = psd.flatten()
+    calc_power = bandpower(freqs, psd, TARGET_BAND)
+
+    norm_power = (calc_power - DEPRESSION) / (HEALTHY - DEPRESSION)
+    norm_power = np.clip(norm_power, 0, 1)  # Ensure within bounds
+    # Compute reward (higher when closer to HEALTHY)
+    reward = 1 - abs(norm_power - 1)
+    return reward
+
+
+def reward_func_simple_old(eeg_top, fs):
     target_peak_freq = 8 # Hz
     frequencies, psd = ss.welch(eeg_top, fs=fs, nperseg=int(fs/4))
     psd = psd.flatten()

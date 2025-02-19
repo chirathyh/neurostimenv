@@ -3,3 +3,4 @@ debug: False
 
 n_arms: 10
 n_trials: 3
+n_eval_trials: 3

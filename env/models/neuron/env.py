@@ -154,9 +154,11 @@ class NeuronEnv(gym.Env):
             sim_data.append(full_eeg)
             sim_data.append([i_stim])
 
-            plot = kwargs.get("plot", False)
-            if self.args.agent.agent == 'mbandit' and plot:
-                FILE = self.args.experiment.dir+"/EEG_BANDIT.csv"    # save the EEG signal
+            # save the EEG signal for mbandit algorithm
+            save = kwargs.get("save", False)
+            save_seed = kwargs.get("seed", 0)
+            if self.args.agent.agent == 'mbandit' and save:
+                FILE = self.args.experiment.dir+"/EEG_BANDIT_"+str(save_seed)+".csv"
                 np.savetxt(FILE, full_eeg, delimiter=",")
                 print("### EEG Saved.")
 

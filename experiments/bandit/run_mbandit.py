@@ -55,7 +55,8 @@ def main(cfg: DictConfig) -> None:
 
         chosen_arm = bandit.select_arm()
 
-        env = NeuronEnv(cfg, MPI_VAR)
+        ENVSEED = cfg.experiment.seed + t
+        env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
         reward = env.exploration_rollout(policy_seq=[[0., 1.], [amps[chosen_arm], freqs[chosen_arm]]], buffer=None, steps=2)  # off-line
         env.close()
 
@@ -76,9 +77,13 @@ def main(cfg: DictConfig) -> None:
     # evaluate
     print("### Evaluating the best treatment...") if RANK==0 else None
     best_arm = bandit.select_best_arm()
-    env = NeuronEnv(cfg, MPI_VAR)
-    _ = env.exploration_rollout(policy_seq=[[0., 1.], [amps[best_arm], freqs[best_arm]]], buffer=None, steps=2, plot=True)  # off-line
-    env.close()
+
+    for i in range(0, cfg.agent.n_eval_trials):
+        ENVSEED = cfg.experiment.seed + i + 100
+        env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
+        reward = env.exploration_rollout(policy_seq=[[0., 1.], [amps[best_arm], freqs[best_arm]]], buffer=None, steps=2, save=True, seed=ENVSEED)  # off-line
+        print("### Reward is: ", reward) if RANK==0 else None
+        env.close()
 
     print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
     print("### Experiment completed.") if RANK==0 else None
