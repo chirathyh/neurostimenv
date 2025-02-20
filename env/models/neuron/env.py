@@ -117,13 +117,20 @@ class NeuronEnv(gym.Env):
 
     def exploration_rollout(self, policy_seq, buffer, steps, **kwargs):
         RANK = self.MPI_VAR['RANK']
-        if RANK == 0:
-            print("\n==> Running exploration simulations...")
+        COMM = self.MPI_VAR['COMM']
+        print("\n==> Running exploration simulations...") if RANK == 0 else None
         # TODO: this is inefficient. e.g., for an episilon-greedy algo exploration required "evaluation_rollout"
         # NOTE: Therefore; can explore offline RL algorithms which would be more suitable.
         self.network.tstart, self.network.tstop = 0., self.args.env.simulation.obs_win_len * steps
-        i_stim, t_stim = prep_stim_seq(action=policy_seq, step_size=self.args.env.simulation.obs_win_len, steps=steps, dt=self.network.dt)
         reward = None
+        if RANK == 0:
+            i_stim, t_stim = prep_stim_seq(action=policy_seq, step_size=self.args.env.simulation.obs_win_len, steps=steps, dt=self.network.dt)
+        else:
+            i_stim, t_stim = None, None
+        i_stim = COMM.bcast(i_stim, root=0)
+        t_stim = COMM.bcast(t_stim, root=0)
+        COMM.Barrier()
+
         # Redirect NEURON output to the log file and use tqdm progress bar.
         time_pattern = re.compile(r"t = (\d+\.\d+) ms")
         log_file_path = self.args.experiment.dir+'/neuron_exploration_sim_output.log'

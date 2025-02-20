@@ -37,6 +37,7 @@ def main(cfg: DictConfig) -> None:
         print("\n")
         cfg = setup_folders(cfg)
     COMM.Barrier()
+
     tic_0 = time.perf_counter()
 
     def bandit_actions(cfg):
@@ -44,24 +45,32 @@ def main(cfg: DictConfig) -> None:
         freqs = np.linspace(cfg.env.stimFreq_min, cfg.env.stimFreq_max, cfg.agent.n_arms)
         return amps, freqs
 
-    bandit = EpsilonGreedyBandit(cfg.agent.n_arms, epsilon=0.1)
-    amps, freqs = bandit_actions(cfg)
+    if RANK==0:
+        bandit = EpsilonGreedyBandit(cfg.agent.n_arms, epsilon=0.1)
+        amps, freqs = bandit_actions(cfg)
+    else:
+        bandit, amps, freqs = None, None, None
+    amps = COMM.bcast(amps, root=0)
+    freqs = COMM.bcast(freqs, root=0)
+    COMM.Barrier()
 
     rewards = np.zeros(cfg.agent.n_trials)
-    optimal = np.zeros(cfg.agent.n_trials)
-    true_means = np.random.rand(cfg.agent.n_arms)  # True mean rewards for each arm (hidden from the agent)
 
     for t in range(cfg.agent.n_trials):
 
-        chosen_arm = bandit.select_arm()
+        chosen_arm = bandit.select_arm() if RANK==0 else None
+        chosen_arm = COMM.bcast(chosen_arm, root=0)
+        COMM.Barrier()
 
         ENVSEED = cfg.experiment.seed + t
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
         reward = env.exploration_rollout(policy_seq=[[0., 1.], [amps[chosen_arm], freqs[chosen_arm]]], buffer=None, steps=2)  # off-line
         env.close()
 
-        bandit.update(chosen_arm, reward)
-        rewards[t] = reward
+        COMM.Barrier()
+        if RANK==0:
+            bandit.update(chosen_arm, reward)
+            rewards[t] = reward
         # optimal[t] = (chosen_arm == optimal_arm)
 
     if RANK==0:
@@ -76,7 +85,9 @@ def main(cfg: DictConfig) -> None:
 
     # evaluate
     print("### Evaluating the best treatment...") if RANK==0 else None
-    best_arm = bandit.select_best_arm()
+    best_arm = bandit.select_best_arm() if RANK==0 else None
+    best_arm = COMM.bcast(best_arm, root=0)
+    COMM.Barrier()
 
     for i in range(cfg.agent.n_eval_trials):
 
@@ -85,6 +96,7 @@ def main(cfg: DictConfig) -> None:
         reward = env.exploration_rollout(policy_seq=[[0., 1.], [amps[best_arm], freqs[best_arm]]], buffer=None, steps=2, save=True, seed=ENVSEED)  # off-line
         env.close()
 
+        COMM.Barrier()
         print("### Reward is: ", reward) if RANK==0 else None
         print("### Best arm amplitude (mA): ", amps[best_arm]) if RANK==0 else None
         print("### Best arm freq (Hz): ", freqs[best_arm]) if RANK==0 else None
