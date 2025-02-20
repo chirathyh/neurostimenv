@@ -123,7 +123,7 @@ class NeuronEnv(gym.Env):
         # NOTE: Therefore; can explore offline RL algorithms which would be more suitable.
         self.network.tstart, self.network.tstop = 0., self.args.env.simulation.obs_win_len * steps
         i_stim, t_stim = prep_stim_seq(action=policy_seq, step_size=self.args.env.simulation.obs_win_len, steps=steps, dt=self.network.dt)
-        reward = -1
+        reward = None
         # Redirect NEURON output to the log file and use tqdm progress bar.
         time_pattern = re.compile(r"t = (\d+\.\d+) ms")
         log_file_path = self.args.experiment.dir+'/neuron_exploration_sim_output.log'

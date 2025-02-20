@@ -78,14 +78,17 @@ def main(cfg: DictConfig) -> None:
     print("### Evaluating the best treatment...") if RANK==0 else None
     best_arm = bandit.select_best_arm()
 
-    for i in range(0, cfg.agent.n_eval_trials):
+    for i in range(cfg.agent.n_eval_trials):
+
         ENVSEED = cfg.experiment.seed + i + 100
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
         reward = env.exploration_rollout(policy_seq=[[0., 1.], [amps[best_arm], freqs[best_arm]]], buffer=None, steps=2, save=True, seed=ENVSEED)  # off-line
+        env.close()
+
         print("### Reward is: ", reward) if RANK==0 else None
         print("### Best arm amplitude (mA): ", amps[best_arm]) if RANK==0 else None
         print("### Best arm freq (Hz): ", freqs[best_arm]) if RANK==0 else None
-        env.close()
+
 
     print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
     print("### Experiment completed.") if RANK==0 else None
