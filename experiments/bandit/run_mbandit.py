@@ -18,7 +18,7 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 import matplotlib.pyplot as plt
 from utils.utils import setup_folders
-
+import gc
 
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="config")
@@ -73,6 +73,8 @@ def main(cfg: DictConfig) -> None:
             rewards[t] = reward
         # optimal[t] = (chosen_arm == optimal_arm)
 
+        gc.collect()
+
     if RANK==0:
         plt.figure()
         plt.plot(rewards)
@@ -101,6 +103,7 @@ def main(cfg: DictConfig) -> None:
         print("### Best arm amplitude (mA): ", amps[best_arm]) if RANK==0 else None
         print("### Best arm freq (Hz): ", freqs[best_arm]) if RANK==0 else None
 
+        gc.collect()
 
     print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
     print("### Experiment completed.") if RANK==0 else None

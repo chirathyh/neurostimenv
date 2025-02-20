@@ -156,11 +156,6 @@ class NeuronEnv(gym.Env):
         #full_eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
 
         if RANK == 0:
-            # for testing
-            sim_data = []
-            sim_data.append(full_eeg)
-            sim_data.append([i_stim])
-
             # save the EEG signal for mbandit algorithm
             save = kwargs.get("save", False)
             save_seed = kwargs.get("seed", 0)
