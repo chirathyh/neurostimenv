@@ -74,8 +74,8 @@ all_freqs, avg_psd, ci_95 = process_eeg(file_path="../../data/feature_analysis/m
 all_freqs_h, avg_psd_h, ci_95_h = process_eeg(file_path="../../data/feature_analysis/healthy/EEG_HEALTHY_")
 
 
-EEG_freq, EEG_ps = process(filepath="data/testbandit/EEG_BANDIT_110.csv")
-EEG_freq2, EEG_ps2 = process(filepath="data/testbandit/EEG_BANDIT_111.csv")
+EEG_freq, EEG_ps = process(filepath="data/testbandit_rew3/EEG_BANDIT_110.csv")
+EEG_freq2, EEG_ps2 = process(filepath="data/testbandit_rew3/EEG_BANDIT_111.csv")
 
 # EEG_freq_h, EEG_ps_h = process(filepath="../../data/feature_analysis/healthy/EEG_HEALTHY_10.csv")
 # EEG_freq_m, EEG_ps_m = process(filepath="../../data/feature_analysis/mdd/EEG_MDD_10.csv")
@@ -86,8 +86,8 @@ plt.figure(figsize=(10, 5))
 
 
 # Plot Power Spectral Density (PSD)
-plt.plot(EEG_freq, EEG_ps, color='b', label="Reward=0.186")
-plt.plot(EEG_freq2, EEG_ps2, color='g', label="Reward=1")
+plt.plot(EEG_freq, EEG_ps, color='b', label="Reward=0.81")
+plt.plot(EEG_freq2, EEG_ps2, color='g', label="Reward=1.73")
 # plt.plot(EEG_freq_h, EEG_ps_h, color='k', linestyle='--', label="HEALTHY")
 # plt.plot(EEG_freq_m, EEG_ps_m, color='r', linestyle='--', label="MDD")
 

@@ -25,8 +25,8 @@ features:
   - 'stimAmplitude'
   - 'stimFreq'
 
-stimAmplitude_min: 1  # 1e-3 mA
-stimAmplitude_max: 4  # 10e-3 mA
+stimAmplitude_min: 1  # this is in mA
+stimAmplitude_max: 4  # this is in mA
 stimFreq_min: 1  # Hz
 stimFreq_max: 50  # 20 Hz
 

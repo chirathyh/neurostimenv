@@ -83,6 +83,8 @@ def main(cfg: DictConfig) -> None:
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
         reward = env.exploration_rollout(policy_seq=[[0., 1.], [amps[best_arm], freqs[best_arm]]], buffer=None, steps=2, save=True, seed=ENVSEED)  # off-line
         print("### Reward is: ", reward) if RANK==0 else None
+        print("### Best arm amplitude (mA): ", amps[best_arm]) if RANK==0 else None
+        print("### Best arm freq (Hz): ", freqs[best_arm]) if RANK==0 else None
         env.close()
 
     print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None

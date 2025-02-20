@@ -50,12 +50,11 @@ def reward_func_simple(eeg_top, fs):
     for band, limits in FREQ_BANDS.items():
         calc_power = bandpower(freqs, psd, limits)
 
-        # Normalize power between depression & healthy values
-        norm_power = (calc_power - DEPRESSION[band]) / (HEALTHY[band] - DEPRESSION[band])
-        norm_power = np.clip(norm_power, 0, 1)  # Ensure in [0,1]
+        norm_power = (calc_power - HEALTHY[band]) / (HEALTHY[band])
+        norm_power = norm_power**2
 
         # Compute reward (higher when closer to HEALTHY)
-        reward = 1 - abs(norm_power - 1)
+        reward = -1 * norm_power
 
         # Weighted sum of rewards from all bands
         total_reward += BAND_WEIGHTS[band] * reward
