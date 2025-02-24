@@ -1,5 +1,6 @@
 import sys
 import time
+import pandas as pd
 from mpi4py import MPI
 from decouple import config
 MAIN_PATH = config('MAIN_PATH')
@@ -65,7 +66,10 @@ def main(cfg: DictConfig) -> None:
         bandit = None
     COMM.Barrier()
 
-    rewards = np.zeros(cfg.agent.n_trials)
+    rewards = np.zeros(cfg.agent.n_trials + cfg.agent.n_eval_trials)
+    selected_freq = np.zeros(cfg.agent.n_trials + cfg.agent.n_eval_trials)
+    selected_amp = np.zeros(cfg.agent.n_trials + cfg.agent.n_eval_trials)
+    experiment_seed = np.zeros(cfg.agent.n_trials + cfg.agent.n_eval_trials)
 
     for t in range(cfg.agent.n_trials):
 
@@ -76,13 +80,16 @@ def main(cfg: DictConfig) -> None:
         ENVSEED = cfg.experiment.seed + t
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
         reward = env.exploration_rollout(policy_seq=[[0., 1.], [bandit_action_pairs[chosen_arm][0], bandit_action_pairs[chosen_arm][1]]],
-                                         buffer=None, steps=2)  # off-line
+                                         buffer=None, steps=2, save=True, mode="EXP", seed=ENVSEED)  # off-line
         env.close()
 
         COMM.Barrier()
         if RANK==0:
             bandit.update(chosen_arm, reward)
             rewards[t] = reward
+            selected_amp[t] = bandit_action_pairs[chosen_arm][0]
+            selected_freq[t] = bandit_action_pairs[chosen_arm][1]
+            experiment_seed[t] = ENVSEED
         # optimal[t] = (chosen_arm == optimal_arm)
 
         gc.collect()
@@ -108,7 +115,7 @@ def main(cfg: DictConfig) -> None:
         ENVSEED = cfg.experiment.seed + i + 100
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
         reward = env.exploration_rollout(policy_seq=[[0., 1.], [bandit_action_pairs[best_arm][0], bandit_action_pairs[best_arm][1]]],
-                                         buffer=None, steps=2, save=True, seed=ENVSEED)  # off-line
+                                         buffer=None, steps=2, save=True, mode="EVAL", seed=ENVSEED)  # off-line
         env.close()
 
         COMM.Barrier()
@@ -116,10 +123,25 @@ def main(cfg: DictConfig) -> None:
         print("### Best arm amplitude (mA): ", bandit_action_pairs[best_arm][0]) if RANK == 0 else None
         print("### Best arm freq (Hz): ", bandit_action_pairs[best_arm][1]) if RANK == 0 else None
 
+        if RANK == 0:
+            rewards[cfg.agent.n_trials+i] = reward
+            selected_amp[cfg.agent.n_trials+i] = bandit_action_pairs[best_arm][0]
+            selected_freq[cfg.agent.n_trials+i] = bandit_action_pairs[best_arm][1]
+            experiment_seed[cfg.agent.n_trials+i] = ENVSEED
+
         gc.collect()
 
-    print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK == 0 else None
-    print("### Experiment completed.") if RANK == 0 else None
+    if RANK == 0:
+        df = pd.DataFrame({
+            'Reward': rewards,
+            'Amplitude': selected_amp,
+            'Frequency': selected_freq,
+            'Seed': experiment_seed
+        })
+        df.to_csv(cfg.experiment.dir+'/experiment_summary.csv', index=False)
+
+        print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes')
+        print("### Experiment completed.")
 
 
 if __name__ == "__main__":

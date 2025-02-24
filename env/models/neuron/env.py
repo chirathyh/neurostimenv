@@ -159,8 +159,9 @@ class NeuronEnv(gym.Env):
             # save the EEG signal for mbandit algorithm
             save = kwargs.get("save", False)
             save_seed = kwargs.get("seed", 0)
+            save_mode = kwargs.get("mode", 'EXP')
             if self.args.agent.agent == 'mbandit' and save:
-                FILE = self.args.experiment.dir+"/EEG_BANDIT_"+str(save_seed)+".csv"
+                FILE = self.args.experiment.dir+"/EEG_BANDIT_"+save_mode+"_"+str(save_seed)+".csv"
                 np.savetxt(FILE, full_eeg, delimiter=",")
                 print("### EEG Saved.")
 

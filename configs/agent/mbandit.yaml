@@ -2,5 +2,5 @@ agent: 'mbandit'
 debug: False
 
 n_arms: 13
-n_trials: 3
-n_eval_trials: 3
+n_trials: 12
+n_eval_trials: 5
