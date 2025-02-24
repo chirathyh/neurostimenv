@@ -40,18 +40,29 @@ def main(cfg: DictConfig) -> None:
 
     tic_0 = time.perf_counter()
 
-    def bandit_actions(cfg):
-        amps = np.linspace(cfg.env.stimAmplitude_min, cfg.env.stimAmplitude_max, cfg.agent.n_arms)
-        freqs = np.linspace(cfg.env.stimFreq_min, cfg.env.stimFreq_max, cfg.agent.n_arms)
-        return amps, freqs
+    # def bandit_actions(cfg):
+    #     amps = np.linspace(cfg.env.stimAmplitude_min, cfg.env.stimAmplitude_max, cfg.agent.n_arms)
+    #     freqs = np.linspace(cfg.env.stimFreq_min, cfg.env.stimFreq_max, cfg.agent.n_arms)
+    #     return amps, freqs
+
+    bandit_action_pairs = [[0.5, 2.],
+                           [0.5, 10.],
+                           [1., 10.],
+                           [1., 20.],
+                           [2., 4.],
+                           [2., 8.],
+                           [2., 10.],
+                           [2., 12.],
+                           [2., 16.],
+                           [2., 20.],
+                           [2., 40.],
+                           [4., 50.],
+                           [15., 75.]]
 
     if RANK==0:
         bandit = EpsilonGreedyBandit(cfg.agent.n_arms, epsilon=0.1)
-        amps, freqs = bandit_actions(cfg)
     else:
-        bandit, amps, freqs = None, None, None
-    amps = COMM.bcast(amps, root=0)
-    freqs = COMM.bcast(freqs, root=0)
+        bandit = None
     COMM.Barrier()
 
     rewards = np.zeros(cfg.agent.n_trials)
@@ -64,7 +75,8 @@ def main(cfg: DictConfig) -> None:
 
         ENVSEED = cfg.experiment.seed + t
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
-        reward = env.exploration_rollout(policy_seq=[[0., 1.], [amps[chosen_arm], freqs[chosen_arm]]], buffer=None, steps=2)  # off-line
+        reward = env.exploration_rollout(policy_seq=[[0., 1.], [bandit_action_pairs[chosen_arm][0], bandit_action_pairs[chosen_arm][1]]],
+                                         buffer=None, steps=2)  # off-line
         env.close()
 
         COMM.Barrier()
@@ -86,8 +98,8 @@ def main(cfg: DictConfig) -> None:
         plt.close()
 
     # evaluate
-    print("### Evaluating the best treatment...") if RANK==0 else None
-    best_arm = bandit.select_best_arm() if RANK==0 else None
+    print("### Evaluating the best treatment...") if RANK == 0 else None
+    best_arm = bandit.select_best_arm() if RANK == 0 else None
     best_arm = COMM.bcast(best_arm, root=0)
     COMM.Barrier()
 
@@ -95,18 +107,19 @@ def main(cfg: DictConfig) -> None:
 
         ENVSEED = cfg.experiment.seed + i + 100
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
-        reward = env.exploration_rollout(policy_seq=[[0., 1.], [amps[best_arm], freqs[best_arm]]], buffer=None, steps=2, save=True, seed=ENVSEED)  # off-line
+        reward = env.exploration_rollout(policy_seq=[[0., 1.], [bandit_action_pairs[best_arm][0], bandit_action_pairs[best_arm][1]]],
+                                         buffer=None, steps=2, save=True, seed=ENVSEED)  # off-line
         env.close()
 
         COMM.Barrier()
-        print("### Reward is: ", reward) if RANK==0 else None
-        print("### Best arm amplitude (mA): ", amps[best_arm]) if RANK==0 else None
-        print("### Best arm freq (Hz): ", freqs[best_arm]) if RANK==0 else None
+        print("### Reward is: ", reward) if RANK == 0 else None
+        print("### Best arm amplitude (mA): ", bandit_action_pairs[best_arm][0]) if RANK == 0 else None
+        print("### Best arm freq (Hz): ", bandit_action_pairs[best_arm][1]) if RANK == 0 else None
 
         gc.collect()
 
-    print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
-    print("### Experiment completed.") if RANK==0 else None
+    print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK == 0 else None
+    print("### Experiment completed.") if RANK == 0 else None
 
 
 if __name__ == "__main__":
