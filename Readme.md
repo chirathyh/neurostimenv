@@ -40,13 +40,13 @@ Using the project
 Running a stochastic multi-arm bandit algorithm for a simple Ball and Stick Model.
 ```
 cd experiments/bandit 
-python mpirun -np 2 python run_mbandit.py experiment.name=test env=ballnstick agent=mbandit env.network.syn_activity=True experiment.tqdm=False agent.pretrain=True agent.checkpoint=test6
+mpirun -np 2 python run_mbandit.py experiment.name=test env=ballnstick agent=mbandit env.network.syn_activity=True experiment.tqdm=False agent.pretrain=True agent.checkpoint=test6
 ```
 
 Running a Implicit Q-Learning algorithm for a depression mirocircuit (HL23Net: https://pubmed.ncbi.nlm.nih.gov/35021088/).
 ```
 cd experiments/drl 
-mpirun -np 2 python run_iql.py experiment.name=test env=hl23net env.network.syn_activity=True experiment.debug=True experiment.tqdm=False experiment.plot=False
+mpirun -np 512 python run_iql.py experiment.name=test env=hl23net env.network.syn_activity=True experiment.debug=True experiment.tqdm=False experiment.plot=False
 ```
 
 <h4>Important Notes</h4>
