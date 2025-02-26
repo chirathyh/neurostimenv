@@ -61,8 +61,6 @@ def process_eeg(file_path):
         avg_power_alpha += target_power_alpha
         avg_power_beta += target_power_beta
 
-
-
         # Store results
         if all_freqs is None:
             all_freqs = freqs

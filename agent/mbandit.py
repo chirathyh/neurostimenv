@@ -2,7 +2,7 @@ import numpy as np
 
 
 class EpsilonGreedyBandit:
-    def __init__(self, n_arms, epsilon=0.1):
+    def __init__(self, n_arms, epsilon=0.1, pretrain=False, checkpoint=None):
         """
         Initialize the epsilon-greedy multi-armed bandit.
 
@@ -12,8 +12,16 @@ class EpsilonGreedyBandit:
         """
         self.n_arms = n_arms
         self.epsilon = epsilon
-        self.counts = np.zeros(n_arms)      # Count of times each arm has been pulled
-        self.values = np.zeros(n_arms)      # Estimated value (mean reward) for each arm
+
+        if pretrain:
+            self.counts = np.load("../../results/"+checkpoint+"/checkpoints/counts.npy")      # Count of times each arm has been pulled
+            self.values = np.load("../../results/"+checkpoint+"/checkpoints/values.npy")
+            print("Pretrained bandit loaded from checkpoint in experiment: ", checkpoint)
+            print(self.counts)
+            print(self.values)
+        else:
+            self.counts = np.zeros(n_arms)      # Count of times each arm has been pulled
+            self.values = np.zeros(n_arms)      # Estimated value (mean reward) for each arm
 
     def select_arm(self):
         """

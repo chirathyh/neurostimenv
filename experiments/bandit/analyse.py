@@ -7,7 +7,9 @@ from scipy.stats import t
 dt = 0.025
 fs = (1 / dt) * 1000
 nperseg = int(fs/2)
-transient = 2000  # in seconds L23Net uses : 2000
+
+transient = 4000  # in seconds L23Net uses : 2000
+
 t1 = int(transient/dt)
 print("Sampling Rate:", fs)
 
@@ -92,12 +94,12 @@ plt.figure(figsize=(10, 5))
 # Define colors in the blue, green, and purple families
 colors = ['royalblue', 'mediumseagreen', 'darkorchid', 'deepskyblue', 'limegreen', 'blueviolet']
 
-plt.plot(EEG_freq, EEG_ps, color=colors[0], linestyle='--', label="Reward=-0.12")
-plt.plot(EEG_freq2, EEG_ps2, color=colors[1], linestyle='--', label="Reward=-0.50")
-plt.plot(EEG_freq3, EEG_ps3, color=colors[2], linestyle='--', label="Reward=-1.19")
-plt.plot(EEG_freq4, EEG_ps4, color=colors[3], linestyle='--', label="Reward=-0.41")
-plt.plot(EEG_freq5, EEG_ps5, color=colors[4], linestyle='--', label="Reward=-2.45")
-plt.plot(EEG_freq6, EEG_ps6, color=colors[5], linestyle='--', label="Reward=-1.41")
+plt.plot(EEG_freq, EEG_ps, color=colors[0], linestyle='--', label="Reward= -0.12")
+plt.plot(EEG_freq2, EEG_ps2, color=colors[1], linestyle='--', label="Reward= -0.50")
+plt.plot(EEG_freq3, EEG_ps3, color=colors[2], linestyle='--', label="Reward= -0.41")
+plt.plot(EEG_freq4, EEG_ps4, color=colors[3], linestyle='--', label="Reward= -2.45")
+plt.plot(EEG_freq5, EEG_ps5, color=colors[4], linestyle='--', label="Reward= -1.41")
+plt.plot(EEG_freq6, EEG_ps6, color=colors[5], linestyle='--', label="Reward= -0.24")
 
 
 # plt.plot(EEG_freq_h, EEG_ps_h, color='k', linestyle='--', label="HEALTHY")
@@ -111,8 +113,24 @@ plt.fill_between(all_freqs, avg_psd - ci_95, avg_psd + ci_95, color='r', alpha=0
 plt.plot(all_freqs_h, avg_psd_h, color='k', label="Healthy")
 plt.fill_between(all_freqs_h, avg_psd_h - ci_95_h, avg_psd_h + ci_95_h, color='k', alpha=0.3)
 
-plt.xlim(4, 30)
-plt.ylim(0, 1e-19)
+
+# Add vertical lines at 8 Hz and 12 Hz
+plt.axvline(x=8, color='gray', linestyle='--', alpha=0.7)
+plt.axvline(x=12, color='gray', linestyle='--', alpha=0.7)
+plt.axvline(x=16, color='gray', linestyle='--', alpha=0.7)
+
+# Add text annotations for frequency bands (Greek notation)
+plt.text(6.5, plt.ylim()[0] + (plt.ylim()[1] - plt.ylim()[0]) * 0.05, r"$\theta$",
+         fontsize=14, color='black', ha='center', fontweight='bold')
+
+plt.text(10, plt.ylim()[0] + (plt.ylim()[1] - plt.ylim()[0]) * 0.05, r"$\alpha$",
+         fontsize=14, color='black', ha='center', fontweight='bold')
+
+plt.text(20, plt.ylim()[0] + (plt.ylim()[1] - plt.ylim()[0]) * 0.05, r"$\beta$",
+         fontsize=14, color='black', ha='center', fontweight='bold')
+
+plt.xlim(4, 50)
+# plt.ylim(0, 1e-19)
 plt.xlabel("Frequency (Hz)")
 plt.ylabel("Power (dB/Hz)")
 plt.title("Power Spectral Density (PSD)")

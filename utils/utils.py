@@ -20,6 +20,9 @@ def setup_folders(args):
             print(f"Error deleting {LOG_DIR}: {e}")
 
     os.makedirs(LOG_DIR, exist_ok=True)  # Ensure directory exists
+    os.makedirs(LOG_DIR + '/training/', exist_ok=True)  # Ensure directory exists
+    os.makedirs(LOG_DIR + '/testing/', exist_ok=True)  # Ensure directory exists
+    os.makedirs(LOG_DIR + '/checkpoints/', exist_ok=True)  # Ensure directory exists
     return args
 
 

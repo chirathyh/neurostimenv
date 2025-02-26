@@ -1,5 +1,6 @@
 import sys
 import time
+import csv
 import pandas as pd
 from mpi4py import MPI
 from decouple import config
@@ -61,7 +62,8 @@ def main(cfg: DictConfig) -> None:
                            [15., 75.]]
 
     if RANK==0:
-        bandit = EpsilonGreedyBandit(cfg.agent.n_arms, epsilon=0.1)
+        bandit = EpsilonGreedyBandit(cfg.agent.n_arms, epsilon=0.1,
+                                     pretrain=cfg.agent.pretrain, checkpoint=cfg.agent.checkpoint)
     else:
         bandit = None
     COMM.Barrier()
@@ -69,6 +71,7 @@ def main(cfg: DictConfig) -> None:
     rewards = np.zeros(cfg.agent.n_trials + cfg.agent.n_eval_trials)
     selected_freq = np.zeros(cfg.agent.n_trials + cfg.agent.n_eval_trials)
     selected_amp = np.zeros(cfg.agent.n_trials + cfg.agent.n_eval_trials)
+    selected_arm = np.zeros(cfg.agent.n_trials + cfg.agent.n_eval_trials)
     experiment_seed = np.zeros(cfg.agent.n_trials + cfg.agent.n_eval_trials)
 
     for t in range(cfg.agent.n_trials):
@@ -80,18 +83,30 @@ def main(cfg: DictConfig) -> None:
         ENVSEED = cfg.experiment.seed + t
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
         reward = env.exploration_rollout(policy_seq=[[0., 1.], [bandit_action_pairs[chosen_arm][0], bandit_action_pairs[chosen_arm][1]]],
-                                         buffer=None, steps=2, save=True, mode="EXP", seed=ENVSEED)  # off-line
+                                         buffer=None, steps=2, save=True, mode="training", seed=ENVSEED)  # off-line
         env.close()
 
         COMM.Barrier()
         if RANK==0:
+            # update the bandit algorithm and save values and counts as checkpoints.
             bandit.update(chosen_arm, reward)
-            rewards[t] = reward
-            selected_amp[t] = bandit_action_pairs[chosen_arm][0]
-            selected_freq[t] = bandit_action_pairs[chosen_arm][1]
-            experiment_seed[t] = ENVSEED
-        # optimal[t] = (chosen_arm == optimal_arm)
+            np.save(cfg.experiment.dir+"/checkpoints/values.npy", bandit.values)  # Save as .npy file
+            np.save(cfg.experiment.dir+"/checkpoints/counts.npy", bandit.counts)  # Save as .npy file
 
+            # saving
+            data = {"Reward": reward, "Arm": chosen_arm, "Amplitude": bandit_action_pairs[chosen_arm][0],
+                    "Frequency": bandit_action_pairs[chosen_arm][1], "Seed": ENVSEED}
+            with open(cfg.experiment.dir+"/training/STIM_BANDIT_"+str(ENVSEED)+".csv", "w", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow(data.keys())  # Write headers
+                writer.writerow(data.values())  # Write values
+            # save in bulk
+            # rewards[t] = reward
+            # selected_amp[t] = bandit_action_pairs[chosen_arm][0]
+            # selected_freq[t] = bandit_action_pairs[chosen_arm][1]
+            # selected_arm[t] = chosen_arm
+            # experiment_seed[t] = ENVSEED
+        # optimal[t] = (chosen_arm == optimal_arm)
         gc.collect()
 
     if RANK==0:
@@ -112,10 +127,10 @@ def main(cfg: DictConfig) -> None:
 
     for i in range(cfg.agent.n_eval_trials):
 
-        ENVSEED = cfg.experiment.seed + i + 100
+        ENVSEED = cfg.experiment.seed + i + 1000
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
         reward = env.exploration_rollout(policy_seq=[[0., 1.], [bandit_action_pairs[best_arm][0], bandit_action_pairs[best_arm][1]]],
-                                         buffer=None, steps=2, save=True, mode="EVAL", seed=ENVSEED)  # off-line
+                                         buffer=None, steps=2, save=True, mode="testing", seed=ENVSEED)  # off-line
         env.close()
 
         COMM.Barrier()
@@ -124,22 +139,30 @@ def main(cfg: DictConfig) -> None:
         print("### Best arm freq (Hz): ", bandit_action_pairs[best_arm][1]) if RANK == 0 else None
 
         if RANK == 0:
-            rewards[cfg.agent.n_trials+i] = reward
-            selected_amp[cfg.agent.n_trials+i] = bandit_action_pairs[best_arm][0]
-            selected_freq[cfg.agent.n_trials+i] = bandit_action_pairs[best_arm][1]
-            experiment_seed[cfg.agent.n_trials+i] = ENVSEED
+            # saving
+            data = {"Reward": reward, "Arm": best_arm,"Amplitude": bandit_action_pairs[best_arm][0],
+                    "Frequency": bandit_action_pairs[best_arm][1], "Seed": ENVSEED}
+            with open(cfg.experiment.dir+"/testing/STIM_BANDIT_"+str(ENVSEED)+".csv", "w", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow(data.keys())  # Write headers
+                writer.writerow(data.values())  # Write values
+            # save in bulk
+            # rewards[cfg.agent.n_trials+i] = reward
+            # selected_amp[cfg.agent.n_trials+i] = bandit_action_pairs[best_arm][0]
+            # selected_freq[cfg.agent.n_trials+i] = bandit_action_pairs[best_arm][1]
+            # selected_arm[cfg.agent.n_trials+i] = best_arm
+            # experiment_seed[cfg.agent.n_trials+i] = ENVSEED
 
         gc.collect()
 
     if RANK == 0:
-        df = pd.DataFrame({
-            'Reward': rewards,
-            'Amplitude': selected_amp,
-            'Frequency': selected_freq,
-            'Seed': experiment_seed
-        })
-        df.to_csv(cfg.experiment.dir+'/experiment_summary.csv', index=False)
-
+        # df = pd.DataFrame({
+        #     'Reward': rewards,
+        #     'Amplitude': selected_amp,
+        #     'Frequency': selected_freq,
+        #     'Seed': experiment_seed
+        # })
+        # df.to_csv(cfg.experiment.dir+'/experiment_summary.csv', index=False)
         print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes')
         print("### Experiment completed.")
 
@@ -148,7 +171,7 @@ if __name__ == "__main__":
     main()
 
 # python run_bandit.py experiment.name=test9 env=ballnstick agent=mbandit env.network.syn_activity=True
-# mpirun -np 2 python run_mbandit.py experiment.name=test9 env=ballnstick agent=mbandit env.network.syn_activity=True experiment.tqdm=False
+# mpirun -np 2 python run_mbandit.py experiment.name=test9 env=ballnstick agent=mbandit env.network.syn_activity=True experiment.tqdm=False agent.pretrain=True agent.checkpoint=test6
 
 # python run_bandit.py experiment.name=mtest9 env=hl23net agent=mbandit experiment.debug=True env.network.syn_activity=True
 # mpirun -np 64 python run_mbandit.py experiment.name=mtest9 env=hl23net agent=mbandit experiment.debug=True env.network.syn_activity=True experiment.tqdm=False
