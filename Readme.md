@@ -2,16 +2,12 @@
 <img src="img/logo.png" alt="GluCoEnv" width="477"/>
 </p>
 
-<div align="center">
-
 ---
-
 <h1>NeuroStimEnv: A Reinforcement Learning Environment for Closed-Loop Transcranial Brain
 Stimulation of Biological Neural Circuits</h1>
 
 ![license](https://img.shields.io/badge/License-MIT-yellow.svg)
 [![python_sup](https://img.shields.io/badge/python-3.10.12-black.svg?)](https://www.python.org/downloads/release/python-31012/)
-</div>
 
 **NeuroStimEnv** is a project to develop Reinforcement Learning (RL)-based transcranial stimulation treatment targeting different psychiatric and neurological disorders. The framework allows integration of different neural circuits using the NEURON simulation engine and develop RL algorithms to modulate the target neural oscillations (brain waves).
 
