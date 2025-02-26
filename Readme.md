@@ -29,6 +29,7 @@ Using the project
 ---
 
 <h4>Prerequsites</h4>
+
 * The environment is based on the gym framework. <br>
 * The neural environment is based on the <code>NEURON==8.2.3</code> and <code>LFPy==2.3</code>. <br>
 * The project uses the <code>SimNIBS==4.1.0</code> for the transcranial stimulation. <br>
@@ -46,7 +47,9 @@ Running a Implicit Q-Learning algorithm.
 cd experiments/drl 
 mpirun -np 2 python run_iql.py experiment.name=test env=hl23net env.network.syn_activity=True experiment.debug=True experiment.tqdm=False experiment.plot=False
 ```
+
 <h4>Important Notes</h4>
+
 * Running large neural circuits require a high-performance computing environment (e.g., <code>env=hl23net</code> with N=1,000 neurons). <br>
 * To test the framework on your local machine, use the <code>env=ballnstick</code>, which uses a simple circuit (N=40) without any biophesical mechanisms. <br>
 * Setting up neural circuit models
@@ -71,8 +74,8 @@ mpirun -np 2 python run_iql.py experiment.name=test env=hl23net env.network.syn_
 Contact
 --
 Chirath Hettiarachchi - chirath.hettiarachchi@anu.edu.au\
-School of Computing, College of Engineering & Computer Science,\
-Australian National University. 
+School of Computing, Australian National University. 
+
 
 TODO
 --
