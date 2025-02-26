@@ -78,13 +78,4 @@ Chirath Hettiarachchi - chirath.hettiarachchi@anu.edu.au\
 School of Computing, Australian National University. 
 
 
-TODO
---
-
-Run times:
-- N=100 neurons, setup 0.088 min (np=10, my laptop), runtime 1.435 min (4000ms at dt=0.512)
-- N=1000 neurons, setup 1.735 min (np=16, ohiohgpu), runtime 21 min (4000ms at dt=0.512)
-- N=1000 neurons, setup 27 mins, (np=16, nci), runtome 256 min (28,000 ms at 0.512)
-
-
 
