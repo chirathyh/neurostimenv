@@ -36,6 +36,7 @@ Using the project
 * You can download different neural circuit models from ModelDB (https://modeldb.science/).
 
 <h4>Quick Start - Running RL algorithms</h4>
+
 Running a stochastic multi-arm bandit algorithm.
 ```
 cd experiments/bandit 
