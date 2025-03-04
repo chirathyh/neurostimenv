@@ -12,7 +12,7 @@ Stimulation of Biological Neural Circuits</h1>
 **NeuroStimEnv** is a project to develop Reinforcement Learning (RL)-based transcranial stimulation treatment targeting different psychiatric and neurological disorders. The framework allows integration of different neural circuits using the NEURON simulation engine and develop RL algorithms to modulate the target neural oscillations (brain waves).
 
 <div align="center">
-<img src="img/neurostimenv.png" alt="GluCoEnv" width="477"/>
+<img src="img/neurostimenv.png" alt="NeuroStimEnv" width="477"/>
 </div>
 
 Using the project

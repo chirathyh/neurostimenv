@@ -1,10 +1,10 @@
 #!/bin/bash
 #PBS -P va80
 #PBS -q normal
-#PBS -l walltime=48:00:00
-#PBS -l mem=2090GB
+#PBS -l walltime=40:00:00
+#PBS -l mem=2470GB
 #PBS -l jobfs=100GB
-#PBS -l ncpus=528
+#PBS -l ncpus=624
 #PBS -M chirath.hettiarachchi@anu.edu.au
 #PBS -l storage=gdata/ny83
 #PBS -o out_bandit.txt
