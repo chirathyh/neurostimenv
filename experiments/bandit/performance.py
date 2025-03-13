@@ -17,8 +17,8 @@ t1 = int(transient/dt)
 print("Sampling Rate:", fs)
 
 
-count = np.load("../../data/bandit/bandit2/checkpoints/counts.npy")
-values = np.load("../../data/bandit/bandit2/checkpoints/values.npy")
+count = np.load("../../data/bandit/nbandit2/checkpoints/counts.npy")
+values = np.load("../../data/bandit/nbandit2/checkpoints/values.npy")
 
 print(count)
 print(values)
