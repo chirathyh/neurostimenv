@@ -75,7 +75,6 @@ def prep_stim_seq(action, step_size, steps, dt):
         # calc parameters based on amplitude and freq.
         amplitude = action[i][0] * 1e6  # LFPy accepts units nA, convert mA -> nA
         freq = action[i][1]
-        phase = action[i][2]  # Phase in radians
 
         total_cycles = freq * (step_size/1000)
         total_pulses = 2 * total_cycles

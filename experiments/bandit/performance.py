@@ -17,8 +17,8 @@ t1 = int(transient/dt)
 print("Sampling Rate:", fs)
 
 
-count = np.load("../../data/bandit/nbandit2/checkpoints/counts.npy")
-values = np.load("../../data/bandit/nbandit2/checkpoints/values.npy")
+count = np.load("../../data/bandit/hbandit1/checkpoints/counts.npy")
+values = np.load("../../data/bandit/hbandit1/checkpoints/values.npy")
 
 print(count)
 print(values)
@@ -62,15 +62,17 @@ def plot_rewards_whisker(rewards, arms):
     plt.show()
 
 # Example usage
-folder_path = "../../data/bandit/nbandit1/training"  # Change this to the folder containing your CSV files
+folder_path = "../../data/bandit/hbandit1/training"  # Change this to the folder containing your CSV files
 rewards, arms = read_rewards_from_csv(folder_path)
+plot_rewards_whisker(rewards, arms)
+plot_rewards(rewards)
 
-folder_path = "../../data/bandit/nbandit2/training"  # Change this to the folder containing your CSV files
-rewards2, arms2 = read_rewards_from_csv(folder_path)
+# folder_path = "../../data/bandit/hbandit2/training"  # Change this to the folder containing your CSV files
+# rewards2, arms2 = read_rewards_from_csv(folder_path)
 
 # plot_rewards(rewards)
-plot_rewards_whisker(rewards+rewards2, arms+arms2)
-plot_rewards(rewards+rewards2)
+# plot_rewards_whisker(rewards+rewards2, arms+arms2)
+# plot_rewards(rewards+rewards2)
 
 
 # folder_path = "../../data/bandit/bandit2/training"  # Change this to the folder containing your CSV files

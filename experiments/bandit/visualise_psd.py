@@ -87,7 +87,7 @@ def process_bandit_testing(folder_path):
     return all_freqs, avg_psd, ci_95
 
 
-all_freqs_b, avg_psd_b, ci_95_b = process_bandit_testing(folder_path="../../data/bandit/nbandit2/testing")
+all_freqs_b, avg_psd_b, ci_95_b = process_bandit_testing(folder_path="../../data/bandit/hbandit1/testing")
 all_freqs, avg_psd, ci_95 = process_eeg(file_path="../../data/feature_analysis/mdd/EEG_MDD_")
 all_freqs_h, avg_psd_h, ci_95_h = process_eeg(file_path="../../data/feature_analysis/healthy/EEG_HEALTHY_")
 
