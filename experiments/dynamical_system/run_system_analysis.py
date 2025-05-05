@@ -115,10 +115,10 @@ if __name__ == "__main__":
     main()
 
 # python run_system_analysis.py experiment.name=test9 env=ballnstick agent=mbandit env.network.syn_activity=True
-# mpirun -np 2 python run_system_analysis.py experiment.name=test9 env=ballnstick agent=mbandit env.network.syn_activity=True experiment.tqdm=False agent.pretrain=True agent.checkpoint=test6
+# mpirun -np 2 python run_system_analysis.py experiment.name=test9 env=ballnstick agent=mbandit env.network.syn_activity=True experiment.tqdm=False agent.pretrain=False agent.checkpoint=test6
 
 # python run_system_analysis.py experiment.name=mtest9 env=hl23net agent=mbandit experiment.debug=True env.network.syn_activity=True
-# mpirun -np 64 python run_system_analysis.py experiment.name=mtest9 env=hl23net agent=mbandit experiment.debug=True env.network.syn_activity=True experiment.tqdm=False
+# mpirun -np 4 python run_system_analysis.py experiment.name=mtest9 env=hl23net agent=mbandit experiment.debug=True env.network.syn_activity=True experiment.tqdm=False
 
 # killall mpirun
 

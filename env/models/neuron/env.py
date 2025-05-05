@@ -189,8 +189,8 @@ class NeuronEnv(gym.Env):
         eeg = None
         if self.args.env.ts.apply:
             self.extracellular_models[0].probe.set_current(stim_elec, i_stim)
-            self.network.enable_extracellular_stimulation_mpi(self.extracellular_models[0], t_ext, n=5)  # using because issue with mpi and L23Net
-            #self.network.enable_extracellular_stimulation(self.extracellular_models[0], t_ext, n=5)
+            #self.network.enable_extracellular_stimulation_mpi(self.extracellular_models[0], t_ext, n=5)  # using because issue with mpi and L23Net
+            self.network.enable_extracellular_stimulation(self.extracellular_models[0], t_ext, n=5)
 
         COMM.Barrier()
         SPIKES = self.network.simulate(probes=self.extracellular_models, **self.args.env.network.networkSimulationArguments)
