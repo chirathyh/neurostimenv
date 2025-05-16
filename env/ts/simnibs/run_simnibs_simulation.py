@@ -45,6 +45,7 @@ def run_tacs():
     S = sim_struct.SESSION()
     S.subpath = 'm2m_ernie'  # head mesh
     S.pathfem = 'TACSchallenge'  # Directory for the simulation
+    S.fields = 'eEjJ'
     S.map_to_surf=True
     S.open_in_gmsh=True # open results once they are ready
                         # (set to False if you are annoyed by the popup windows)
@@ -132,4 +133,8 @@ def run_tacs():
 #     run_tdcs(OUTPUT='results/tdcs/Fz_I2_'+str(current), positions=['Fz', 'I2'], currents=[current, -current], shapes=['ellipse', 'ellipse'])
 #run_tms(OUTPUT='tms_simu')
 # run_tacs()
-run_tdcs(OUTPUT='tdcs_simu1', positions=['Fz', 'I2'], curr1ents=[0.001, -0.001], shapes=['ellipse', 'ellipse'])
+
+run_tdcs(OUTPUT='tdcs_simu1', positions=['AF3', 'FC5'], currents=[0.001, -0.001], shapes=['ellipse', 'ellipse'])
+
+
+# simnibs_python run_simnibs_simulation.py

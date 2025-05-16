@@ -6,36 +6,24 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-head_mesh = read_msh('tdcs_simu1/ernie_TDCS_1_scalar.msh')
+head_mesh = read_msh('tacs_simu_4mA_8Hz/ernie_TDCS_1_scalar.msh')
+#head_mesh = read_msh('optimization/single_target.msh')
 gray_matter = head_mesh.crop_mesh(simnibs.ElementTags.GM)
 # scalp = head_mesh.crop_mesh(simnibs.ElementTags.SCALP)
-#ernie_coords = simnibs.mni2subject_coords([-58, 35, 50], 'm2m_ernie')  # F3: -58, 35, 50
 
-#ernie_coords = simnibs.subject2mni_coords([0., 0., 78.2], 'm2m_ernie')  # F3: -58, 35, 50
-ernie_coords = [78.2, 0, 0]
+# Coordinates of the target ROI
+# ernie_coords = simnibs.mni2subject_coords([-41, 41, 16], 'm2m_ernie')  # F3: -58, 35, 50
+ernie_coords = [-37.1796,  68.4849,  34.9607]  # the word/subject coordinate are present in the leadfield calculation
 
-# Final
-#ernie_coords = simnibs.mni2subject_coords([-41, 41, 16], 'm2m_ernie')  # F3: -58, 35, 50
-# ernie_coords = [-39.05980886279742,85.04069743317085,59.190744338211545]  # F3 electrode for subject
-# print(ernie_coords)
-
-
-#ernie_coords = [0.0007629211490047538, 0.0005164314240723371, -1.0247522935997254] # cartesian coordinates
-# ernie_coords = [0., 0., 90.2]
-
-
-
-
+# Radius of the ROI
+r = 10.0 # we will use a sphere of radius 10 mm
 # Electric fields are defined in the center of the elements
-r = 20.0 # we will use a sphere of radius 10 mm
 
 elm_centers = gray_matter.elements_baricenters()[:]  # get element centers
 roi = np.linalg.norm(elm_centers - ernie_coords, axis=1) < r  # determine the elements in the ROI
 elm_vols = gray_matter.elements_volumes_and_areas()[:]  # get the element volumes, we will use those for averaging
 num_elements_in_roi = np.sum(roi)
 print(f'Number of elements in ROI at {ernie_coords}: {num_elements_in_roi}')
-
-
 # scalp.add_element_field(roi, 'roi')
 # scalp.view(visible_fields='roi').show()
 
@@ -48,6 +36,18 @@ print(gray_matter.field)
 
 field_name = 'magnJ'
 field = gray_matter.field[field_name][:]
-# Calculate the mean
-mean_magnE = np.average(field[roi], weights=elm_vols[roi])
-print('mean ', field_name, ' in M1 ROI: ', mean_magnE)
+mean_magn = np.average(field[roi], weights=elm_vols[roi])  # Calculate the mean
+print('mean ', field_name, ' in M1 ROI: ', mean_magn)
+
+# calculating the current at the roi
+# --- convert to total current in ROI -------------------------------
+# radius in meters
+r_m = r / 1000.0
+# cross-sectional area (circle) perpendicular to current flow
+cross_area = np.pi * r_m**2                          # m²
+total_current = mean_magn * cross_area              # A
+
+print(f"Estimated total current through a {r}mm‑radius ROI: "
+      f"{total_current:.3e} A")
+
+# simnibs_python calc_roi_field.py
