@@ -62,17 +62,35 @@ def plot_rewards_whisker(rewards, arms):
     plt.show()
 
 # Example usage
-folder_path = "../../data/bandit/hbandit1/training"  # Change this to the folder containing your CSV files
+folder_path = "../../data/bandit/hopefulbandit/testing"  # Change this to the folder containing your CSV files
 rewards, arms = read_rewards_from_csv(folder_path)
+print(rewards)
+
+# Plot histogram
+plt.hist(rewards, bins=10, edgecolor='black')
+
+# Add labels and title
+plt.xlabel('Value')
+plt.ylabel('Frequency')
+plt.title('Histogram of List Data')
+
+# Show plot
+plt.show()
+
+
+
+exit()
 plot_rewards_whisker(rewards, arms)
 plot_rewards(rewards)
 
-# folder_path = "../../data/bandit/hbandit2/training"  # Change this to the folder containing your CSV files
-# rewards2, arms2 = read_rewards_from_csv(folder_path)
+exit()
 
-# plot_rewards(rewards)
-# plot_rewards_whisker(rewards+rewards2, arms+arms2)
-# plot_rewards(rewards+rewards2)
+folder_path = "../../data/bandit/nbandit2/training"  # Change this to the folder containing your CSV files
+rewards2, arms2 = read_rewards_from_csv(folder_path)
+
+plot_rewards(rewards)
+plot_rewards_whisker(rewards+rewards2, arms+arms2)
+plot_rewards(rewards+rewards2)
 
 
 # folder_path = "../../data/bandit/bandit2/training"  # Change this to the folder containing your CSV files

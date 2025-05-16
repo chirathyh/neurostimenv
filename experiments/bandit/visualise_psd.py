@@ -86,8 +86,19 @@ def process_bandit_testing(folder_path):
     ci_95 = t.ppf(0.975, df=len(csv_files)-1) * sem_psd
     return all_freqs, avg_psd, ci_95
 
+def process_temp(file):
+    b, a = ss.butter(N=2, Wn=[.1, 100.], btype='bandpass', fs=fs, output='ba')
+    EEG = np.loadtxt(file, delimiter=",")
+    EEG_filt = ss.filtfilt(b, a, EEG[t1:], axis=-1)
+    freqs, psd = ss.welch(EEG_filt, fs=fs, nperseg=nperseg)
+    return freqs, psd
 
-all_freqs_b, avg_psd_b, ci_95_b = process_bandit_testing(folder_path="../../data/bandit/hbandit1/testing")
+
+#all_freqs_b, avg_psd_b, ci_95_b = process_bandit_testing(folder_path="../../data/bandit/nbandit2/testing")
+all_freqs_b, avg_psd_b, ci_95_b = process_bandit_testing(folder_path="../../data/bandit/hopefulbandit/testing")
+#all_freqs_b, avg_psd_b = process_temp(file="../../data/bandit/nbandit2/testing/EEG_BANDIT_1062.csv")
+
+
 all_freqs, avg_psd, ci_95 = process_eeg(file_path="../../data/feature_analysis/mdd/EEG_MDD_")
 all_freqs_h, avg_psd_h, ci_95_h = process_eeg(file_path="../../data/feature_analysis/healthy/EEG_HEALTHY_")
 
