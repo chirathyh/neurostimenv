@@ -13,6 +13,10 @@ class EpsilonGreedyBandit:
         self.n_arms = n_arms
         self.epsilon = epsilon
 
+        self.c = n_arms
+        self.epsilon_min = self.c / 100  # for 100 trials
+        self.t = 0
+
         if pretrain:
             self.counts = np.load("../../results/"+checkpoint+"/checkpoints/counts.npy")      # Count of times each arm has been pulled
             self.values = np.load("../../results/"+checkpoint+"/checkpoints/values.npy")
@@ -27,6 +31,8 @@ class EpsilonGreedyBandit:
         """
         Select an arm to pull based on the epsilon-greedy strategy.
         """
+        self.t += 1
+        self.epsilon = max(self.epsilon_min, self.c/self.t)
         if np.random.rand() < self.epsilon:
             # Exploration: choose a random arm
             return np.random.randint(self.n_arms)

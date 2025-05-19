@@ -17,8 +17,8 @@ t1 = int(transient/dt)
 print("Sampling Rate:", fs)
 
 
-count = np.load("../../data/bandit/hbandit1/checkpoints/counts.npy")
-values = np.load("../../data/bandit/hbandit1/checkpoints/values.npy")
+count = np.load("../../data/bandit/simnibsbandit/checkpoints/counts.npy")
+values = np.load("../../data/bandit/simnibsbandit/checkpoints/values.npy")
 
 print(count)
 print(values)
@@ -62,7 +62,7 @@ def plot_rewards_whisker(rewards, arms):
     plt.show()
 
 # Example usage
-folder_path = "../../data/bandit/hopefulbandit/testing"  # Change this to the folder containing your CSV files
+folder_path = "../../data/bandit/simnibsbandit/training"  # Change this to the folder containing your CSV files
 rewards, arms = read_rewards_from_csv(folder_path)
 print(rewards)
 
@@ -70,28 +70,23 @@ print(rewards)
 plt.hist(rewards, bins=10, edgecolor='black')
 
 # Add labels and title
-plt.xlabel('Value')
-plt.ylabel('Frequency')
-plt.title('Histogram of List Data')
+# plt.xlabel('Value')
+# plt.ylabel('Frequency')
+# plt.title('Histogram of List Data')
+# plt.show()
 
-# Show plot
-plt.show()
-
-
-
-exit()
 plot_rewards_whisker(rewards, arms)
 plot_rewards(rewards)
 
-exit()
 
-folder_path = "../../data/bandit/nbandit2/training"  # Change this to the folder containing your CSV files
+
+folder_path = "../../data/bandit/simnibsbandit/testing"  # Change this to the folder containing your CSV files
 rewards2, arms2 = read_rewards_from_csv(folder_path)
 
-plot_rewards(rewards)
 plot_rewards_whisker(rewards+rewards2, arms+arms2)
 plot_rewards(rewards+rewards2)
 
+exit()
 
 # folder_path = "../../data/bandit/bandit2/training"  # Change this to the folder containing your CSV files
 # rewards2, arms2 = read_rewards_from_csv(folder_path)

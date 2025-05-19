@@ -85,7 +85,7 @@ def main(cfg: DictConfig) -> None:
 
 
     if RANK==0:
-        bandit = EpsilonGreedyBandit(cfg.agent.n_arms, epsilon=0.1,
+        bandit = EpsilonGreedyBandit(cfg.agent.n_arms, epsilon=1.0,
                                      pretrain=cfg.agent.pretrain, checkpoint=cfg.agent.checkpoint)
     else:
         bandit = None
@@ -105,8 +105,13 @@ def main(cfg: DictConfig) -> None:
 
         ENVSEED = cfg.experiment.seed + t
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
-        reward = env.exploration_rollout(policy_seq=[[0., 1.], [bandit_action_pairs[chosen_arm][0], bandit_action_pairs[chosen_arm][1]]],
-                                         buffer=None, steps=2, save=True, mode="training", seed=ENVSEED)  # off-line
+        reward = env.exploration_rollout(policy_seq=[[0., 1.], [0., 1.], [0., 1.], [0., 1.],
+                                                     [0., 1.],
+                                                     [bandit_action_pairs[chosen_arm][0], bandit_action_pairs[chosen_arm][1]],
+                                                     [0., 1.],
+                                                     [bandit_action_pairs[chosen_arm][0], bandit_action_pairs[chosen_arm][1]]
+                                                     ],
+                                         buffer=None, steps=8, save=True, mode="training", seed=ENVSEED)  # off-line
         env.close()
 
         COMM.Barrier()
@@ -152,8 +157,13 @@ def main(cfg: DictConfig) -> None:
 
         ENVSEED = cfg.experiment.seed + i + 1000
         env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
-        reward = env.exploration_rollout(policy_seq=[[0., 1.], [bandit_action_pairs[best_arm][0], bandit_action_pairs[best_arm][1]]],
-                                         buffer=None, steps=2, save=True, mode="testing", seed=ENVSEED)  # off-line
+        reward = env.exploration_rollout(policy_seq=[[0., 1.], [0., 1.], [0., 1.], [0., 1.],
+                                                     [0., 1.],
+                                                     [bandit_action_pairs[best_arm][0], bandit_action_pairs[best_arm][1]],
+                                                     [0., 1.],
+                                                     [bandit_action_pairs[best_arm][0], bandit_action_pairs[best_arm][1]]
+                                                     ],
+                                         buffer=None, steps=8, save=True, mode="testing", seed=ENVSEED)  # off-line
         env.close()
 
         COMM.Barrier()

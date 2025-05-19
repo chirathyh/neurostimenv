@@ -94,7 +94,7 @@ def process_bandit_testing(folder_path):
     for file, reward_file in zip(csv_files, reward_files):
         df = pd.read_csv(reward_file)
         rew = df['Reward'].values[0]
-        if rew < -0.05:
+        if rew < -0.5:
             continue
         else:
             print(rew)
@@ -124,7 +124,7 @@ def process_temp(file):
 #### MAIN CODE ###
 
 #all_freqs_b, avg_psd_b, ci_95_b = process_bandit_testing(folder_path="../../data/bandit/nbandit2/testing")
-all_freqs_b, avg_psd_b, ci_95_b = process_bandit_testing(folder_path="../../data/bandit/hopefulbandit/testing")
+all_freqs_b, avg_psd_b, ci_95_b = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit/testing")
 #all_freqs_b, avg_psd_b = process_temp(file="../../data/bandit/nbandit2/testing/EEG_BANDIT_1062.csv")
 
 

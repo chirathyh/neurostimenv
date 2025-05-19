@@ -95,8 +95,8 @@ def process_temp(file):
 
 
 #all_freqs_b, avg_psd_b, ci_95_b = process_bandit_testing(folder_path="../../data/bandit/nbandit2/testing")
-all_freqs_b, avg_psd_b, ci_95_b = process_bandit_testing(folder_path="../../data/bandit/hopefulbandit/testing")
-#all_freqs_b, avg_psd_b = process_temp(file="../../data/bandit/nbandit2/testing/EEG_BANDIT_1062.csv")
+all_freqs_b, avg_psd_b, ci_95_b = process_bandit_testing(folder_path="../../data/bandit/hbandit1/testing")
+#all_freqs_b, avg_psd_b = process_temp(file="../../data/bandit/simnibsbandit/testing/EEG_BANDIT_1013.csv")
 
 
 all_freqs, avg_psd, ci_95 = process_eeg(file_path="../../data/feature_analysis/mdd/EEG_MDD_")
