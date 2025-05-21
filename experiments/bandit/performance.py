@@ -17,8 +17,8 @@ t1 = int(transient/dt)
 print("Sampling Rate:", fs)
 
 
-count = np.load("../../data/bandit/simnibsbandit/checkpoints/counts.npy")
-values = np.load("../../data/bandit/simnibsbandit/checkpoints/values.npy")
+count = np.load("../../data/bandit/simnibsbandit2/checkpoints/counts.npy")
+values = np.load("../../data/bandit/simnibsbandit2/checkpoints/values.npy")
 
 print(count)
 print(values)
@@ -62,7 +62,7 @@ def plot_rewards_whisker(rewards, arms):
     plt.show()
 
 # Example usage
-folder_path = "../../data/bandit/simnibsbandit/training"  # Change this to the folder containing your CSV files
+folder_path = "../../data/bandit/simnibsbandit2/training"  # Change this to the folder containing your CSV files
 rewards, arms = read_rewards_from_csv(folder_path)
 print(rewards)
 
@@ -77,7 +77,7 @@ plt.hist(rewards, bins=10, edgecolor='black')
 
 plot_rewards_whisker(rewards, arms)
 plot_rewards(rewards)
-
+exit()
 
 
 folder_path = "../../data/bandit/simnibsbandit/testing"  # Change this to the folder containing your CSV files

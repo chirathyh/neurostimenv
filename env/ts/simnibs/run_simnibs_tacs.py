@@ -37,5 +37,5 @@ def run_tacs(amp=1, freq=2):
     run_simnibs(S)
 
 
-run_tacs(amp=4, freq=8)
+run_tacs(amp=1, freq=100)
 # simnibs_python run_simnibs_tacs.py

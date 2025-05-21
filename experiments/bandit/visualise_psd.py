@@ -21,9 +21,10 @@ def process(filepath):
     print("Loaded data:\n", EEG)
     # signal filtering
     b, a = ss.butter(N=2, Wn=[.1, 100.], btype='bandpass', fs=fs, output='ba')
-    EEG_filt = ss.filtfilt(b, a, EEG[t1:], axis=-1)
 
+    EEG_filt = ss.filtfilt(b, a, EEG[t1:], axis=-1)
     EEG_freq, EEG_ps = ss.welch(EEG_filt, fs=fs, nperseg=nperseg)
+
     #EEG_freq, EEG_ps = ss.welch(EEG_filt[t1:], fs=fs, nperseg=nperseg)
     return EEG_freq, EEG_ps
 
@@ -44,6 +45,7 @@ def process_eeg(file_path):
     for file in file_list:
         print(f"Processing {file}...")
         EEG = np.loadtxt(file, delimiter=",")
+
         EEG_filt = ss.filtfilt(b, a, EEG[t1:], axis=-1)
         freqs, psd = ss.welch(EEG_filt, fs=fs, nperseg=nperseg)
 
@@ -75,8 +77,10 @@ def process_bandit_testing(folder_path):
     all_freqs = None
     for file in sorted(csv_files):
         EEG = np.loadtxt(file, delimiter=",")
+
         EEG_filt = ss.filtfilt(b, a, EEG[t1:], axis=-1)
         freqs, psd = ss.welch(EEG_filt, fs=fs, nperseg=nperseg)
+
         if all_freqs is None:
             all_freqs = freqs
         all_psd.append(psd)
@@ -95,7 +99,7 @@ def process_temp(file):
 
 
 #all_freqs_b, avg_psd_b, ci_95_b = process_bandit_testing(folder_path="../../data/bandit/nbandit2/testing")
-all_freqs_b, avg_psd_b, ci_95_b = process_bandit_testing(folder_path="../../data/bandit/hbandit1/testing")
+all_freqs_b, avg_psd_b, ci_95_b = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit2/testing")
 #all_freqs_b, avg_psd_b = process_temp(file="../../data/bandit/simnibsbandit/testing/EEG_BANDIT_1013.csv")
 
 
