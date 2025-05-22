@@ -10,6 +10,8 @@ sys.path.insert(1, MAIN_PATH)
 import warnings
 warnings.simplefilter('ignore', Warning)
 
+from neuron import h
+
 from env.models.neuron.env import NeuronEnv
 from agent.mbandit import EpsilonGreedyBandit
 
@@ -109,10 +111,14 @@ def main(cfg: DictConfig) -> None:
                                                      [0., 1.],
                                                      [bandit_action_pairs[chosen_arm][0], bandit_action_pairs[chosen_arm][1]],
                                                      [0., 1.],
-                                                     [bandit_action_pairs[chosen_arm][0], bandit_action_pairs[chosen_arm][1]]
+                                                     [bandit_action_pairs[chosen_arm][0], bandit_action_pairs[chosen_arm][1]],
+                                                     [0., 1.]
                                                      ],
-                                         buffer=None, steps=8, save=True, mode="training", seed=ENVSEED)  # off-line
+                                         buffer=None, steps=9, save=True, mode="training", seed=ENVSEED)  # off-line
         env.close()
+        h('forall delete_section()')      # drop all sections
+        del env
+        gc.collect()
 
         COMM.Barrier()
         if RANK==0:
@@ -161,9 +167,10 @@ def main(cfg: DictConfig) -> None:
                                                      [0., 1.],
                                                      [bandit_action_pairs[best_arm][0], bandit_action_pairs[best_arm][1]],
                                                      [0., 1.],
-                                                     [bandit_action_pairs[best_arm][0], bandit_action_pairs[best_arm][1]]
+                                                     [bandit_action_pairs[best_arm][0], bandit_action_pairs[best_arm][1]],
+                                                     [0., 1.]
                                                      ],
-                                         buffer=None, steps=8, save=True, mode="testing", seed=ENVSEED)  # off-line
+                                         buffer=None, steps=9, save=True, mode="testing", seed=ENVSEED)  # off-line
         env.close()
 
         COMM.Barrier()
@@ -203,7 +210,7 @@ def main(cfg: DictConfig) -> None:
 if __name__ == "__main__":
     main()
 
-# python run_bandit.py experiment.name=test9 env=ballnstick agent=mbandit env.network.syn_activity=True
+# python run_bandit.py experiment.name=test9 env=ballnstick agent=mbandit env.network.syn_activity=True env.ts.apply=True
 # mpirun -np 2 python run_mbandit.py experiment.name=test9 env=ballnstick agent=mbandit env.network.syn_activity=True experiment.tqdm=False agent.pretrain=True agent.checkpoint=test6
 
 # python run_bandit.py experiment.name=mtest9 env=hl23net agent=mbandit experiment.debug=True env.network.syn_activity=True

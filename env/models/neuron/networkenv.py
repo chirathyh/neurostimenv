@@ -98,13 +98,23 @@ class NetworkEnv(Network):
         # self.lfpy_state.restore()
         # print(self.tstop)
         v_ext = {}
+
+        # original implementation; used in simnibsbandit2
+        # for popname in self.populations.keys():
+        #     cells = self.populations[popname].cells
+        #     if len(cells) != 0:  # TODO: <chirath> I'm skipping when cells are zero during multiple processes.
+        #         v_ext[popname] = np.zeros((len(cells), cells[0].totnsegs, len(t_ext)))
+        #         for id_cell, cell in enumerate(cells):
+        #             electrode.probe.electrodes[0].mapping = None  # this could be inefficient, mapping calculated every time.
+        #             v_ext[popname][id_cell] = cell.enable_extracellular_stimulation(electrode, t_ext, n, model)
+
+        # to save memory; not saving the v_ext => tring for used in simnibsbandit3
         for popname in self.populations.keys():
             cells = self.populations[popname].cells
             if len(cells) != 0:  # TODO: <chirath> I'm skipping when cells are zero during multiple processes.
-                v_ext[popname] = np.zeros((len(cells), cells[0].totnsegs, len(t_ext)))
                 for id_cell, cell in enumerate(cells):
                     electrode.probe.electrodes[0].mapping = None  # this could be inefficient, mapping calculated every time.
-                    v_ext[popname][id_cell] = cell.enable_extracellular_stimulation(electrode, t_ext, n, model)
+                    cell.enable_extracellular_stimulation(electrode, t_ext, n, model)
 
         return v_ext
     # def init_simulation(self, probes=None, t_ext=None, obs_win_len=None,

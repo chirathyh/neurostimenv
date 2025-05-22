@@ -181,7 +181,7 @@ class NeuronEnv(gym.Env):
                     # print(reward, cur_action)
                 cur_state = next_state
             print("Exploration rollout successfully completed.\n")
-        return reward
+        return reward  # the returned reward is always the last segment.
 
     def step_n(self, i_stim, t_ext, stim_elec):
         COMM = self.MPI_VAR['COMM']
