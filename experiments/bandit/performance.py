@@ -7,6 +7,23 @@ import numpy as np
 from scipy.stats import t
 import seaborn as sns
 
+plt.rcParams.update({
+    # Base font size for small text (ticks, annotations)
+    'font.size': 14,
+    # Axis titles
+    'axes.titlesize': 16,
+    # Axis labels (xlabel, ylabel)
+    'axes.labelsize': 16,
+    # Tick labels
+    'xtick.labelsize': 14,
+    'ytick.labelsize': 14,
+    # Legend text
+    'legend.fontsize': 14,
+    # Figure title (if you ever use suptitle)
+    'figure.titlesize': 18,
+})
+
+
 dt = 0.025
 fs = (1 / dt) * 1000
 nperseg = int(fs/2)
@@ -62,7 +79,7 @@ def plot_rewards_whisker(rewards, arms):
     plt.show()
 
 # Example usage
-folder_path = "../../data/bandit/simnibsbandit2/training"  # Change this to the folder containing your CSV files
+folder_path = "../../data/bandit/simnibsbandit3/training"  # Change this to the folder containing your CSV files
 rewards, arms = read_rewards_from_csv(folder_path)
 print(rewards)
 
