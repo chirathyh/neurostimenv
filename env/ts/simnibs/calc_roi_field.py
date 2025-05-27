@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import pyvista as pv
+
 
 head_mesh = read_msh('tacs_simu_4mA_8Hz/ernie_TDCS_1_scalar.msh')
 #head_mesh = read_msh('optimization/single_target.msh')

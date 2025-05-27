@@ -272,12 +272,12 @@ FREQ = [8, 8, 8, 10, 40, 77.5]  # Hz
 # all_freqs_h, avg_psd_h, ci_lower_h, ci_upper_h = process_eeg(file_path="../../data/feature_analysis/healthy/EEG_HEALTHY_")
 all_freqs, avg_psd, ci_lower, ci_upper, all_freqs_h, avg_psd_h, ci_lower_h, ci_upper_h = load_calculated_psd_healthy_mdd()
 
-all_freqs_b, avg_psd_b, ci_lower_b, ci_upper_b = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit3/training",
-                                                                        selected_arm=SELECTED_ARM, segment=5)
-
-
-all_freqs_seg1, avg_psd_seg1, ci_lower_seg1, ci_upper_seg1 = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit3/training",
-                                                                        selected_arm=SELECTED_ARM, segment=1)
+# all_freqs_b, avg_psd_b, ci_lower_b, ci_upper_b = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit3/training",
+#                                                                         selected_arm=SELECTED_ARM, segment=5)
+#
+#
+# all_freqs_seg1, avg_psd_seg1, ci_lower_seg1, ci_upper_seg1 = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit3/training",
+#                                                                         selected_arm=SELECTED_ARM, segment=1)
 
 
 # testing whether somehow signal len has an effect: it does not
@@ -290,21 +290,21 @@ plt.figure(figsize=(10, 5))
 colors = ['royalblue', 'mediumseagreen', 'darkorchid', 'deepskyblue', 'limegreen', 'blueviolet']
 
 # Depression group
-plt.plot(all_freqs, avg_psd, color='r', linestyle='--', label="Depression")
-#plt.fill_between(all_freqs, ci_lower, ci_upper, color='r', alpha=0.3)
+plt.plot(all_freqs, avg_psd, color='r', label="Depression Baseline")  # , linestyle='--'
+plt.fill_between(all_freqs, ci_lower, ci_upper, color='r', alpha=0.3)
 
 # Healthy group
-plt.plot(all_freqs_h, avg_psd_h, color='k', linestyle='--', label="Healthy")
-#plt.fill_between(all_freqs_h, ci_lower_h, ci_upper_h, color='k', alpha=0.3)
+plt.plot(all_freqs_h, avg_psd_h, color='k', label="Healthy Baseline") # , linestyle='--'
+plt.fill_between(all_freqs_h, ci_lower_h, ci_upper_h, color='k', alpha=0.3)
 
 # bandit results
 #plt.plot(all_freqs_b, avg_psd_b, color='g', label=f"Bandit Stimulation: {AMP[SELECTED_ARM]}mA, {FREQ[SELECTED_ARM]}Hz")
-plt.plot(all_freqs_b, avg_psd_b, color='tab:green', label=f"Bandit Stimulation: Segment 5")
-plt.fill_between(all_freqs_h, ci_lower_b, ci_upper_b, color='tab:green', alpha=0.3)
-
-
-plt.plot(all_freqs_seg1, avg_psd_seg1, color='tab:blue', label=f"Bandit Stimulation: Segment 1")
-plt.fill_between(all_freqs_seg1, ci_lower_seg1, ci_upper_seg1, color='tab:blue', alpha=0.3)
+# plt.plot(all_freqs_b, avg_psd_b, color='tab:green', label=f"Bandit Stimulation: Segment 5")
+# plt.fill_between(all_freqs_h, ci_lower_b, ci_upper_b, color='tab:green', alpha=0.3)
+#
+#
+# plt.plot(all_freqs_seg1, avg_psd_seg1, color='tab:blue', label=f"Bandit Stimulation: Segment 1")
+# plt.fill_between(all_freqs_seg1, ci_lower_seg1, ci_upper_seg1, color='tab:blue', alpha=0.3)
 
 # Add vertical lines at 8 Hz and 12 Hz
 plt.axvline(x=8, color='gray', linestyle='--', alpha=0.7)
