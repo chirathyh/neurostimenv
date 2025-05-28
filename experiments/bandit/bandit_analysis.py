@@ -1,16 +1,29 @@
 import os
 import glob
+
+import os
+import re
+import sys
+from decouple import config
+
+MAIN_PATH = config('MAIN_PATH')
+sys.path.insert(1, MAIN_PATH)
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.signal as ss
 import numpy as np
 from scipy.stats import t
 from scipy.signal import stft
+from env.eeg import features
 
 
 dt = 0.025
 fs = (1 / dt) * 1000
+
 nperseg = int(fs/2)
+noverlap = int(nperseg*0.5) #nperseg-1 #nperseg // 2
+
 transient = 4000  # ms; first 4s is removed from the EEG (triansient phase)
 t1 = int(transient/dt)
 print("Sampling Rate:", fs)
@@ -35,7 +48,7 @@ plt.rcParams.update({
 
 
 
-def bootstrap_ci(data, num_bootstraps=1000, ci=95):
+def bootstrap_ci(data, num_bootstraps=5, ci=95):
     """
     Compute the bootstrapped mean and confidence interval.
 
@@ -85,7 +98,7 @@ def process_eeg(file_path):
         print(f"Processing {file}...")
         EEG = np.loadtxt(file, delimiter=",")
         EEG_filt = ss.filtfilt(b, a, EEG[t1:], axis=-1)
-        freqs, psd = ss.welch(EEG_filt, fs=fs, nperseg=nperseg)
+        freqs, psd = ss.welch(EEG_filt, fs=fs, nperseg=nperseg, noverlap=noverlap)
 
         # Store results
         if all_freqs is None:
@@ -108,22 +121,30 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
     all_freqs = None
 
     for file, reward_file in zip(sorted(csv_files), sorted(reward_files)):
-        print(file, reward_file)
+        #print(file, reward_file)
         df = pd.read_csv(reward_file)
         rew = df['Reward'].values[0]
 
         arm = df['Arm'].values[0]
         if arm != selected_arm:
             continue
-        print(rew)
-        # if rew < -1.5:
-        #     continue
 
+        #print(file, reward_file)
         EEG = np.loadtxt(file, delimiter=",")
         EEG_filt = ss.filtfilt(b, a, EEG[t1:], axis=-1)
 
-        # different protocol stages
         x1 = int(1000/dt)
+
+
+        # if rew > -2.5:
+        #     continue
+        selection_reward = features.reward_func_simple(np.array(EEG_filt[0:x1]), fs)
+
+        if selection_reward <= -0.09264591737143694:
+            continue
+        print(selection_reward)
+
+        # different protocol stages
         if segment == 1:
             EEG_segment = EEG_filt[0:x1]
         elif segment == 2:
@@ -140,13 +161,18 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
             print("select segment")
             exit()
 
-        freqs, psd = ss.welch(EEG_segment, fs=fs, nperseg=nperseg)
+        freqs, psd = ss.welch(EEG_segment, fs=fs, nperseg=nperseg, noverlap=noverlap)
         if all_freqs is None:
             all_freqs = freqs
         all_psd.append(psd)
 
     print("total examples: ", len(all_psd))
-    avg_psd, ci_lower, ci_upper = bootstrap_ci(all_psd)
+
+    ci_lower, ci_upper = [], []
+    #avg_psd, ci_lower, ci_upper = bootstrap_ci(all_psd)
+
+    avg_psd = np.mean(np.array(all_psd), axis=0)
+
     return all_freqs, avg_psd, ci_lower, ci_upper
 
 
@@ -195,14 +221,19 @@ def plot_sfft_bandit_testing(folder_path, selected_arm=1, segment=4):
         arm = df['Arm'].values[0]
         if arm != selected_arm:
             continue
-        # if rew < -1.5:
-        #     continue
+
 
         EEG = np.loadtxt(file, delimiter=",")
         EEG_filt = ss.filtfilt(b, a, EEG[t1:], axis=-1)
 
-        # different protocol stages
         x1 = int(1000/dt)
+
+        selection_reward = features.reward_func_simple(np.array(EEG_filt[0:x1]), fs)
+        if selection_reward >= -0.09264591737143694 :
+            continue
+
+        # different protocol stages
+
         if segment == 1:
             EEG_segment = EEG_filt[0:x1]
         elif segment == 2:
@@ -272,12 +303,12 @@ FREQ = [8, 8, 8, 10, 40, 77.5]  # Hz
 # all_freqs_h, avg_psd_h, ci_lower_h, ci_upper_h = process_eeg(file_path="../../data/feature_analysis/healthy/EEG_HEALTHY_")
 all_freqs, avg_psd, ci_lower, ci_upper, all_freqs_h, avg_psd_h, ci_lower_h, ci_upper_h = load_calculated_psd_healthy_mdd()
 
-# all_freqs_b, avg_psd_b, ci_lower_b, ci_upper_b = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit3/training",
-#                                                                         selected_arm=SELECTED_ARM, segment=5)
-#
-#
-# all_freqs_seg1, avg_psd_seg1, ci_lower_seg1, ci_upper_seg1 = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit3/training",
-#                                                                         selected_arm=SELECTED_ARM, segment=1)
+all_freqs_b, avg_psd_b, ci_lower_b, ci_upper_b = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit3/training",
+                                                                        selected_arm=SELECTED_ARM, segment=5)
+
+
+all_freqs_seg1, avg_psd_seg1, ci_lower_seg1, ci_upper_seg1 = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit3/training",
+                                                                        selected_arm=SELECTED_ARM, segment=1)
 
 
 # testing whether somehow signal len has an effect: it does not
@@ -290,20 +321,20 @@ plt.figure(figsize=(10, 5))
 colors = ['royalblue', 'mediumseagreen', 'darkorchid', 'deepskyblue', 'limegreen', 'blueviolet']
 
 # Depression group
-plt.plot(all_freqs, avg_psd, color='r', label="Depression Baseline")  # , linestyle='--'
-plt.fill_between(all_freqs, ci_lower, ci_upper, color='r', alpha=0.3)
-
-# Healthy group
-plt.plot(all_freqs_h, avg_psd_h, color='k', label="Healthy Baseline") # , linestyle='--'
-plt.fill_between(all_freqs_h, ci_lower_h, ci_upper_h, color='k', alpha=0.3)
+plt.plot(all_freqs, avg_psd, color='r', linestyle='--', label="Depression Baseline")  # , linestyle='--'
+# plt.fill_between(all_freqs, ci_lower, ci_upper, color='r', alpha=0.3)
+#
+# # Healthy group
+plt.plot(all_freqs_h, avg_psd_h, color='k', linestyle='--', label="Healthy Baseline") #
+# plt.fill_between(all_freqs_h, ci_lower_h, ci_upper_h, color='k', alpha=0.3)
 
 # bandit results
 #plt.plot(all_freqs_b, avg_psd_b, color='g', label=f"Bandit Stimulation: {AMP[SELECTED_ARM]}mA, {FREQ[SELECTED_ARM]}Hz")
-# plt.plot(all_freqs_b, avg_psd_b, color='tab:green', label=f"Bandit Stimulation: Segment 5")
-# plt.fill_between(all_freqs_h, ci_lower_b, ci_upper_b, color='tab:green', alpha=0.3)
-#
-#
-# plt.plot(all_freqs_seg1, avg_psd_seg1, color='tab:blue', label=f"Bandit Stimulation: Segment 1")
+plt.plot(all_freqs_b, avg_psd_b, color='tab:green', label=f"Bandit Stimulation: Segment 5")
+# plt.fill_between(all_freqs_b, ci_lower_b, ci_upper_b, color='tab:green', alpha=0.3)
+
+
+plt.plot(all_freqs_seg1, avg_psd_seg1, color='tab:blue', label=f"Bandit Stimulation: Segment 1")
 # plt.fill_between(all_freqs_seg1, ci_lower_seg1, ci_upper_seg1, color='tab:blue', alpha=0.3)
 
 # Add vertical lines at 8 Hz and 12 Hz
