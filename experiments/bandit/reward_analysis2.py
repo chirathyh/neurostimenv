@@ -116,6 +116,7 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
     b, a = ss.butter(N=2, Wn=[.1, 100.], btype='bandpass', fs=fs, output='ba')
     reward_values = []
     reward_values_final_segment = []
+    reward_values_final_segment3 = []
 
     for file, reward_file in zip(sorted(csv_files), sorted(reward_files)):
         #print(file, reward_file)
@@ -156,7 +157,10 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
         reward_final = features.reward_func_simple(np.array(EEG_filt[x1*4 : ]), fs)
         reward_values_final_segment.append(reward_final)
 
-    return reward_values, reward_values_final_segment
+        reward_final3 = features.reward_func_simple(np.array(EEG_filt[x1*2 : x1*3]), fs)
+        reward_values_final_segment3.append(reward_final3)
+
+    return reward_values, reward_values_final_segment, reward_values_final_segment3
 
 
 def save_calculated_psd_healthy_mdd(all_freqs, avg_psd, ci_lower, ci_upper,
@@ -189,8 +193,8 @@ SEGEMENT = 1
 AMP = [1, 2, 4, 2, 2, 15]  # mA
 FREQ = [8, 8, 8, 10, 40, 77.5]  # Hz
 
-reward_values_mdd = process_eeg(file_path="../../data/feature_analysis/mdd/EEG_MDD_")
-reward_values_healthy = process_eeg(file_path="../../data/feature_analysis/healthy/EEG_HEALTHY_")
+# reward_values_mdd = process_eeg(file_path="../../data/feature_analysis/mdd/EEG_MDD_")
+# reward_values_healthy = process_eeg(file_path="../../data/feature_analysis/healthy/EEG_HEALTHY_")
 #
 # print(min(reward_values_healthy))
 # print(max(reward_values_healthy))
@@ -200,19 +204,19 @@ reward_values_healthy = process_eeg(file_path="../../data/feature_analysis/healt
 
 # print(len(reward_values_mdd))
 # print(len(reward_values_healthy))
+# #
+# plt.figure(figsize=(10, 5))
+# plt.hist(reward_values_mdd, bins=10, alpha=0.5, label='MDD', orientation='horizontal')  # semi-transparent bars for x
+# plt.hist(reward_values_healthy, bins=10, alpha=0.5, label='Healthy', orientation='horizontal')  # same bins for y
+# plt.axhline(y=-0.09264591737143694, color='r', label='Cutoff value', linestyle='--', alpha=0.7)
+# plt.legend()                              # show labels
+# plt.xlabel('Frequency')
+# plt.ylabel('Reward/Score')
 #
-plt.figure(figsize=(10, 5))
-plt.hist(reward_values_mdd, bins=10, alpha=0.5, label='MDD', orientation='horizontal')  # semi-transparent bars for x
-plt.hist(reward_values_healthy, bins=10, alpha=0.5, label='Healthy', orientation='horizontal')  # same bins for y
-plt.axhline(y=-0.09264591737143694, color='r', label='Cutoff value', linestyle='--', alpha=0.7)
-plt.legend()                              # show labels
-plt.xlabel('Frequency')
-plt.ylabel('Reward/Score')
+# plt.show()
+# exit()
 
-plt.show()
-exit()
-
-reward_values, reward_values_final_segment = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit3/training", selected_arm=SELECTED_ARM, segment=5)
+reward_values, reward_values_final_segment, reward_values_final_segment3 = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit3/training", selected_arm=SELECTED_ARM, segment=5)
 
 print(len(reward_values))
 print(len(reward_values_final_segment))
@@ -230,11 +234,11 @@ print(reward_values_final_segment)
 # plt.show()
 # exit()
 
-plt.figure(figsize=(5, 10))
+plt.figure(figsize=(8, 10))
 
 # Plot line segments
 up = 0
-for a_val, b_val in zip(reward_values, reward_values_final_segment):
+for a_val, b_val, c_val in zip(reward_values, reward_values_final_segment, reward_values_final_segment3):
     if a_val >= -0.09264591737143694:  # a_val >= b_val and
         c = 'r'
     elif a_val >= b_val:
@@ -242,14 +246,14 @@ for a_val, b_val in zip(reward_values, reward_values_final_segment):
         up += 1
     else:
         c ='g'
-    plt.plot([0, 1], [a_val, b_val], color=c, alpha=0.6, marker='o',            # draw circles at each data point
+    plt.plot([0, 1, 2], [a_val, c_val, b_val], color=c, alpha=0.6, marker='o',            # draw circles at each data point
                     markersize=6,          # size of the circles
                     markerfacecolor=c,     # fill color same as line
                     markeredgecolor=c )
 
 # Customize plot
 plt.xlim(-0.1, 1.1)
-plt.xticks([0, 1], ['Segment 1', 'Segment 5'])
+plt.xticks([0, 1, 2], ['Segment 1', 'Segment 3', 'Segment 5'])
 plt.ylabel('Reward')
 plt.grid(True, linestyle='--', alpha=0.5)
 plt.tight_layout()

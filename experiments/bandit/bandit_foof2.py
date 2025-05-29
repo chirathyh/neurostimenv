@@ -99,19 +99,19 @@ def get_offsets_exponents(mdd_eeg_data):
 SELECTED_ARM = 1
 SEGEMENT = 1
 
-colours = ['r', 'b', 'k', 'y', 'm']
-segments = [1, 5]
-labels = ['Segment 1', 'Segment 2']
-plt.figure(figsize=(10, 5))
-for i in range(0, len(segments)):
-    eeg_data = get_bandit_eeg(folder_path="../../data/bandit/simnibsbandit3/training", selected_arm=SELECTED_ARM, segment=segments[i])
-    offsets, exponents = get_offsets_exponents(eeg_data)
-    plt.scatter(exponents, offsets, color=colours[i], label=labels[i])
-plt.xlabel("Exponent")
-plt.ylabel("Offset")
-plt.legend()
-plt.show()
-exit()
+# colours = ['r', 'b', 'k', 'y', 'm']
+# segments = [1, 5]
+# labels = ['Segment 1', 'Segment 2']
+# plt.figure(figsize=(10, 5))
+# for i in range(0, len(segments)):
+#     eeg_data = get_bandit_eeg(folder_path="../../data/bandit/simnibsbandit3/training", selected_arm=SELECTED_ARM, segment=segments[i])
+#     offsets, exponents = get_offsets_exponents(eeg_data)
+#     plt.scatter(exponents, offsets, color=colours[i], label=labels[i])
+# plt.xlabel("Exponent")
+# plt.ylabel("Offset")
+# plt.legend()
+# plt.show()
+# exit()
 
 
 
@@ -153,8 +153,15 @@ print(exponents)
 
 fg.plot()
 plt.show()
-# fm = fg.get_fooof(ind=4, regenerate=True)
-# fm.print_results()
-# fm.plot()
-# plt.show()
+fm = fg.get_fooof(ind=0, regenerate=True)
+fm.print_results()
+fm.plot()
+plt.show()
+
+fm = fg.get_fooof(ind=4, regenerate=True)
+fm.print_results()
+fm.plot()
+plt.show()
+
+
 #

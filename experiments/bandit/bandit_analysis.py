@@ -48,7 +48,7 @@ plt.rcParams.update({
 
 
 
-def bootstrap_ci(data, num_bootstraps=5, ci=95):
+def bootstrap_ci(data, num_bootstraps=100, ci=95):
     """
     Compute the bootstrapped mean and confidence interval.
 
@@ -98,6 +98,11 @@ def process_eeg(file_path):
         print(f"Processing {file}...")
         EEG = np.loadtxt(file, delimiter=",")
         EEG_filt = ss.filtfilt(b, a, EEG[t1:], axis=-1)
+
+        # test only using 1s
+        x1 = int(1000/dt)
+        EEG_filt = EEG_filt[0:x1]
+
         freqs, psd = ss.welch(EEG_filt, fs=fs, nperseg=nperseg, noverlap=noverlap)
 
         # Store results
@@ -132,17 +137,15 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
         #print(file, reward_file)
         EEG = np.loadtxt(file, delimiter=",")
         EEG_filt = ss.filtfilt(b, a, EEG[t1:], axis=-1)
-
         x1 = int(1000/dt)
-
 
         # if rew > -2.5:
         #     continue
-        selection_reward = features.reward_func_simple(np.array(EEG_filt[0:x1]), fs)
 
-        if selection_reward <= -0.09264591737143694:
+        selection_reward = features.reward_func_simple(np.array(EEG_filt[0:x1]), fs)
+        if selection_reward >= -0.09264591737143694:
             continue
-        print(selection_reward)
+        # print(selection_reward)
 
         # different protocol stages
         if segment == 1:
@@ -169,9 +172,8 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
     print("total examples: ", len(all_psd))
 
     ci_lower, ci_upper = [], []
-    #avg_psd, ci_lower, ci_upper = bootstrap_ci(all_psd)
-
-    avg_psd = np.mean(np.array(all_psd), axis=0)
+    avg_psd, ci_lower, ci_upper = bootstrap_ci(all_psd)  # bootstrapped values
+    #avg_psd = np.mean(np.array(all_psd), axis=0)  # simple mean
 
     return all_freqs, avg_psd, ci_lower, ci_upper
 
@@ -301,7 +303,7 @@ FREQ = [8, 8, 8, 10, 40, 77.5]  # Hz
 
 # all_freqs, avg_psd, ci_lower, ci_upper = process_eeg(file_path="../../data/feature_analysis/mdd/EEG_MDD_")
 # all_freqs_h, avg_psd_h, ci_lower_h, ci_upper_h = process_eeg(file_path="../../data/feature_analysis/healthy/EEG_HEALTHY_")
-all_freqs, avg_psd, ci_lower, ci_upper, all_freqs_h, avg_psd_h, ci_lower_h, ci_upper_h = load_calculated_psd_healthy_mdd()
+# all_freqs, avg_psd, ci_lower, ci_upper, all_freqs_h, avg_psd_h, ci_lower_h, ci_upper_h = load_calculated_psd_healthy_mdd()
 
 all_freqs_b, avg_psd_b, ci_lower_b, ci_upper_b = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit3/training",
                                                                         selected_arm=SELECTED_ARM, segment=5)
@@ -321,21 +323,21 @@ plt.figure(figsize=(10, 5))
 colors = ['royalblue', 'mediumseagreen', 'darkorchid', 'deepskyblue', 'limegreen', 'blueviolet']
 
 # Depression group
-plt.plot(all_freqs, avg_psd, color='r', linestyle='--', label="Depression Baseline")  # , linestyle='--'
+#plt.plot(all_freqs, avg_psd, color='r', linestyle='--', label="Depression Baseline")  # , linestyle='--'
 # plt.fill_between(all_freqs, ci_lower, ci_upper, color='r', alpha=0.3)
 #
 # # Healthy group
-plt.plot(all_freqs_h, avg_psd_h, color='k', linestyle='--', label="Healthy Baseline") #
+#plt.plot(all_freqs_h, avg_psd_h, color='k', linestyle='--', label="Healthy Baseline") #
 # plt.fill_between(all_freqs_h, ci_lower_h, ci_upper_h, color='k', alpha=0.3)
 
 # bandit results
 #plt.plot(all_freqs_b, avg_psd_b, color='g', label=f"Bandit Stimulation: {AMP[SELECTED_ARM]}mA, {FREQ[SELECTED_ARM]}Hz")
 plt.plot(all_freqs_b, avg_psd_b, color='tab:green', label=f"Bandit Stimulation: Segment 5")
-# plt.fill_between(all_freqs_b, ci_lower_b, ci_upper_b, color='tab:green', alpha=0.3)
+plt.fill_between(all_freqs_b, ci_lower_b, ci_upper_b, color='tab:green', alpha=0.3)
 
 
 plt.plot(all_freqs_seg1, avg_psd_seg1, color='tab:blue', label=f"Bandit Stimulation: Segment 1")
-# plt.fill_between(all_freqs_seg1, ci_lower_seg1, ci_upper_seg1, color='tab:blue', alpha=0.3)
+plt.fill_between(all_freqs_seg1, ci_lower_seg1, ci_upper_seg1, color='tab:blue', alpha=0.3)
 
 # Add vertical lines at 8 Hz and 12 Hz
 plt.axvline(x=8, color='gray', linestyle='--', alpha=0.7)
