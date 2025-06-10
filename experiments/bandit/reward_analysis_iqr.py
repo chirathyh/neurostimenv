@@ -11,7 +11,7 @@ MAIN_PATH = config('MAIN_PATH')
 sys.path.insert(1, MAIN_PATH)
 
 
-
+import statsmodels
 import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.signal as ss
@@ -257,6 +257,154 @@ def quantile_filter(x, lower_q=0.01, upper_q=0.99):
     return lower_bound, upper_bound, mask
 
 
+def medcouple(x):
+    """
+    Compute the medcouple statistic, a robust measure of skewness.
+    Adapted from Hubert & Vandervelken (2008) and Coe (2020).
+    x : 1D array-like, must be sorted
+    Returns: float (medcouple value)
+    """
+    x = np.sort(np.asarray(x))
+    n = len(x)
+    median = np.median(x)
+
+    # Split into lower and upper halves relative to median
+    x_low = x[x <= median]
+    x_high = x[x >= median]
+
+    # Create all pairwise kernel values
+    def kernel(u, v):
+        return (v + u - 2*median) / (v - u) if v != u else np.sign(v - median)
+
+    # Vectorized kernel computation
+    Z = []
+    for i in range(len(x_low)):
+        for j in range(len(x_high)):
+            u = x_low[i]
+            v = x_high[j]
+            if v != u:
+                Z.append((v + u - 2*median) / (v - u))
+            else:
+                Z.append(np.sign(v - median))
+    Z = np.array(Z)
+    return np.median(Z)
+
+
+def winsorize_iqr_skewed(x, k=1.5):
+    """
+    Detect and winsorize outliers based on adjusted 1.5*IQR rule
+    for skewed data using the medcouple statistic.
+
+    Parameters:
+    x : list or 1D numpy array
+    k : float, multiplier for IQR (default 1.5)
+
+    Returns:
+    winsorized_x : numpy array with outliers winsorized
+    lower_fence, upper_fence : floats, used fences for winsorization
+    medcouple_val : float, skewness measure
+    """
+    x = np.asarray(x) * -1
+
+    print("DATA")
+    print(x)
+
+    q1 = np.percentile(x, 25)
+    q3 = np.percentile(x, 75)
+    iqr = q3 - q1
+
+    mc = medcouple(x)
+
+    print("MC manual")
+    print(mc)
+    #
+    # print("MC library")
+    # def _medcouple_1d(y):
+    #     """
+    #     Calculates the medcouple robust measure of skew.
+    #
+    #     Parameters
+    #     ----------
+    #     y : array_like, 1-d
+    #         Data to compute use in the estimator.
+    #
+    #     Returns
+    #     -------
+    #     mc : float
+    #         The medcouple statistic
+    #
+    #     Notes
+    #     -----
+    #     The current algorithm requires a O(N**2) memory allocations, and so may
+    #     not work for very large arrays (N>10000).
+    #
+    #     .. [*] M. Hubert and E. Vandervieren, "An adjusted boxplot for skewed
+    #        distributions" Computational Statistics & Data Analysis, vol. 52, pp.
+    #        5186-5201, August 2008.
+    #     """
+    #
+    #     # Parameter changes the algorithm to the slower for large n
+    #
+    #     y = np.squeeze(np.asarray(y))
+    #     if y.ndim != 1:
+    #         raise ValueError("y must be squeezable to a 1-d array")
+    #
+    #     y = np.sort(y)
+    #
+    #     n = y.shape[0]
+    #     if n % 2 == 0:
+    #         mf = (y[n // 2 - 1] + y[n // 2]) / 2
+    #     else:
+    #         mf = y[(n - 1) // 2]
+    #
+    #     z = y - mf
+    #     lower = z[z <= 0.0]
+    #     upper = z[z >= 0.0]
+    #     upper = upper[:, None]
+    #     standardization = upper - lower
+    #     is_zero = np.logical_and(lower == 0.0, upper == 0.0)
+    #     standardization[is_zero] = np.inf
+    #     spread = upper + lower
+    #     h = spread / standardization
+    #     # GH5395
+    #     num_ties = np.sum(lower == 0.0)
+    #     if num_ties:
+    #         # Replacements has -1 above the anti-diagonal, 0 on the anti-diagonal,
+    #         # and 1 below the anti-diagonal
+    #         replacements = np.ones((num_ties, num_ties)) - np.eye(num_ties)
+    #         replacements -= 2 * np.triu(replacements)
+    #         # Convert diagonal to anti-diagonal
+    #         replacements = np.fliplr(replacements)
+    #         # Always replace upper right block
+    #         h[:num_ties, -num_ties:] = replacements
+    #
+    #     return np.median(h)
+    # mc_new = _medcouple_1d(x)
+    # print(mc_new)
+    # exit()
+
+    # Adjust fences based on medcouple (Hubert & Van der Veeken 2008)
+    if mc > 0:
+        # lower_fence = q1 - k * np.exp(-4 * mc) * iqr
+        # upper_fence = q3 + k * np.exp(3 * mc) * iqr
+
+        # clipped
+        adj_lower = np.clip(np.exp(-4 * mc), 0.5, 2)
+        adj_upper = np.clip(np.exp(3 * mc), 0.5, 4)
+        lower_fence = q1 - k * adj_lower * iqr
+        upper_fence = q3 + k * adj_upper * iqr
+
+    else:
+        lower_fence = q1 - k * np.exp(-3 * mc) * iqr
+        upper_fence = q3 + k * np.exp(4 * mc) * iqr
+
+    winsorized_x = np.copy(x)
+    winsorized_x[winsorized_x < lower_fence] = lower_fence
+    winsorized_x[winsorized_x > upper_fence] = upper_fence
+
+    return winsorized_x, lower_fence, upper_fence, mc
+
+
 reward_values, reward_values_final_segment = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit3/training", selected_arm=SELECTED_ARM, segment=5)
 
 print(len(reward_values))
@@ -271,6 +419,14 @@ print(reward_values_final_segment)
 # print(1.5 * IQR)
 # exit()
 
+print("\n=== IQR MC based Filtering ===")
+winsorized_x, lf, uf, mc_val = winsorize_iqr_skewed(reward_values_final_segment)
+print(f"Medcouple (skewness measure): {mc_val:.4f}")
+print(f"Lower fence: {lf:.2f}, Upper fence: {uf:.2f}")
+print(f"Winsorized data: {winsorized_x}")
+print(len(winsorized_x))
+
+exit()
 
 print("\n=== Quantile-based Filtering ===")
 # low_q, high_q, mask_q = quantile_filter(reward_values, lower_q=0.05, upper_q=0.75)

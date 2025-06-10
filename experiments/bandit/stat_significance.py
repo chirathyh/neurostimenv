@@ -72,7 +72,7 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
 
         x1 = int(1000/dt)
 
-        if rew < -1.5:
+        if rew < -1.3929:
             continue
         # selection_reward = features.reward_func_simple(np.array(EEG_filt[0:x1]), fs)
         # if selection_reward >= -0.09264591737143694 :

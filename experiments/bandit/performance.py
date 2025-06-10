@@ -34,13 +34,14 @@ t1 = int(transient/dt)
 print("Sampling Rate:", fs)
 
 
-count = np.load("../../data/bandit/simnibsbandit2/checkpoints/counts.npy")
-values = np.load("../../data/bandit/simnibsbandit2/checkpoints/values.npy")
+count = np.load("../../data/bandit/simnibsbandit3/checkpoints/counts.npy")
+values = np.load("../../data/bandit/simnibsbandit3/checkpoints/values.npy")
 
 print(count)
 print(values)
 print(np.argmax(values))
 print(np.sum(count))
+exit()
 
 def read_rewards_from_csv(folder_path):
     reward_values = []
