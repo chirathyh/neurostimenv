@@ -139,12 +139,13 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
         EEG_filt = ss.filtfilt(b, a, EEG[t1:], axis=-1)
         x1 = int(1000/dt)
 
-        # if rew > -2.5:
-        #     continue
-
-        selection_reward = features.reward_func_simple(np.array(EEG_filt[0:x1]), fs)
-        if selection_reward >= -0.09264591737143694:
+        rew = features.reward_func_simple(np.array(EEG_filt[x1*4 : ]), fs)
+        if rew < -1.82668915:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
             continue
+
+        #selection_reward = features.reward_func_simple(np.array(EEG_filt[0:x1]), fs)
+        #if selection_reward >= -0.09264591737143694:
+        #    continue
         # print(selection_reward)
 
         # different protocol stages
@@ -164,7 +165,7 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
             print("select segment")
             exit()
 
-        freqs, psd = ss.welch(EEG_segment, fs=fs, nperseg=nperseg, noverlap=noverlap)
+        freqs, psd = ss.welch(EEG_segment, fs=fs, nperseg=nperseg)  #, noverlap=noverlap
         if all_freqs is None:
             all_freqs = freqs
         all_psd.append(psd)

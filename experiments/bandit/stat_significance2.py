@@ -51,7 +51,11 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
 
         x1 = int(1000 / dt)
         # Filtering criteria; example: skip very negative rewards
-        if rew < -2.0399:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
+
+        rew = features.reward_func_simple(np.array(EEG_filt[x1*4 : ]), fs)
+        # if rew < -1.82668915:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
+        #     continue
+        if rew < -2.00017065:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
             continue
 
         # Select segment

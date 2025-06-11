@@ -272,35 +272,42 @@ print(reward_values_final_segment)
 # exit()
 
 
-print("\n=== Quantile-based Filtering ===")
-# low_q, high_q, mask_q = quantile_filter(reward_values, lower_q=0.05, upper_q=0.75)
+# print("\n=== Quantile-based Filtering ===")
+# # low_q, high_q, mask_q = quantile_filter(reward_values, lower_q=0.05, upper_q=0.75)
+# # print(f"95% range: {low_q:.4f} - {high_q:.4f}")
+#
+# low_q, high_q, mask_q = quantile_filter(reward_values_final_segment, lower_q=0.05, upper_q=0.85)
 # print(f"95% range: {low_q:.4f} - {high_q:.4f}")
+# exit()
+#
+#
+# mean_val, sd_val, lower, upper = compute_thresholds(reward_values_final_segment, n_sd=2.5)
+# print(f"Mean = {mean_val:.4f}")
+# print(f"Sample SD = {sd_val:.4f}")
+# print(f"Lower threshold (mean - 2.5 SD) = {lower:.4f}")
+# print(f"Upper threshold (mean + 2.5 SD) = {upper:.4f}")
 
-low_q, high_q, mask_q = quantile_filter(reward_values_final_segment, lower_q=0.05, upper_q=0.85)
-print(f"95% range: {low_q:.4f} - {high_q:.4f}")
-exit()
-
-
-mean_val, sd_val, lower, upper = compute_thresholds(reward_values_final_segment, n_sd=2.5)
-print(f"Mean = {mean_val:.4f}")
-print(f"Sample SD = {sd_val:.4f}")
-print(f"Lower threshold (mean - 2.5 SD) = {lower:.4f}")
-print(f"Upper threshold (mean + 2.5 SD) = {upper:.4f}")
-
-
-exit()
+# take the log transform
+# reward_values = np.log(np.asarray(reward_values) * -1)
+# reward_values_final_segment = np.log(np.asarray(reward_values_final_segment) * -1)
 
 
-
-plt.figure()
-plt.hist(reward_values, bins=30, alpha=0.5, label='Segment 1', orientation='horizontal')  # semi-transparent bars for x
-plt.hist(reward_values_final_segment, bins=30, alpha=0.5, label='Segment 5', orientation='horizontal')  # same bins for y
-plt.legend()                              # show labels
-plt.xlabel('Frequency')
-plt.ylabel('Reward')
-plt.title('Overlaid Histograms of x and y')
-plt.show()
-exit()
+# plt.figure()
+# #plt.hist(reward_values, bins=30, alpha=0.5, label='Segment 1')  # semi-transparent bars for x  , orientation='horizontal'
+# plt.hist(reward_values_final_segment, bins=120, alpha=0.5, label='Segment 5')  # , orientation='horizontal' ; same bins for y
+#
+# plt.axvline(x=-1.3929, color='red', linestyle='--', linewidth=1.5, label='75% (47/63 samples)')
+# plt.axvline(x=-1.7268, color='blue', linestyle='--', linewidth=1.5, label='85% (53/63 samples)')
+# plt.axvline(x=-2.0399, color='green', linestyle='--', linewidth=1.5, label='90% (56/g3 samples)')
+# plt.axvline(x=-1.82668915, color='black', linestyle='--', linewidth=1.5, label='MAD 2.5 SD')
+#
+#
+# plt.legend()                              # show labels
+# plt.xlabel('Reward')
+# plt.ylabel('Frequency')
+# # plt.title('Overlaid Histograms of x and y')
+# plt.show()
+# exit()
 
 plt.figure(figsize=(5, 10))
 

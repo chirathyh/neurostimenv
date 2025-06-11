@@ -313,6 +313,14 @@ def winsorize_iqr_skewed(x, k=1.5):
     q3 = np.percentile(x, 75)
     iqr = q3 - q1
 
+    print("without skewness")
+    print("q1", q1)
+    print("q3", q3)
+    print("iqr: ", iqr)
+    print(q1 - (1.5*iqr))
+    print(q3 + (1.5*iqr))
+    exit()
+
     mc = medcouple(x)
 
     print("MC manual")
