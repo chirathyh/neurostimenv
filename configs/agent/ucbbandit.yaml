@@ -1,0 +1,9 @@
+agent: 'ucbbandit'
+debug: False
+
+pretrain: False
+checkpoint: 'test'
+
+n_arms: 6
+n_trials: 3
+n_eval_trials: 1
