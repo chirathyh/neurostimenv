@@ -51,6 +51,8 @@ class NeuronEnv(gym.Env):
         eval_reward, cur_steps = 0, 0
         action, cur_state, i_stim, t_stim, cur_action, eeg = [], [], [], [], [], [[]]
 
+        #prev_eeg = []
+
         #for i in tqdm(range(0, steps), desc="Evaluation Progress", unit="step", disable=not self.args.experiment.tqdm):
         for i in range(0, steps):
             if RANK == 0:
@@ -73,12 +75,24 @@ class NeuronEnv(gym.Env):
             # Redirect NEURON output to the log file and use tqdm progress bar.
             time_pattern = re.compile(r"t = (\d+\.\d+) ms")
             log_file_path = self.args.experiment.dir+'/neuron_evaluation_sim_output.log'
+
             with open(log_file_path, "a") as log_file:
                 original_stdout = sys.stdout  # Save the original stdout
                 sys.stdout = log_file
                 try:
                     with tqdm(total=self.network.tstop, unit="ms", desc="Simulation Progress", disable=not self.args.experiment.tqdm) as pbar:
                         eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
+
+                        # sanity check
+                        # if i != 0:
+                        #     cur_eeg = eeg[0]
+                        #     prev_len = len(prev_eeg)
+                        #     corr = np.correlate(prev_eeg, cur_eeg[0: prev_len])
+                        #     print("correlation: ", corr)
+                        # print("prev len", len(prev_eeg))
+                        # print("current len", len(eeg[0]))
+                        # prev_eeg = eeg[0]
+
                         log_file.flush()  # Ensure file buffer is written
                         sys.stdout = original_stdout  # Restore stdout temporarily
                         with open(log_file_path, "r") as log_reader:
@@ -160,7 +174,7 @@ class NeuronEnv(gym.Env):
             save = kwargs.get("save", False)
             save_seed = kwargs.get("seed", 0)
             save_mode = kwargs.get("mode", 'training')
-            if self.args.agent.agent == 'mbandit' and save:
+            if (self.args.agent.agent == 'mbandit' or self.args.agent.agent == 'ucbbandit') and save:
                 FILE = self.args.experiment.dir+"/"+save_mode+"/EEG_BANDIT_"+str(save_seed)+".csv"
                 np.savetxt(FILE, full_eeg, delimiter=",")
                 print("### EEG Saved.")

@@ -57,10 +57,10 @@ def main(cfg: DictConfig) -> None:
         for i in range(0, 1):  # collect data <S, A, R, S', Done>
             ENVSEED = cfg.experiment.seed + i
 
-            env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
-            action_seq = sample_random_actions(cfg, cfg.agent.n_expl_steps)
-            env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=cfg.agent.n_expl_steps)  # off-line
-            env.close()
+            # env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
+            # action_seq = sample_random_actions(cfg, cfg.agent.n_expl_steps)
+            # env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=cfg.agent.n_expl_steps)  # off-line
+            # env.close()
             #
             # print('\n### Exploration run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
             # tic_1 = time.perf_counter()
@@ -71,7 +71,7 @@ def main(cfg: DictConfig) -> None:
             #     iql_agent.train(buffer, epochs=25)
             # COMM.Barrier()
 
-            eval_env = NeuronEnv(cfg, MPI_VAR, ENVSEED=ENVSEED)
+            eval_env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
             reward = eval_env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=cfg.agent.n_eval_steps)  # on-line
             eval_env.close()
 
