@@ -13,10 +13,12 @@ import numpy as np
 from scipy.stats import t, shapiro, ttest_ind, mannwhitneyu
 from scipy.signal import stft
 from scipy import stats
-from env.eeg import features  # if needed elsewhere
+#from env.eeg import features  # if needed elsewhere
 
 from experiments.bandit.stats.configs import get_configs
 dt, fs, nperseg, _, t1 = get_configs()
+
+import reward_func
 
 
 def process_bandit_testing(folder_path, selected_arm=1, segment=4):
@@ -44,8 +46,8 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
         x1 = int(1000 / dt)
         # Filtering criteria; example: skip very negative rewards
 
-        rew = features.reward_func_simple(np.array(EEG_filt[x1*4 : ]), fs)
-        if rew < -1.82668915:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
+        rew = reward_func.reward_func_simple(np.array(EEG_filt[x1*4 : ]), fs)
+        if rew < -1.82668916:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
             continue
         # if rew < -2.00017065:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
         #     continue
@@ -122,6 +124,11 @@ def get_stats(freqs, all_psd_group1, all_psd_group2, low=4, high=8, alpha=0.05, 
     print(f"Sample sizes: group1 = {n1}, group2 = {n2}")
     print(f"Group1 ({low}-{high}Hz) mean ± SD: {np.mean(data1):.4g} ± {np.std(data1, ddof=1):.4g}")
     print(f"Group2 ({low}-{high}Hz) mean ± SD: {np.mean(data2):.4g} ± {np.std(data2, ddof=1):.4g}")
+
+    median1 = np.median(data1)
+    median2 = np.median(data2)
+    print("Median Group1:", median1)
+    print("Median Group2:", median2)
 
     # Normality checks: Shapiro-Wilk (note: small samples limit power; if n>5000, skip or use other)
     def do_shapiro(arr, label):

@@ -127,8 +127,8 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
         x1 = int(1000/dt)
 
         rew = features.reward_func_simple(np.array(EEG_filt[x1*4 : ]), fs)
-        if rew < -1.82668915:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
-            continue
+        # if rew < -1.82668915:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
+        #     continue
 
 
         # different protocol stages
@@ -156,8 +156,8 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
     print("total examples: ", len(all_psd))
 
     ci_lower, ci_upper = [], []
-    #avg_psd, ci_lower, ci_upper = bootstrap_ci(all_psd)  # bootstrapped values
-    avg_psd = np.mean(np.array(all_psd), axis=0)  # simple mean
+    avg_psd, ci_lower, ci_upper = bootstrap_ci(all_psd)  # bootstrapped values
+    #avg_psd = np.mean(np.array(all_psd), axis=0)  # simple mean
 
     return all_freqs, avg_psd, ci_lower, ci_upper
 
@@ -312,16 +312,16 @@ plt.plot(all_freqs, avg_psd, color='r', linestyle='--', label="Depression Baseli
 #
 # # Healthy group
 plt.plot(all_freqs_h, avg_psd_h, color='k', linestyle='--', label="Healthy Baseline") #
-# plt.fill_between(all_freqs_h, ci_lower_h, ci_upper_h, color='k', alpha=0.3)
+#plt.fill_between(all_freqs_h, ci_lower_h, ci_upper_h, color='k', alpha=0.3)
 
 # bandit results
 #plt.plot(all_freqs_b, avg_psd_b, color='g', label=f"Bandit Stimulation: {AMP[SELECTED_ARM]}mA, {FREQ[SELECTED_ARM]}Hz")
-plt.plot(all_freqs_b, avg_psd_b, color='tab:green', label=f"Bandit Stimulation: Segment 5")
-#plt.fill_between(all_freqs_b, ci_lower_b, ci_upper_b, color='tab:green', alpha=0.3)
+plt.plot(all_freqs_b, avg_psd_b, color='tab:green', label=f"Bandit Stimulation: EEG Segment 5")
+plt.fill_between(all_freqs_b, ci_lower_b, ci_upper_b, color='tab:green', alpha=0.3)
 
 
-plt.plot(all_freqs_seg1, avg_psd_seg1, color='tab:blue', label=f"Bandit Stimulation: Segment 1")
-#plt.fill_between(all_freqs_seg1, ci_lower_seg1, ci_upper_seg1, color='tab:blue', alpha=0.3)
+plt.plot(all_freqs_seg1, avg_psd_seg1, color='tab:blue', label=f"Bandit Stimulation: EEG Segment 1")
+plt.fill_between(all_freqs_seg1, ci_lower_seg1, ci_upper_seg1, color='tab:blue', alpha=0.3)
 
 # Add vertical lines at 8 Hz and 12 Hz
 plt.axvline(x=8, color='gray', linestyle='--', alpha=0.7)

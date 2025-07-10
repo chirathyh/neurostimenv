@@ -146,7 +146,11 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
         all_psd.append(psd)
 
     print("total examples: ", len(all_psd))
+
     avg_psd, ci_lower, ci_upper = bootstrap_ci(all_psd)
+
+    #avg_psd = np.mean(np.array(all_psd), axis=0)  # simple mean
+
     return all_freqs, avg_psd, ci_lower, ci_upper
 
 

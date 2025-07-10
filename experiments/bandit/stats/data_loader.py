@@ -18,7 +18,9 @@ import scipy.signal as ss
 import numpy as np
 from scipy.stats import t
 from scipy.signal import stft
-from env.eeg import features
+
+import reward_func
+#from env.eeg import features
 
 
 from experiments.bandit.stats.configs import get_configs
@@ -56,14 +58,14 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4, preprocessed_
 
         # filter
         if filter:
-            rew = features.reward_func_simple(np.array(EEG_filt[x1*4 : ]), fs)
+            rew = reward_func.reward_func_simple(np.array(EEG_filt[x1*4 : ]), fs)
             if rew < filter_threshold:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268  # best: -1.82668915
                 continue
         # print(file, reward_file)
 
-        reward_value = features.reward_func_simple(np.array(EEG_filt[0:x1]), fs)
+        reward_value = reward_func.reward_func_simple(np.array(EEG_filt[0:x1]), fs)
         reward_values.append(reward_value)
-        reward_final = features.reward_func_simple(np.array(EEG_filt[x1*4 : ]), fs)
+        reward_final = reward_func.reward_func_simple(np.array(EEG_filt[x1*4 : ]), fs)
         reward_values_final_segment.append(reward_final)
 
 

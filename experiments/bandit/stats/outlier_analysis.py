@@ -45,16 +45,19 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
         # Filtering criteria; example: skip very negative rewards
 
         rew = features.reward_func_simple(np.array(EEG_filt[x1*4 : ]), fs)
-        if rew < -1.82668915:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
-            plt.plot(EEG_filt, 'r')
-            filename = os.path.join('g/', f"{abs(rew):.4f}.png")
-            plt.savefig(filename)
-            continue
 
-        else:
-            plt.plot(EEG_filt, 'b')
-            filename = os.path.join('g/', f"{abs(rew):.4f}.png")
-            plt.savefig(filename)
+        print(rew)
+        plt.plot(EEG_filt[x1*4 : ], 'r')
+        filename = os.path.join('g/', f"{abs(rew):.6f}.png")
+        #plt.savefig(filename)
+        plt.show()
+
+        if rew < -1.82668915:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
+            # plt.plot(EEG_filt[x1*4 : ], 'r')
+            # # filename = os.path.join('g/', f"{abs(rew):.4f}.png")
+            # # plt.savefig(filename)
+            # plt.show()
+            continue
 
         # if rew < -2.00017065:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
         #     continue

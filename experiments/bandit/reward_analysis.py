@@ -128,7 +128,7 @@ def process_eeg(file_path):
         EEG_filt = ss.filtfilt(b, a, EEG[t1:], axis=-1)
 
         x1 = int(1000/dt)
-        EEG_segment = EEG_filt[0:x1*8]
+        EEG_segment = EEG_filt#[0:x1*8]
         reward_value = features.reward_func_simple(np.array(EEG_segment), fs)
         reward_values.append(reward_value)
 
@@ -217,8 +217,8 @@ SEGEMENT = 1
 AMP = [1, 2, 4, 2, 2, 15]  # mA
 FREQ = [8, 8, 8, 10, 40, 77.5]  # Hz
 
-# reward_values_mdd = process_eeg(file_path="../../data/feature_analysis/mdd/EEG_MDD_")
-# reward_values_healthy = process_eeg(file_path="../../data/feature_analysis/healthy/EEG_HEALTHY_")
+reward_values_mdd = process_eeg(file_path="../../data/feature_analysis/mdd/EEG_MDD_")
+reward_values_healthy = process_eeg(file_path="../../data/feature_analysis/healthy/EEG_HEALTHY_")
 #
 # print(min(reward_values_healthy))
 # print(max(reward_values_healthy))
@@ -230,9 +230,9 @@ FREQ = [8, 8, 8, 10, 40, 77.5]  # Hz
 # print(len(reward_values_healthy))
 #
 # plt.figure(figsize=(10, 5))
-# plt.hist(reward_values_mdd, bins=10, alpha=0.5, label='MDD', orientation='horizontal')  # semi-transparent bars for x
-# plt.hist(reward_values_healthy, bins=10, alpha=0.5, label='Healthy', orientation='horizontal')  # same bins for y
-# plt.axhline(y=-0.09264591737143694, color='r', label='Cutoff value', linestyle='--', alpha=0.7)
+# plt.hist(reward_values_mdd, color='red', bins=10, label='Depression', orientation='horizontal')  # semi-transparent bars for x alpha=0.5,
+# plt.hist(reward_values_healthy, color='black', bins=10, label='Healthy', orientation='horizontal')  # same bins for y alpha=0.5,
+# plt.axhline(y=-0.09264591737143694, color='green', label='Cutoff value', linestyle='--', alpha=0.7)
 # plt.legend()                              # show labels
 # plt.xlabel('Frequency')
 # plt.ylabel('Reward/Score')
@@ -289,25 +289,26 @@ print(reward_values_final_segment)
 
 # take the log transform
 # reward_values = np.log(np.asarray(reward_values) * -1)
+# reward_values = np.log(np.asarray(reward_values) * -1)
 # reward_values_final_segment = np.log(np.asarray(reward_values_final_segment) * -1)
 
 
-# plt.figure()
-# #plt.hist(reward_values, bins=30, alpha=0.5, label='Segment 1')  # semi-transparent bars for x  , orientation='horizontal'
-# plt.hist(reward_values_final_segment, bins=120, alpha=0.5, label='Segment 5')  # , orientation='horizontal' ; same bins for y
-#
+plt.figure(figsize=(10, 5))
+#plt.hist(reward_values, bins=30, alpha=0.5, label='Segment 1')  # semi-transparent bars for x  , orientation='horizontal'
+plt.hist(reward_values_final_segment, bins=120, alpha=0.5, label='EEG Segment 5')  # , orientation='horizontal' ; same bins for y
+
 # plt.axvline(x=-1.3929, color='red', linestyle='--', linewidth=1.5, label='75% (47/63 samples)')
 # plt.axvline(x=-1.7268, color='blue', linestyle='--', linewidth=1.5, label='85% (53/63 samples)')
 # plt.axvline(x=-2.0399, color='green', linestyle='--', linewidth=1.5, label='90% (56/g3 samples)')
-# plt.axvline(x=-1.82668915, color='black', linestyle='--', linewidth=1.5, label='MAD 2.5 SD')
-#
-#
-# plt.legend()                              # show labels
-# plt.xlabel('Reward')
-# plt.ylabel('Frequency')
-# # plt.title('Overlaid Histograms of x and y')
-# plt.show()
-# exit()
+plt.axvline(x=-1.82668915, color='black', linestyle='--', linewidth=1.5, label='2.5 MAD (55/63 samples)')
+
+
+plt.legend()                              # show labels
+plt.xlabel('Reward')
+plt.ylabel('Frequency')
+# plt.title('Overlaid Histograms of x and y')
+plt.show()
+exit()
 
 plt.figure(figsize=(5, 10))
 
