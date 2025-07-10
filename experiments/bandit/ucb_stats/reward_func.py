@@ -34,8 +34,8 @@ def reward_func_simple(eeg_top, fs):
         "beta": 9.913579537680276e-20,
     }
 
-    # b, a = ss.butter(N=2, Wn=[.1, 100.], btype='bandpass', fs=fs, output='ba')
-    # eeg_top = ss.filtfilt(b, a, eeg_top, axis=-1)
+    b, a = ss.butter(N=2, Wn=[.1, 100.], btype='bandpass', fs=fs, output='ba')
+    eeg_top = ss.filtfilt(b, a, eeg_top, axis=-1)
 
     freqs, psd = ss.welch(eeg_top, fs=fs, nperseg=int(fs/2))
     psd = psd.flatten()

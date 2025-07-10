@@ -20,7 +20,7 @@ from scipy.stats import t
 from scipy.signal import stft
 from env.eeg import features
 
-from experiments.bandit.stats.data_loader import process_bandit_testing
+from experiments.bandit.ucb_stats.data_loader import process_bandit_testing
 
 from experiments.bandit.stats.mad_z_score import mad_outlier_mask
 from experiments.bandit.stats.trim_upper_quantile import trim_upper_quantile
@@ -39,13 +39,13 @@ plt.rcParams.update({
 })
 
 
-SELECTED_ARM = 1
+SELECTED_ARM = 4
 SEGEMENT = 1
 AMP = [1, 2, 4, 2, 2, 15]  # mA
 FREQ = [8, 8, 8, 10, 40, 77.5]  # Hz
 
 print("\nUsing pre-processed EEG (bandpass filter)")
-reward_values, reward_values_final_segment = process_bandit_testing(folder_path="../../../data/bandit/simnibsbandit3/training",
+reward_values, reward_values_final_segment = process_bandit_testing(folder_path="../../../data/bandit/simnibsbandit_ucb/training",
                                                                     selected_arm=SELECTED_ARM, segment=5,
                                                                     preprocessed_eeg=True, filter=False, filter_threshold=1)
 x = -1 * np.asarray(reward_values_final_segment)

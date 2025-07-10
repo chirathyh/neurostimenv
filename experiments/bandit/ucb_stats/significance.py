@@ -47,7 +47,7 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
         # Filtering criteria; example: skip very negative rewards
 
         rew = reward_func.reward_func_simple(np.array(EEG_filt[x1*4 : ]), fs)
-        if rew < -1.82668916:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
+        if rew < -1.96523015:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
             continue
         # if rew < -2.00017065:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
         #     continue
@@ -187,8 +187,8 @@ def get_stats(freqs, all_psd_group1, all_psd_group2, low=4, high=8, alpha=0.05, 
     }
 
 if __name__ == "__main__":
-    SELECTED_ARM = 1
-    base_folder = "../../../data/bandit/simnibsbandit3/training"
+    SELECTED_ARM = 4
+    base_folder = "../../../data/bandit/simnibsbandit_ucb/training"
     all_freqs_seg5, all_psdb_seg5 = process_bandit_testing(folder_path=base_folder, selected_arm=SELECTED_ARM, segment=5)
     all_freqs_seg1, all_psd_seg1 = process_bandit_testing(folder_path=base_folder, selected_arm=SELECTED_ARM, segment=1)
 

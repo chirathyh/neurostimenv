@@ -18,7 +18,7 @@ from scipy.signal import stft
 from env.eeg import features
 
 
-from experiments.bandit.stats.configs import get_configs
+from experiments.bandit.ucb_stats.configs import get_configs
 dt, fs, nperseg, _, t1 = get_configs()
 
 
@@ -275,7 +275,7 @@ def plot_sfft_bandit_testing(folder_path, selected_arm=1, segment=4):
     plt.show()
 
 
-SELECTED_ARM = 1
+SELECTED_ARM = 4
 SEGEMENT = 1
 AMP = [1, 2, 4, 2, 2, 15]  # mA
 FREQ = [8, 8, 8, 10, 40, 77.5]  # Hz
@@ -289,11 +289,11 @@ FREQ = [8, 8, 8, 10, 40, 77.5]  # Hz
 # all_freqs_h, avg_psd_h, ci_lower_h, ci_upper_h = process_eeg(file_path="../../data/feature_analysis/healthy/EEG_HEALTHY_")
 all_freqs, avg_psd, ci_lower, ci_upper, all_freqs_h, avg_psd_h, ci_lower_h, ci_upper_h = load_calculated_psd_healthy_mdd()
 
-all_freqs_b, avg_psd_b, ci_lower_b, ci_upper_b = process_bandit_testing(folder_path="../../../data/bandit/simnibsbandit3/training",
+all_freqs_b, avg_psd_b, ci_lower_b, ci_upper_b = process_bandit_testing(folder_path="../../../data/bandit/simnibsbandit_ucb/training",
                                                                         selected_arm=SELECTED_ARM, segment=5)
 
 
-all_freqs_seg1, avg_psd_seg1, ci_lower_seg1, ci_upper_seg1 = process_bandit_testing(folder_path="../../../data/bandit/simnibsbandit3/training",
+all_freqs_seg1, avg_psd_seg1, ci_lower_seg1, ci_upper_seg1 = process_bandit_testing(folder_path="../../../data/bandit/simnibsbandit_ucb/training",
                                                                         selected_arm=SELECTED_ARM, segment=1)
 
 

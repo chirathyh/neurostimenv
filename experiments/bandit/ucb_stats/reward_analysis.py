@@ -217,8 +217,8 @@ SEGEMENT = 1
 AMP = [1, 2, 4, 2, 2, 15]  # mA
 FREQ = [8, 8, 8, 10, 40, 77.5]  # Hz
 
-reward_values_mdd = process_eeg(file_path="../../data/feature_analysis/mdd/EEG_MDD_")
-reward_values_healthy = process_eeg(file_path="../../data/feature_analysis/healthy/EEG_HEALTHY_")
+reward_values_mdd = process_eeg(file_path="../../../data/feature_analysis/mdd/EEG_MDD_")
+reward_values_healthy = process_eeg(file_path="../../../data/feature_analysis/healthy/EEG_HEALTHY_")
 #
 # print(min(reward_values_healthy))
 # print(max(reward_values_healthy))
@@ -257,7 +257,7 @@ def quantile_filter(x, lower_q=0.01, upper_q=0.99):
     return lower_bound, upper_bound, mask
 
 
-reward_values, reward_values_final_segment = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit3/training", selected_arm=SELECTED_ARM, segment=5)
+reward_values, reward_values_final_segment = process_bandit_testing(folder_path="../../../data/bandit/simnibsbandit_ucb/training", selected_arm=4, segment=5)
 
 print(len(reward_values))
 print(len(reward_values_final_segment))
