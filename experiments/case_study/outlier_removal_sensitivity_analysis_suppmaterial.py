@@ -45,7 +45,7 @@ AMP = [1, 2, 4, 2, 2, 15]  # mA
 FREQ = [8, 8, 8, 10, 40, 77.5]  # Hz
 
 print("\nUsing pre-processed EEG (bandpass filter)")
-reward_values, reward_values_final_segment = process_bandit_testing(folder_path="../../../data/bandit/simnibsbandit3/training",
+reward_values, reward_values_final_segment = process_bandit_testing(folder_path="../../data/bandit/simnibsbandit3/training",
                                                                     selected_arm=SELECTED_ARM, segment=5,
                                                                     preprocessed_eeg=True, filter=False, filter_threshold=1)
 x = -1 * np.asarray(reward_values_final_segment)
