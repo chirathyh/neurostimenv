@@ -49,6 +49,20 @@ cd experiments/drl
 mpirun -np 512 python run_iql.py experiment.name=test env=hl23net env.network.syn_activity=True experiment.debug=True experiment.tqdm=False experiment.plot=False
 ```
 
+<h4>Quick Start - Running SimNIBS to obtain stimulation parameters</h4>
+
+First we simulate the effects of the selected stimulation parameters and electrode montage setup. Next, we use the simulation output and evaluates its effects on the target microcircuit by calculating the current at the region of interest. Finally, the calculated current will be applied in the NEURON simulation.   
+```
+cd env/ts/simnibs 
+simnibs_python run_simnibs_tacs.py
+simnibs_python calc_roi_field.py
+```
+Optionally, you can use the full capability of SimNIBS to optimise the applied stimulation to a target brain region.
+```
+cd env/ts/simnibs 
+simnibs_python optimise_tdcs.py
+```
+
 <h4>Important Notes</h4>
 
 * Running large neural circuits require a high-performance computing environment (e.g., <code>env=hl23net env.network.dt=0.025</code> with N=1,000 neurons and at dt=0.025). <br>
