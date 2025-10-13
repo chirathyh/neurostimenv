@@ -63,6 +63,85 @@ cd env/ts/simnibs
 simnibs_python optimise_tdcs.py
 ```
 
+<h4>Simulation parameters</h4>
+The experiment parameters are handled using hydra and yaml files. There are settings for both RL-agents as well as the neural circuits (environment).
+Example settings for an environment (hl23net) (summarised).
+
+```yaml
+name: 'hl23net'
+
+simulation:
+  duration: 55000  #ms
+  obs_win_len: 500 #1000.0  #ms
+  MDD: True  # healthy OR MDD
+  DRUG: False  # add drugs
+  
+network:
+  dt: 0.0625 #0.025  # ms
+  tstart: 0.
+  v_init: -80.
+  celsius: 34.
+  verbose: False
+
+  position: [0., 0., 78200]  # µm, also used as single dipole reference for EEG/ECoG: 78200; -725
+
+  syn_activity: True
+  synapse:
+    start: 0.
+    interval: 10.
+    number: 1000
+    noise: 1.0
+
+eeg:
+  measure: True
+  locations: [[0., 0., 90000.]]  # µm
+  foursphereheadmodel:
+    radii: [79000., 80000., 85000., 90000.]  # µm ["Brain", "CSF", "Skull", "Scalp"]
+    sigmas: [0.3, 1.5, 0.015, 0.3]  # conductivity: (S/m)
+
+ts:
+  apply: True
+  method: 'tdcs'  # 'tacs, tdcs, tms
+  type: 'pulse' #'tdcs'  # tdcs, pulse, sin
+  # run simnibs to generate extracellular current density
+  calc: False
+  simnibs_params:
+    output: ''
+    positions: ['AF3', 'FC5']
+    currents: # n actions, Amperes
+      - [1, -1]   # mA, sum to 0
+      - [2, -2]
+      - [4, -4]
+      - [15, -15]
+    shapes: ['ellipse', 'ellipse']  # Set the shape, default to 'rect'
+    dimensions: [25, 25]  # Set the dimensions, default to 50x50 mm
+    thicknesses: [1.5, 1.5]  # Set the thickness, default to 4 mm
+
+    roi_coordinate:
+      location: [-37.1796,  68.4849,  34.9607]
+      type: 'world' #'mni', 'world'
+      radius: 10 # mm
+
+  # extracellular position in network: RecExtElectrode
+  electrodeParameters:
+    # get the location < x, y, z in µm > from the network position: network.position
+    r: 20.  # µm; radius of each contact surface
+    n: 50  # number of discrete points used to compute the n-point average potential on each circular contact point
+    sigma: 0.3  # extracellular conductivity in units of (S/m)
+    method: "pointsource"   
+```
+
+Example settings for an RL agent (mbandit).
+```yaml
+agent: 'mbandit'
+debug: False
+pretrain: False
+checkpoint: 'sample-checkpoint-to-restart'
+n_arms: 6
+n_trials: 3
+n_eval_trials: 2
+```
+
 <h4>Important Notes</h4>
 
 * Running large neural circuits require a high-performance computing environment (e.g., <code>env=hl23net env.network.dt=0.025</code> with N=1,000 neurons and at dt=0.025). <br>
