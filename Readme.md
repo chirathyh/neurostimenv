@@ -63,7 +63,7 @@ cd env/ts/simnibs
 simnibs_python optimise_tdcs.py
 ```
 
-<h4>Simulation parameters</h4>
+<h4>Handling experiment parameters</h4>
 The experiment parameters are handled using <code>hydra</code> and <code>yaml</code> files. There are settings for both RL-agents as well as the neural circuits (environment).
 Example settings for an environment (<code>hl23net</code>) (summarised).
 
