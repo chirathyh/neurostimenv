@@ -64,11 +64,11 @@ simnibs_python optimise_tdcs.py
 ```
 
 <h4>Simulation parameters</h4>
-The experiment parameters are handled using hydra and yaml files. There are settings for both RL-agents as well as the neural circuits (environment).
-Example settings for an environment (hl23net) (summarised).
+The experiment parameters are handled using <code>hydra</code> and <code>yaml</code> files. There are settings for both RL-agents as well as the neural circuits (environment).
+Example settings for an environment (<code>hl23net</code>) (summarised).
 
 ```yaml
-name: 'hl23net'
+name: 'hl23net'  # name of the microcircuit
 
 simulation:
   duration: 55000  #ms
@@ -131,9 +131,9 @@ ts:
     method: "pointsource"   
 ```
 
-Example settings for an RL agent (mbandit).
+Example settings for an RL agent (<code>mbandit</code>).
 ```yaml
-agent: 'mbandit'
+agent: 'mbandit'  # name of the RL algorithm
 debug: False
 pretrain: False
 checkpoint: 'sample-checkpoint-to-restart'
