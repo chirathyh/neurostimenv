@@ -23,7 +23,7 @@ import reward_func
 #from env.eeg import features
 
 
-from experiments.bandit.stats.configs import get_configs
+from experiments.case_study.configs import get_configs
 
 dt, fs, nperseg, _, t1 = get_configs()
 

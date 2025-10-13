@@ -2,7 +2,6 @@ import os
 import glob
 import sys
 from decouple import config
-
 MAIN_PATH = config('MAIN_PATH')
 sys.path.insert(1, MAIN_PATH)
 
@@ -13,12 +12,10 @@ import numpy as np
 from scipy.stats import t, shapiro, ttest_ind, mannwhitneyu
 from scipy.signal import stft
 from scipy import stats
-#from env.eeg import features  # if needed elsewhere
-
-from experiments.bandit.stats.configs import get_configs
-dt, fs, nperseg, _, t1 = get_configs()
-
 import reward_func
+
+from experiments.case_study.configs import get_configs
+dt, fs, nperseg, _, t1 = get_configs()
 
 
 def process_bandit_testing(folder_path, selected_arm=1, segment=4):
@@ -47,10 +44,10 @@ def process_bandit_testing(folder_path, selected_arm=1, segment=4):
         # Filtering criteria; example: skip very negative rewards
 
         rew = reward_func.reward_func_simple(np.array(EEG_filt[x1*4 : ]), fs)
-        if rew < -1.82668916:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
+
+        # remove outliers; outlier reward value calculated in outlier analysis.
+        if rew < -1.82668916:
             continue
-        # if rew < -2.00017065:  # 75% 1.3929; 80%: 1.5272; 78% 1.5133; 90%: 2.0399; 85% 1.7268
-        #     continue
 
         # Select segment
         if segment == 1:
@@ -186,9 +183,12 @@ def get_stats(freqs, all_psd_group1, all_psd_group2, low=4, high=8, alpha=0.05, 
         'rank_biserial': r_rb if 'r_rb' in locals() else None
     }
 
+
 if __name__ == "__main__":
     SELECTED_ARM = 1
-    base_folder = "../../data/bandit/simnibsbandit3/training"
+
+    base_folder = "data/bandit/training"
+
     all_freqs_seg5, all_psdb_seg5 = process_bandit_testing(folder_path=base_folder, selected_arm=SELECTED_ARM, segment=5)
     all_freqs_seg1, all_psd_seg1 = process_bandit_testing(folder_path=base_folder, selected_arm=SELECTED_ARM, segment=1)
 
