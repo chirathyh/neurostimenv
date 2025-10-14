@@ -151,6 +151,15 @@ n_eval_trials: 2
   - model files
   - morphology files
 
+Currently integrated microcircuits (Environments)
+--
+| Environment          | Notes                                                                                                                     | Compute Resources               |
+|----------------------|---------------------------------------------------------------------------------------------------------------------------|---------------------------------|
+| <code>ballnstick</code> | Simple ball-and-stick neuron model, simplified morphology and biophysics. A toy example to help understand the framework. | Local machine (very minimal)    |
+| <code>hl23pyrnet</code> | Human cortical L2/3 pyramidal cells, a small adjustable population. Inspired by examples available on LFPy.               | Local machine (moderate)        |
+| <code>hl23net</code> | Depression and healthy microcircuit by Yao et al. A detailed model refer the manuscript and other resources.              | High performance compute (high) |
+
+
 ### Citing
 ```
 @misc{neurostimenv,
