@@ -176,7 +176,7 @@ National Computational Infrastructure (NCI) under the National Computational
 Merit Allocation Scheme (Project No. va80) and ANU Merit Allocation Scheme
 (Project No. ny83).
 
-We also acknowledge the open-source scientific contributors related to NEURON, SimNIBS, LFPy, and HL23NET microcircuit.
+We also acknowledge the open-source scientific contributors related to NEURON, SimNIBS, LFPy, and HL23NET microcircuit projects.
 
 Contact
 --
