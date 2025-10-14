@@ -163,6 +163,20 @@ n_eval_trials: 2
    }
 ```
 
+Reporting Issues, Feature Requests & Contributing to the project
+--
+Please contact Chirath Hettiarachchi (chirath.hettiarachchi@anu.edu.au) for reporting issues or contributing to the project. Your thoughts & comments are welcome, which will be valuable towards the research in this domain.
+
+Acknowledgement
+--
+This research was funded by the MRFF 2022 National Critical Research Infrastructure (Project No. MRFCRI000138, titled “Developing a new digital therapeutic or
+depression: Closed loop non-invasive brain stimulation”). This work was supported
+by computational resources provided by the Australian Government through the
+National Computational Infrastructure (NCI) under the National Computational
+Merit Allocation Scheme (Project No. va80) and ANU Merit Allocation Scheme
+(Project No. ny83).
+
+We also acknowledge the open-source scientific contributors related to NEURON, SimNIBS, LFPy, and HL23NET microcircuit.
 
 Contact
 --
