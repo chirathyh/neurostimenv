@@ -68,16 +68,16 @@ The experiment parameters are handled using <code>hydra</code> and <code>yaml</c
 Example settings for an environment (<code>hl23net</code>) (summarised).
 
 ```yaml
-name: 'hl23net'  # name of the microcircuit
+name: 'hl23net'  # name of the microcircuit (environment)
 
-simulation:
-  duration: 55000  #ms
-  obs_win_len: 500 #1000.0  #ms
+simulation:  # simulation settings
+  duration: 55000  # ms
+  obs_win_len: 500 #ms
   MDD: True  # healthy OR MDD
   DRUG: False  # add drugs
   
-network:
-  dt: 0.0625 #0.025  # ms
+network:  # microcircuit settings
+  dt: 0.0625 # ms (full resolution - 0.025  )
   tstart: 0.
   v_init: -80.
   celsius: 34.
@@ -92,14 +92,14 @@ network:
     number: 1000
     noise: 1.0
 
-eeg:
+eeg:  # measurement (sensor)
   measure: True
   locations: [[0., 0., 90000.]]  # µm
   foursphereheadmodel:
     radii: [79000., 80000., 85000., 90000.]  # µm ["Brain", "CSF", "Skull", "Scalp"]
     sigmas: [0.3, 1.5, 0.015, 0.3]  # conductivity: (S/m)
 
-ts:
+ts:  # actuator
   apply: True
   method: 'tdcs'  # 'tacs, tdcs, tms
   type: 'pulse' #'tdcs'  # tdcs, pulse, sin
@@ -123,8 +123,7 @@ ts:
       radius: 10 # mm
 
   # extracellular position in network: RecExtElectrode
-  electrodeParameters:
-    # get the location < x, y, z in µm > from the network position: network.position
+  electrodeParameters: # get the location < x, y, z in µm > from the network position: network.position
     r: 20.  # µm; radius of each contact surface
     n: 50  # number of discrete points used to compute the n-point average potential on each circular contact point
     sigma: 0.3  # extracellular conductivity in units of (S/m)
