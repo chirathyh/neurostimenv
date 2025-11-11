@@ -13,7 +13,7 @@ plt.rcParams.update({
 })
 
 popnames = ['HL23PYR', 'HL23SST', 'HL23PV', 'HL23VIP']
-filename = 'cell_positions_and_rotations.h5'
+filename = '../data/bandit/cell_positions_and_rotations.h5'
 
 # dfs = {}
 # for pop in popnames:
@@ -36,4 +36,5 @@ for pop in popnames:
 ax.set_xlabel('X (µm)'); ax.set_ylabel('Y (µm)'); ax.set_zlabel('Z (µm)')
 ax.legend()
 plt.tight_layout()
+fig.savefig('png/Fig9c.png', dpi=300, bbox_inches='tight', pad_inches=0.02, facecolor='auto', transparent=False)
 plt.show()

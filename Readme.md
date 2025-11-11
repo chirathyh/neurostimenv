@@ -35,17 +35,25 @@ Using the project
 * You can download different neural circuit models from ModelDB (https://modeldb.science/). <br>
 * The project uses the <code>SimNIBS==4.1.0</code> for obtaining parameters for the transcranial stimulation. <br>
 
+<h4>Quick Start - Running Simulations</h4>
+
+Running simulations without stimulation for a simple Ball and Stick Model.
+```
+cd experiments/examples 
+mpirun -np 2 python run_simulations.py experiment.name=test9 env=ballnstick env.simulation.duration=1000 env.simulation.MDD=True env.ts.apply=False env.network.syn_activity=True experiment.tqdm=False
+```
+
 <h4>Quick Start - Running RL algorithms</h4>
 
 Running a stochastic multi-arm bandit algorithm for a simple Ball and Stick Model.
 ```
-cd experiments/bandit 
+cd experiments/examples 
 mpirun -np 2 python run_mbandit.py experiment.name=test env=ballnstick agent=mbandit env.network.syn_activity=True experiment.tqdm=False agent.pretrain=True agent.checkpoint=test6
 ```
 
 Running a Implicit Q-Learning algorithm for a depression mirocircuit (HL23Net: https://pubmed.ncbi.nlm.nih.gov/35021088/).
 ```
-cd experiments/drl 
+cd experiments/examples 
 mpirun -np 512 python run_iql.py experiment.name=test env=hl23net env.network.syn_activity=True experiment.debug=True experiment.tqdm=False experiment.plot=False
 ```
 
