@@ -6,6 +6,8 @@ results/
 .env
 data/
 
+Notes.md
+
 experiments/archive/
 experiments/nci/
 experiments/bandit/
