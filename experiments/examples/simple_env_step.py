@@ -18,13 +18,6 @@ import json
 
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
-def remove_axis_junk(ax, lines=['right', 'top']):
-    """remove chosen lines from plotting axis"""
-    for loc, spine in ax.spines.items():
-        if loc in lines:
-            spine.set_color('none')
-    ax.xaxis.set_ticks_position('bottom')
-    ax.yaxis.set_ticks_position('left')
 
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="config")
@@ -42,25 +35,19 @@ def main(cfg: DictConfig) -> None:
         cfg = setup_folders(cfg)
     COMM.Barrier()
 
-    def run_experiment(action=None):
-        tic_0 = time.perf_counter()
+    def run_experiment():
         env = NeuronEnv(cfg, MPI_VAR)
-        obs, reward, done, info = env.step(action=action)
+        EEG = env.step_n(i_stim=None, t_ext=None, stim_elec=None)
         env.close()
-        print('Dominant Frequency:', str(info['dom_freq']), 'Hz') if RANK==0 else None
-        print('Reward:', str(reward)) if RANK==0 else None
-        print('simulation Time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
-        return reward
 
-    run_experiment(action=[1e-3, 4])  # [mA, Hz]  -> 3000 nA
+    run_experiment()
     print("done") if RANK==0 else None
-    #run_experiment(action=[1e-3, 4])  # [mA, Hz]  -> 3000 nA
 
 
 if __name__ == "__main__":
     main()
 
-# python example1.py experiment.name=test9 env=ballnstick env.network.syn_activity=True
+# python simple_env_step.py experiment.name=test9 env=ballnstick env.network.syn_activity=True
 # killall mpirun
 
 

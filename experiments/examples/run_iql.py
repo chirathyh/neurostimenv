@@ -41,8 +41,7 @@ def main(cfg: DictConfig) -> None:
         cfg = setup_folders(cfg)
     COMM.Barrier()
 
-    def sample_random_actions(cfg, simulation_steps):
-        # the first action is set to [0., 1.] for the transient.
+    def sample_random_actions(cfg, simulation_steps): # the first action is set to [0., 1.] for the transient.
         amp_samples = np.random.uniform(cfg.env.stimAmplitude_min, cfg.env.stimAmplitude_max, size=simulation_steps-1)
         freq_samples = np.random.uniform(cfg.env.stimFreq_min, cfg.env.stimFreq_max, size=simulation_steps-1)
         actions = [[amp, freq] for amp, freq in zip(amp_samples, freq_samples)]
@@ -50,29 +49,33 @@ def main(cfg: DictConfig) -> None:
 
     def run_experiment():
         tic_0 = time.perf_counter()
+
+        # init RL algorithm and replay buffer.
         buffer = ReplayMemory(cfg.agent, bufferid=cfg.agent.bufferid, MPI_VAR=MPI_VAR)
         iql_agent = IQL(cfg)
-
         rew = []
         for i in range(0, 1):  # collect data <S, A, R, S', Done>
             ENVSEED = cfg.experiment.seed + i
 
+            # off-line data collection for RL.
             env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
             action_seq = sample_random_actions(cfg, cfg.agent.n_expl_steps)
-            env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=cfg.agent.n_expl_steps)  # off-line
+            env.exploration_rollout(policy_seq=action_seq, buffer=buffer, steps=cfg.agent.n_expl_steps)
             env.close()
 
             print('\n### Exploration run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
             tic_1 = time.perf_counter()
 
+            # train RL agent.
             COMM.Barrier()
             if RANK==0:
                 print("\n==> Training RL agent...")
                 iql_agent.train(buffer, epochs=25)
             COMM.Barrier()
 
+            # on-line evaluation for RL.
             eval_env = NeuronEnv(cfg, MPI_VAR, ENV_SEED=ENVSEED)
-            reward = eval_env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=cfg.agent.n_eval_steps)  # on-line
+            reward = eval_env.evaluation_rollout(policy=iql_agent, buffer=buffer, steps=cfg.agent.n_eval_steps)
             eval_env.close()
 
             print('\n### Evaluation run time: ', str((time.perf_counter() - tic_1)/60)[:5], 'minutes') if RANK==0 else None
@@ -84,9 +87,8 @@ def main(cfg: DictConfig) -> None:
         # plt.show()
 
         print('\n### Experiment run time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
-        # return reward
 
-    run_experiment()  # [mA, Hz]  -> 3000 nA
+    run_experiment()
     print("### Experiment completed.") if RANK==0 else None
 
 
