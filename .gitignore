@@ -8,3 +8,8 @@ data/
 
 experiments/archive/
 experiments/nci/
+experiments/bandit/
+experiments/compute_analysis/
+experiments/drl/
+experiments/feature_analysis/
+experiments/validation/
