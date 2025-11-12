@@ -34,7 +34,7 @@ def remove_axis_junk(ax, lines=['right', 'top']):
     ax.yaxis.set_ticks_position('left')
 
 
-@hydra.main(version_base=None, config_path="../configs", config_name="config")
+@hydra.main(version_base=None, config_path="../../configs", config_name="config")
 def main(cfg: DictConfig) -> None:
     # set up MPI variables:
     COMM = MPI.COMM_WORLD

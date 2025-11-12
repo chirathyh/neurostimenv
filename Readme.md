@@ -186,7 +186,7 @@ Please contact Chirath Hettiarachchi (chirath.hettiarachchi@anu.edu.au) for repo
 
 Acknowledgement
 --
-This research was funded by the MRFF 2022 National Critical Research Infrastructure (Project No. MRFCRI000138, titled “Developing a new digital therapeutic or
+This research was funded by the MRFF 2022 National Critical Research Infrastructure (Project No. MRFCRI000138, titled “Developing a new digital therapeutic for
 depression: Closed loop non-invasive brain stimulation”). This work was supported
 by computational resources provided by the Australian Government through the
 National Computational Infrastructure (NCI) under the National Computational

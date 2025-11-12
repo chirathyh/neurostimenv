@@ -27,7 +27,7 @@ def remove_axis_junk(ax, lines=['right', 'top']):
     ax.yaxis.set_ticks_position('left')
 
 
-@hydra.main(version_base=None, config_path="../configs", config_name="config")
+@hydra.main(version_base=None, config_path="../../configs", config_name="config")
 def main(cfg: DictConfig) -> None:
     # set up MPI variables:
     COMM = MPI.COMM_WORLD
@@ -45,14 +45,14 @@ def main(cfg: DictConfig) -> None:
     def run_experiment(action=None):
         tic_0 = time.perf_counter()
         env = NeuronEnv(cfg, MPI_VAR)
-        obs, reward, done, info = env.exploration_rollout(action=[[6e-3, 4], [3e-3, 8]], steps=2)
+        obs, reward, done, info = env.step(action=action)
         env.close()
         print('Dominant Frequency:', str(info['dom_freq']), 'Hz') if RANK==0 else None
         print('Reward:', str(reward)) if RANK==0 else None
         print('simulation Time: ', str((time.perf_counter() - tic_0)/60)[:5], 'minutes') if RANK==0 else None
         return reward
 
-    run_experiment(action=None)  # [mA, Hz]  -> 3000 nA
+    run_experiment(action=[1e-3, 4])  # [mA, Hz]  -> 3000 nA
     print("done") if RANK==0 else None
     #run_experiment(action=[1e-3, 4])  # [mA, Hz]  -> 3000 nA
 
@@ -63,4 +63,4 @@ if __name__ == "__main__":
 # python example1.py experiment.name=test9 env=ballnstick env.network.syn_activity=True
 # killall mpirun
 
-# mpirun -np 2 python example1.py experiment.name=test1 env=hl23net env.network.dt=0.025 env.simulation.obs_win_len=100 experiment.debug=True
+
