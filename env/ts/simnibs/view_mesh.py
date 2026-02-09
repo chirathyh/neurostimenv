@@ -29,7 +29,7 @@ import gmsh
 gmsh.initialize()
 
 # Path to your .geo file
-geo_file = 'tdcs_simu1/ernie_TDCS_1_el_currents.geo'
+geo_file = 'data/tdcs_simu1/ernie_TDCS_1_el_currents.geo'
 
 # Open the .geo file
 gmsh.open(geo_file)

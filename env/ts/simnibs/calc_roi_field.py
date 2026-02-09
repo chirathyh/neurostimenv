@@ -14,7 +14,7 @@ gray_matter = head_mesh.crop_mesh(simnibs.ElementTags.GM)
 # scalp = head_mesh.crop_mesh(simnibs.ElementTags.SCALP)
 
 # Coordinates of the target ROI
-# ernie_coords = simnibs.mni2subject_coords([-41, 41, 16], 'm2m_ernie')  # F3: -58, 35, 50
+#ernie_coords = simnibs.mni2subject_coords([-41, 41, 16], 'm2m_ernie')  # F3: -58, 35, 50
 ernie_coords = [-37.1796,  68.4849,  34.9607]  # the word/subject coordinate are present in the leadfield calculation
 
 # Radius of the ROI

@@ -219,6 +219,25 @@ class NeuronEnv(gym.Env):
         # eeg = COMM.bcast(eeg, root=0)
         return eeg
 
+    def step_n_dipole(self, i_stim, t_ext, stim_elec):
+        COMM = self.MPI_VAR['COMM']
+        RANK = self.MPI_VAR['RANK']
+        P = None
+        if self.args.env.ts.apply:
+            self.extracellular_models[0].probe.set_current(stim_elec, i_stim)
+            self.network.enable_extracellular_stimulation_mpi(self.extracellular_models[0], t_ext, n=5)  # using because issue with mpi and L23Net
+            #self.network.enable_extracellular_stimulation(self.extracellular_models[0], t_ext, n=5)
+
+        COMM.Barrier()
+        SPIKES = self.network.simulate(probes=self.extracellular_models, **self.args.env.network.networkSimulationArguments)
+        COMM.Barrier()
+
+        if RANK == 0:
+            P = self.extracellular_models[1].data['imem']  # numpy array <3, timesteps>
+            # pot_db_4s_top = self.four_sphere_top.get_dipole_potential(P, np.array(self.args.env.network.position))  # Units: mV
+            # eeg = np.array(pot_db_4s_top) * 1e-3  # convert units: V
+        return P
+
     # # TODO: _step is old and broken, and follows old structure.
     # def _step(self, action, stim_elec=0):
     #     COMM = self.MPI_VAR['COMM']

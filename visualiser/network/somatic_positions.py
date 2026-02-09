@@ -2,6 +2,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
+plt.rcParams.update({
+    'font.size': 16,
+    'axes.titlesize': 18,
+    'axes.labelsize': 18,
+    'xtick.labelsize': 16,
+    'ytick.labelsize': 16,
+    'legend.fontsize': 16,
+    'figure.titlesize': 18,
+})
+
 popnames = ['HL23PYR', 'HL23SST', 'HL23PV', 'HL23VIP']
 filename = 'cell_positions_and_rotations.h5'
 
