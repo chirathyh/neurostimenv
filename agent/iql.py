@@ -30,10 +30,13 @@ class IQL:
         self.alpha = args.agent.alpha
 
         # Initialize networks
-        self.q_network = TwinQNetwork(args)
-        self.q_target = copy.deepcopy(self.q_network).requires_grad_(False).to(self.device)  # Target Q network
         self.value_network = ValueNetwork(args)
         self.policy_network = PolicyNetwork(args)
+        self.q_network = TwinQNetwork(args).to(self.device)
+        self.q_target = copy.deepcopy(self.q_network).to(self.device)  # Target Q network
+        for p in self.q_target.parameters():
+            p.requires_grad = False
+
 
         # Initialize optimizers
         self.q_optimizer = optim.Adam(self.q_network.parameters(), lr=args.agent.lr)
@@ -60,9 +63,24 @@ class IQL:
         self.q_optimizer.zero_grad()
         target = reward_batch + (1 - done_batch) * self.gamma * next_v_value
         qs = self.q_network.both(state_batch, action_batch)
+
+        # print(qs)
         q_loss = sum(F.mse_loss(q, target) for q in qs) / len(qs)
+
+        # q_loss = 0.
+        # for q in qs:
+        #     # if shapes mismatch, reshape target: (B,1)
+        #     if target.shape != q.shape:
+        #         target_q_shaped = target.view_as(q)
+        #     else:
+        #         target_q_shaped = target
+        #     q_loss = q_loss + F.mse_loss(q, target_q_shaped)
+        # q_loss = q_loss / len(qs)
+
         q_loss.backward()
         self.q_optimizer.step()
+
+        # exit()
 
         self.update_target_q_network()
 

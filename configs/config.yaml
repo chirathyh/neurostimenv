@@ -23,6 +23,7 @@ experiment:
 defaults:
   - env: hl23net
   - agent: iql
+  - analysis: dipoles
   - _self_
 
 agent:

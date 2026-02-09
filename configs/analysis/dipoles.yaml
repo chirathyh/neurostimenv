@@ -1,0 +1,19 @@
+# configurations for dipole fitting analysis
+
+# anatomical templates and files
+subject: 'sample' # subject name as in subjects_dir
+subjects_dir: '/home/chirath/mne_data/MNE-sample-data/subjects'  # FreeSurfer subject dir (e.g. sample/subjects)
+trans: '/home/chirath/mne_data/MNE-sample-data/MEG/sample/sample_audvis_raw-trans.fif'
+
+orig_sfreq: 40000  # original sampling frequency in Hz
+sfreq: 100  # sampling frequency in Hz
+
+dipoles:
+  - id: 1
+    coord: [-0.04356633,  0.08047897,  0.05652746]
+    hemisphere: 'lh'
+    notes: 'dlpfc'
+  - id: 2
+    coord: [ 0.01388544, -0.02582726,  0.11364826]
+    hemisphere: 'rh'
+    notes: 'Right Superior Parietal Cortex'
