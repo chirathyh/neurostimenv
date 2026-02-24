@@ -10,14 +10,22 @@ Stimulation of Biological Neural Circuits</h1>
 [![python_sup](https://img.shields.io/badge/python-3.10.12-black.svg?)](https://www.python.org/downloads/release/python-31012/)
 [![DOI](https://img.shields.io/badge/DOI-10.21203/rs.3.rs--7958165/v1-blue)](https://doi.org/10.21203/rs.3.rs-7958165/v1)
 
-**NeuroStimEnv** is a project to develop Reinforcement Learning (RL)-based transcranial stimulation treatment targeting different psychiatric and neurological disorders. The framework allows integration of different neural circuits using the NEURON simulation engine and develop RL algorithms to modulate the target neural oscillations (brain waves).
+**NeuroStimEnv** is a project to develop Reinforcement Learning (RL)-based transcranial stimulation treatment targeting different psychiatric and neurological disorders. Abnormal neural oscillation patterns are observed in these disorders. The framework allows integration of different neural circuits using the NEURON simulation engine and develop RL algorithms to modulate the target neural oscillations (brain waves) using brain stimulation.
 
 <div align="center">
-<img src="img/neurostimenv2.png" alt="NeuroStimEnv" width="477"/>
+<img src="img/neurostimenv2.png" alt="NeuroStimEnv" width="800"/>
+</div>
+
+The NEURON simulation engine is used to model neural circuits exhibiting abnormal neural oscillation patterns associated with psychiatric and neurological disorders. SimNIBS and LFPy are used to simulate EEG and transcranial stimulation signals based on selected electrode montage settings. RL algorithms are designed to use continuous EEG as the sensory input and transcranial stimulation (tACS, TMS, tDCS) as the actuator to modulate the neural oscillations. The framework is designed to be flexible and modular, allowing for the integration of different neural circuits and RL algorithms. Please refer the paper for detailed features / experimental setup.
+
+Example output:
+
+<div align="center">
+<img src="img/sample_output.png" alt="NeuroStimEnv" width="800"/>
 </div>
 
 Using the project
---
+---
 
 <h4>Installation</h4>
 
