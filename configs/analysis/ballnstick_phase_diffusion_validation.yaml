@@ -1,0 +1,100 @@
+# D0: stimulation-free validation of a shared phase-diffusing afferent state.
+# This freezes the state generator before any D1 tACS action map is attempted.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+smoke_test: false
+
+timeline:
+  burn_in_steps: 1
+  # Twelve seconds gives 0.083-Hz Fourier spacing and twelve causal 1-s phase
+  # estimates. A short sequence cannot identify oscillator linewidth reliably.
+  baseline_steps: 12
+  stimulation_steps: 1
+  washout_steps: 1
+  block_ramp_ms: 0.0
+  stimulation_analysis_trim_ms: 0.0
+
+states:
+  modulation_depth: 0.04
+  frequencies_hz: [9.0, 11.0]
+  # D has units rad^2/s. Ideal latent coherence over lag tau is exp(-D*tau).
+  # D=0 is a stationary audit; low and high are the frozen D1 candidates.
+  phase_diffusion_levels:
+    - {label: stationary, diffusion_rad2_per_s: 0.0}
+    - {label: low_diffusion, diffusion_rad2_per_s: 0.5}
+    - {label: high_diffusion, diffusion_rad2_per_s: 2.0}
+  phase_diffusion_integration_dt_ms: 1.0
+
+crossed_design:
+  # Circuit structure is the inferential unit. Frequency and diffusion are
+  # within-structure generator conditions with common random-number coupling.
+  n_structure_seeds: 3
+  # Structure seeds must remain below uint32_max/10,000 because LFPy maps the
+  # structure namespace through structure_seed*10,000.
+  structure_seed_offset: 416000
+  drive_seed_offset: 433000
+  phase_seed_offset: 434000
+  trial_seed_offset: 435000
+
+reference:
+  frequency_hz: 9.0
+  phase_rad: 0.0
+  populations: [E, I]
+  thinning_envelope_modulation_depth: 0.16
+
+# Compatibility metadata required by the shared episode/EEG analysis helpers.
+# D0 never activates this zero-amplitude action.
+tacs:
+  amplitude_v_per_m: 0.0
+  frequency_hz: 9.0
+  axial_montage: axial
+  phase_rad: 0.0
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: transverse_x
+  amplitude_v_per_m: 0.0
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: 0.0
+  block_ramp_ms: 0.0
+
+measurement:
+  phase_window_s: 1.0
+  temporal_chunk_s: 4.0
+  spectral_core_half_width_hz: 0.25
+  spectral_neighbourhood_half_width_hz: 1.5
+  latent_coherence_lag_s: 1.0
+  sampled_private_synapses_per_population: 16
+
+criteria:
+  minimum_structure_seeds: 3
+  minimum_frequency_detection_accuracy: 0.80
+  # The SDE is validated from its many independent 1-ms increments. A 1-s
+  # coherence estimate is reported but is too correlated/noisy for a tight
+  # equation-level tolerance over a 12-s realization.
+  maximum_latent_increment_variance_relative_error: 0.08
+  minimum_low_minus_high_latent_coherence: 0.25
+  minimum_low_minus_high_eeg_phase_stability: 0.03
+  minimum_low_high_classification_accuracy: 0.6666666666666666
+  minimum_state_to_temporal_noise_ratio: 1.0
+  minimum_recent_resultant_to_rms: 0.03
+  maximum_mean_afferent_rate_relative_error: 0.10
+  maximum_diffusion_rate_difference_fraction: 0.20
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+alpha_low_hz: 8.0
+alpha_high_hz: 12.0
+stimulus_exclusion_half_width_hz: 0.75
+phase_null:
+  n_surrogates: 0
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+save_raw_eeg: false
+save_spikes: false

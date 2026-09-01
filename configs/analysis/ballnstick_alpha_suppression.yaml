@@ -1,0 +1,101 @@
+# EEG-guided, phase-specific suppression of an elevated-alpha toy state.
+#
+# A and B use identical 40-cell circuits. Condition A has a sinusoidally
+# modulated (but mean-rate-matched) independent Poisson afferent drive at
+# 10 Hz; condition B uses homogeneous Poisson drive. Neither label denotes
+# disease or health. A uniform 10-Hz field is applied only to A.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+
+timeline:
+  burn_in_steps: 1
+  # Four seconds gives 40 cycles for causal phase estimation before action.
+  baseline_steps: 4
+  # Six seconds gives four independent-equivalent 2-s Welch segments after
+  # trimming the two field ramps, instead of relying on a one-second PSD.
+  stimulation_steps: 6
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  stimulation_analysis_trim_ms: 500.0
+
+reference:
+  frequency_hz: 10.0
+  phase_rad: 0.0
+  populations: [E, I]
+  # Held fixed in A and B so candidate event trains use common random numbers.
+  thinning_envelope_modulation_depth: 0.16
+
+calibration:
+  n_seeds: 2
+  seed_offset: 160000
+  # Choose the smallest rate-matched depth with a repeatable positive alpha
+  # shift. This stage never observes or tunes a stimulation response.
+  modulation_depths: [0.04, 0.08, 0.12, 0.16]
+
+phase_discovery:
+  n_seeds: 2
+  seed_offset: 161000
+  # Offsets are relative to the causal phase extrapolated from each episode's
+  # own preceding EEG, not relative to an arbitrary simulation clock.
+  relative_phase_offsets_rad:
+    - 0.0
+    - 1.5707963267948966
+    - 3.141592653589793
+    - 4.71238898038469
+
+validation:
+  # Four held-out circuits are a directional workshop pilot, not a powered
+  # confirmatory study. Use >=8 new seeds only if this pilot passes unchanged.
+  n_seeds: 4
+  seed_offset: 162000
+
+tacs:
+  amplitude_v_per_m: 0.8
+  frequency_hz: 10.0
+  axial_montage: axial
+  transverse_montage: transverse_x
+
+# Shared namespace consumed by the persistent online episode utilities.
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: ${analysis.tacs.transverse_montage}
+  amplitude_v_per_m: ${analysis.tacs.amplitude_v_per_m}
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: 0.0
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+alpha_low_hz: 8.0
+alpha_high_hz: 12.0
+# Shared T1 analysis also reports a fundamental-excluded audit. It is not the
+# primary endpoint because removing 8--12 Hz removes the state definition.
+stimulus_exclusion_half_width_hz: 2.0
+
+phase_null:
+  n_surrogates: 500
+
+criteria:
+  minimum_calibration_seeds: 2
+  minimum_discovery_seeds: 2
+  minimum_validation_seeds: 4
+  minimum_calibration_positive_seeds: 2
+  minimum_discovery_positive_seeds: 2
+  minimum_validation_positive_seeds: 3
+  minimum_reference_log10_alpha_shift: 0.02
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_washout_residual_fraction: 0.50
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+n_bootstrap: 3000
+n_permutations: 10000
+save_raw_eeg: false
+save_spikes: false

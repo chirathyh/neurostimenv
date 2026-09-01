@@ -1,0 +1,102 @@
+defaults:
+  - ballnstick_phase_refresh_cadence_discovery
+  - _self_
+
+# H4-C: disjoint confirmation of frozen adaptive phase maintenance under
+# shared afferent phase diffusion. This confirms a deterministic feedback
+# controller in ideal neural EEG; it is not a bandit or clinical experiment.
+smoke_test: false
+smoke_context_limit: 0
+
+source_h4bw2:
+  result_dir: ../../results/ballnstick_phase_refresh_cadence_discovery_full/phase_refresh_cadence_discovery
+  expected_sha256:
+    conclusion: aee9ac50b368db3ad45dce69eb27994b33be16bb19b6d5c73b9ed0f7309252b8
+    candidate: 97c9114273d385955343503373fc123477a665f1ca2adae4e0b4b5b8d3baf548
+    target: 67412b211172d894d7eb31673c7e32d32be4c36e3a4f23ad86f4f4f0c2543f41
+    provenance: acaad065f4a38b4bbde6179f67501e19db2391ccb397a31095b81fec569dfae7
+    screening: 3eee324bd11c5e6311b3c8690cc1290ed7901e5fb75dc57972cd77222a2bbae5
+    metrics: 4f17bdc18a6f940da8092a81d4088da7254014f2c74317025648f13637ad0c27
+    updates: e748d06598be79d7d84e9a11c7ce8ba2405347e1452e5adf692ad7d75f3417e5
+    summary: 535604fc442d88448c6b295d44001047d6033c315d44559431689610a2ca6df4
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 12
+  # Nine seconds with 0.5-s onset/offset ramps gives an eight-second endpoint.
+  stimulation_steps: 9
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  stimulation_analysis_trim_ms: 500.0
+
+crossed_design:
+  # Sixteen candidates protect the prospectively screened sample size. The
+  # first twelve structures with all four frequency-by-diffusion contexts
+  # eligible are enrolled. Structure is the inferential unit.
+  n_structure_seeds: 16
+  n_enrolled_structure_seeds: 12
+  n_history_seeds: 1
+  n_future_continuations: 6
+  structure_seed_offset: 321000
+  history_seed_offset: 322000
+  phase_seed_offset: 323000
+  trial_seed_offset: 324000
+  future_seed_offset: 325000
+
+actions:
+  amplitude_v_per_m: 0.2
+  controller_modes:
+    - sham
+    - one_time
+    - refresh_500ms_125ms
+
+# These values must exactly equal the hash-locked selected protocol.
+tacs:
+  frequency_hz: 9.0
+  relative_phase_offset_rad: 3.141592653589793
+  axial_montage: axial
+  phase_estimation_steps: 1
+  initialization_history_ms: 1000.0
+  correction_horizon_ms: 250.0
+  maximum_frequency_correction_hz: 2.0
+  common_audit_history_ms: 1000.0
+  common_audit_interval_ms: 250.0
+
+power_design:
+  alpha_one_sided: 0.05
+  target_power: 0.80
+  minimum_standardized_effect_dz: 0.80
+  planned_independent_structures: 12
+
+criteria:
+  minimum_candidate_structures: 12
+  minimum_enrolled_structures: 12
+  minimum_future_continuations: 6
+  minimum_frequency_detection_accuracy: 0.80
+  practical_primary_advantage_log10: 0.01
+  practical_secondary_advantage_vs_sham_log10: 0.01
+  minimum_positive_structure_fraction: 0.6666666666666666
+  maximum_primary_p_value: 0.05
+  minimum_realized_future_win_fraction: 0.75
+  minimum_common_phase_estimate_actionable_fraction: 0.95
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_causal_timing_error_ms: 1.0e-9
+  maximum_field_boundary_discontinuity_v_per_m: 1.0e-10
+  maximum_frequency_correction_hz: 2.000000001
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+
+inference:
+  exact_sign_flip_max_structures: 20
+  monte_carlo_sign_flips: 100000
+  bootstrap_resamples: 10000
+  random_seed_offset: 329000
+
+paper_psd:
+  segment_seconds: 4.0
+  overlap_fraction: 0.5
+  minimum_plot_hz: 1.0
+  maximum_plot_hz: 30.0
+  zoom_minimum_hz: 5.0
+  zoom_maximum_hz: 15.0
+  bootstrap_resamples: 2000

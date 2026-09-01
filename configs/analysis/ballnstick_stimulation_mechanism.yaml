@@ -1,0 +1,75 @@
+# Confirmatory mechanism-and-confounding experiment for the fixed protocol
+# nominated by the previous discovery run.  This is not another parameter
+# search: 0.5 V/m, 10 Hz is frozen before confirmation.
+simulator: online
+
+condition_a_inhibition_scale: 1.0
+condition_b_inhibition_scale: 0.5
+
+protocol:
+  amplitude_v_per_m: 0.5
+  frequency_hz: 10.0
+  parallel_direction: [0.0, 0.0, 1.0]
+  perpendicular_direction: [1.0, 0.0, 0.0]
+  block_ramp_ms: 250.0
+
+# Each step is env.simulation.obs_win_len (normally 1000 ms).  The field is
+# nonzero only during stimulation.  One absolute-time ramp spans that complete
+# block; it is not restarted at window boundaries.
+timeline:
+  burn_in_steps: 4
+  baseline_steps: 8
+  stimulation_steps: 8
+  post_steps: 8
+
+# Calibration fixes feature scaling without seeing any stimulation response.
+# Confirmation seeds are disjoint from the earlier 1001/2001 cohorts.
+calibration:
+  n_seeds: 8
+  seed_offset: 40000
+confirmation:
+  n_seeds: 24
+  seed_offset: 50000
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+stimulus_exclusion_half_width_hz: 1.0
+
+# The fundamental-excluded feature set is primary.  Raw features are retained
+# to measure how much of the old endpoint can be reproduced by adding a 10-Hz
+# sinusoid to the observation without stimulating the circuit.
+primary_distance_features:
+  - log10_total_power_1_80_excluding_stimulus
+  - relative_gamma_power_excluding_stimulus
+raw_distance_features:
+  - log10_total_power_1_80
+  - relative_gamma_power
+
+synthetic_control:
+  # Match the complete band containing the stimulation frequency (alpha at
+  # 10 Hz) in each seed's active parallel episode.
+  match_driven_band_power: true
+  phase_rad: 0.0
+
+criteria:
+  minimum_mean_improvement: 0.10
+  minimum_positive_seed_fraction: 0.80
+  equivalence_z_margin: 0.50
+  minimum_equivalent_seed_fraction: 0.80
+  require_orientation_specificity: true
+  require_beyond_synthetic_control: true
+  require_population_plv_increase: true
+  maximum_baseline_relative_rms_error: 1.0e-8
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.25
+
+n_bootstrap: 5000
+n_permutations: 20000
+save_raw_eeg: true
+save_spikes: true

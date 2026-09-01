@@ -1,0 +1,131 @@
+# CL1-C: held-out confirmation of the EEG baseline-to-probe trajectory rule
+# discovered after CL1-P. The primary rule and all thresholds are frozen before
+# these new crossed structure/drive seeds are simulated. This is not RL.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 4
+  probe_steps: 3
+  decision_steps: 6
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  amplitude_transition_ms: 500.0
+  # Retain the exact CL1-P estimator and timing; changing duration here would
+  # change the discovered context rather than confirm it.
+  probe_analysis_trim_start_ms: 1000.0
+  decision_analysis_trim_start_ms: 500.0
+  decision_analysis_trim_end_ms: 500.0
+
+frozen_candidate:
+  result_dir: ../../results/ballnstick_alpha_suppression_dose_audit/alpha_suppression_dose_audit
+  expected_modulation_depth: 0.04
+  expected_frequency_hz: 10.0
+  expected_amplitude_v_per_m: 0.4
+  expected_relative_phase_offset_rad: 3.141592653589793
+  expected_montage: axial
+
+discovery:
+  # The runner hashes these completed CL1-P files and validates that the new
+  # confirmation seed namespaces do not overlap their seed provenance.
+  result_dir: ../../results/ballnstick_context_probe_feasibility_full/context_probe_feasibility
+  expected_sha256:
+    conclusion: c7e5b4d1c93cecac0ccf61fc5003032f876bf3481e553b9ee15de07caa8b8a2a
+    summary: e499870deb51a37c4058bdaf92ef65831e2620ee232604650dc3d4f97c553029
+    probe_target: 428979976ef4d120c3254f995cdaaa0d820c888d8945f3f75149ba36021777e3
+    provenance: c8631afa8213415526c14d8f21f6b17cf228655596f478854c6d4097cfdc4537
+
+crossed_design:
+  # Six independent structure groups are the inferential units. Three drive
+  # sessions per structure expose stochastic afferent-event variability.
+  n_structure_seeds: 6
+  n_drive_seeds: 3
+  structure_seed_offset: 340000
+  drive_seed_offset: 350000
+  fixed_phase_seed_offset: 360000
+  trial_seed_offset: 370000
+
+actions:
+  probe_dose_v_per_m: 0.2
+  maintain_dose_v_per_m: 0.2
+  escalate_dose_v_per_m: 0.4
+
+trajectory_rule:
+  # Frozen from CL1-P exploratory analysis: positive means alpha power fell
+  # from the matched baseline to the active-probe analysis interval.
+  feature: matched_baseline_minus_active_probe_log10_alpha
+  threshold_log10: 0.0
+  positive_action: maintain_0p2
+  nonpositive_action: escalate_0p4
+
+reference:
+  frequency_hz: 10.0
+  phase_rad: 0.0
+  populations: [E, I]
+  thinning_envelope_modulation_depth: 0.16
+
+tacs:
+  frequency_hz: 10.0
+  axial_montage: axial
+
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: transverse_x
+  amplitude_v_per_m: ${analysis.actions.escalate_dose_v_per_m}
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: ${analysis.frozen_candidate.expected_relative_phase_offset_rad}
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+alpha_low_hz: 8.0
+alpha_high_hz: 12.0
+stimulus_exclusion_half_width_hz: 2.0
+
+phase_null:
+  n_surrogates: 200
+
+phase_quality:
+  maximum_split_half_error_deg: 45.0
+  minimum_10hz_resultant_to_rms: 0.05
+
+criteria:
+  minimum_eligible_contexts: 12
+  minimum_eligible_structure_seeds: 6
+  minimum_eligible_drive_seeds: 3
+  practical_advantage_log10: 0.01
+  minimum_practical_oracle_crossovers: 4
+  minimum_selected_action_count: 2
+  # The adaptive rule must improve on each fixed dose, not just the historical
+  # 0.4-V/m comparator.
+  minimum_mean_advantage_over_each_fixed_log10: 0.01
+  minimum_positive_structure_fraction: 0.6666666666666666
+  maximum_structure_sign_flip_p_value: 0.05
+  maximum_context_shuffle_p_value: 0.05
+  minimum_oracle_regret_reduction_fraction: 0.25
+  # Secondary attribution audits; these do not enter the primary confirmation.
+  minimum_control_advantage_log10: 0.0
+  maximum_predecision_relative_rms_error: 1.0e-8
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_phase_tracking_error_rad: 1.0e-10
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+
+structure_bootstrap:
+  n_resamples: 10000
+
+context_shuffle:
+  n_permutations: 10000
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+save_raw_eeg: false
+save_spikes: false

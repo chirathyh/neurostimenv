@@ -1,0 +1,142 @@
+# CDM2-D: expanded discovery of a monotone predecision-EEG severity threshold
+# for choosing one of two constant 10-Hz tACS amplitudes. This is not a bandit
+# or confirmation experiment.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+smoke_test: false
+
+timeline:
+  burn_in_steps: 1
+  # Twelve no-field seconds give six non-overlapping 2-s context estimates.
+  baseline_steps: 12
+  stimulation_steps: 6
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  stimulation_analysis_trim_ms: 500.0
+
+frozen_candidate:
+  result_dir: ../../results/ballnstick_alpha_suppression_dose_audit/alpha_suppression_dose_audit
+  expected_modulation_depth: 0.04
+  expected_frequency_hz: 10.0
+  expected_amplitude_v_per_m: 0.4
+  expected_relative_phase_offset_rad: 3.141592653589793
+  expected_montage: axial
+
+source_cdm1:
+  result_dir: ../../results/ballnstick_single_action_dose_map_quick/single_action_dose_map
+  expected_sha256:
+    conclusion: aa65742c62550a3f8f125daecd185c05f1c7078d1db81e304299c0b4e96f5619
+    summary: be3fd91ed8635fff0157618d0e0e6248d3c68104937d8e33c4347eb4109bd41a
+    provenance: 1b24ca362cdaa5f98d6c6f015d1416eb1e09e250ef0d9dcf9104c8335aa3eaa4
+
+states:
+  # The 0.02 state is a prospective screen-negative specificity control. The
+  # 0.04 and 0.06 states provide crossed eligible severity variation. Labels
+  # and depths are audit variables and are unavailable to the policy.
+  modulation_depths: [0.02, 0.04, 0.06]
+  labels: [subthreshold_control, moderate, strong]
+
+crossed_design:
+  # Three independent structures crossed with two predecision histories.
+  # Each eligible context/action is evaluated under three postdecision futures.
+  n_structure_seeds: 3
+  n_history_seeds: 2
+  n_future_continuations: 3
+  structure_seed_offset: 390000
+  history_seed_offset: 392000
+  future_seed_offset: 394000
+  fixed_phase_seed_offset: 396000
+  trial_seed_offset: 398000
+
+actions:
+  # 0.1 and 0.3 V/m were never expected-optimal in CDM1-S. Restricting the
+  # discovery action set makes the one-decision task identifiable and cheaper.
+  sham_dose_v_per_m: 0.0
+  active_doses_v_per_m: [0.2, 0.4]
+
+reference:
+  frequency_hz: 10.0
+  phase_rad: 0.0
+  populations: [E, I]
+  thinning_envelope_modulation_depth: 0.16
+
+tacs:
+  frequency_hz: 10.0
+  relative_phase_offset_rad: 3.141592653589793
+  axial_montage: axial
+
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: transverse_x
+  amplitude_v_per_m: 0.4
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: ${analysis.tacs.relative_phase_offset_rad}
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+context:
+  window_ms: 2000.0
+  # Primary decision variable. Coherent fraction is saved as a mechanistic
+  # observability audit but cannot enter threshold selection.
+  policy_features: [context_alpha_excess_log10]
+  secondary_audit_features:
+    - context_coherent_alpha_fraction
+    - context_alpha_peak_prominence_db
+    - context_alpha_temporal_sem_log10
+
+threshold_discovery:
+  low_dose_v_per_m: 0.2
+  high_dose_v_per_m: 0.4
+  minimum_training_contexts_per_action: 2
+  # Select the threshold minimizing future-averaged target distance, subject to
+  # both actions having the minimum discovery support above.
+  tie_break: lowest_mean_distance_then_largest_minimum_arm_support
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+alpha_low_hz: 8.0
+alpha_high_hz: 12.0
+stimulus_exclusion_half_width_hz: 2.0
+
+phase_null:
+  n_surrogates: 100
+
+phase_quality:
+  maximum_split_half_error_deg: 45.0
+  minimum_10hz_resultant_to_rms: 0.05
+
+criteria:
+  minimum_eligible_contexts: 8
+  minimum_eligible_state_levels: 2
+  minimum_eligible_structure_seeds: 3
+  minimum_eligible_history_seeds: 2
+  minimum_future_continuations: 3
+  practical_advantage_log10: 0.01
+  minimum_expected_low_dose_contexts: 2
+  minimum_expected_low_dose_structures: 2
+  minimum_expected_low_dose_histories: 2
+  minimum_expected_action_fraction: 0.20
+  minimum_mean_expected_oracle_advantage_log10: 0.01
+  minimum_realized_oracle_agreement_fraction: 0.60
+  minimum_state_signal_to_context_mean_noise: 1.25
+  minimum_crossvalidated_advantage_over_best_fixed_log10: 0.005
+  minimum_positive_structure_fraction: 0.6666666666666666
+  maximum_context_shuffle_p_value: 0.10
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_phase_tracking_error_rad: 1.0e-10
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+
+context_shuffle:
+  n_permutations: 2000
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+save_raw_eeg: false
+save_spikes: false

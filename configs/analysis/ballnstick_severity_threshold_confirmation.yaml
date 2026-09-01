@@ -1,0 +1,149 @@
+# CDM2-C: seed-disjoint confirmation of the frozen CDM2-D EEG-severity rule.
+# No threshold, feature, action, target, or success criterion is fitted here.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+smoke_test: false
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 12
+  stimulation_steps: 6
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  stimulation_analysis_trim_ms: 500.0
+
+frozen_candidate:
+  result_dir: ../../results/ballnstick_alpha_suppression_dose_audit/alpha_suppression_dose_audit
+  expected_modulation_depth: 0.04
+  expected_frequency_hz: 10.0
+  expected_amplitude_v_per_m: 0.4
+  expected_relative_phase_offset_rad: 3.141592653589793
+  expected_montage: axial
+
+frozen_discovery:
+  result_dir: ../../results/ballnstick_severity_threshold_discovery_full/severity_threshold_discovery
+  expected_sha256:
+    conclusion: 1235512e46e03d3c4da29b5e5ddb2ec3afae2d8d39ac3cf8f213a487b8eae9bf
+    candidate: a67823960cd9a6507751e3a3d6a8b57bd496e455c93b40dd7bc486303a5b6b17
+    provenance: 835fdd31dbcd6688855761e82c0f6670989bf2926253f280e0002f223e553b7f
+  expected_threshold_log10_alpha_excess: 0.3801312721254124
+  expected_low_dose_v_per_m: 0.2
+  expected_high_dose_v_per_m: 0.4
+
+states:
+  # The 0.02 state remains a prospective screen-negative specificity control.
+  # Only EEG-screen-positive contexts enter the efficacy analysis.
+  modulation_depths: [0.02, 0.04, 0.06]
+  labels: [subthreshold_control, moderate, strong]
+
+crossed_design:
+  # Twelve structures are the independent units. Histories and futures improve
+  # conditional-mean estimation but never increase inferential sample size.
+  n_structure_seeds: 12
+  n_history_seeds: 2
+  n_future_continuations: 3
+  structure_seed_offset: 410000
+  history_seed_offset: 412000
+  future_seed_offset: 414000
+  fixed_phase_seed_offset: 416000
+  trial_seed_offset: 418000
+
+actions:
+  sham_dose_v_per_m: 0.0
+  active_doses_v_per_m: [0.2, 0.4]
+
+reference:
+  frequency_hz: 10.0
+  phase_rad: 0.0
+  populations: [E, I]
+  thinning_envelope_modulation_depth: 0.16
+
+tacs:
+  frequency_hz: 10.0
+  relative_phase_offset_rad: 3.141592653589793
+  axial_montage: axial
+
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: transverse_x
+  amplitude_v_per_m: 0.4
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: ${analysis.tacs.relative_phase_offset_rad}
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+context:
+  window_ms: 2000.0
+  policy_features: [context_alpha_excess_log10]
+  secondary_audit_features:
+    - context_coherent_alpha_fraction
+    - context_alpha_peak_prominence_db
+    - context_alpha_temporal_sem_log10
+
+# Immutable aliases used by the shared binary-dose table constructor. No
+# threshold is searched or fitted in CDM2-C.
+threshold_discovery:
+  low_dose_v_per_m: 0.2
+  high_dose_v_per_m: 0.4
+
+power_design:
+  # A priori one-sided paired-t approximation. The raw minimally important
+  # advantage is 0.01 log10 and the planning SD is 0.013 log10 (rounded from
+  # the frozen-rule discovery structure SD), giving d_z=0.76923. This defines
+  # the large effect worth pursuing in this laptop-scale proof of concept.
+  alpha_one_sided: 0.05
+  target_power: 0.80
+  minimum_mean_advantage_log10: 0.01
+  anticipated_structure_sd_log10: 0.013
+  minimum_standardized_effect_dz: 0.7692307692307693
+  planned_independent_structures: 12
+
+inference:
+  primary_comparator_dose_v_per_m: 0.4
+  secondary_comparator_dose_v_per_m: 0.2
+  exact_sign_flip_max_structures: 20
+  monte_carlo_sign_flips: 200000
+  bootstrap_resamples: 20000
+  random_seed_offset: 420000
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+alpha_low_hz: 8.0
+alpha_high_hz: 12.0
+stimulus_exclusion_half_width_hz: 2.0
+
+phase_null:
+  n_surrogates: 100
+
+phase_quality:
+  maximum_split_half_error_deg: 45.0
+  minimum_10hz_resultant_to_rms: 0.05
+
+criteria:
+  # Used only by the secondary counterfactual-oracle audit inherited from the
+  # dose-map analysis; it is not a CDM2-C primary success criterion.
+  practical_advantage_log10: 0.01
+  minimum_eligible_contexts: 36
+  minimum_eligible_state_levels: 2
+  minimum_analyzable_structure_seeds: 12
+  minimum_eligible_history_seeds: 2
+  minimum_future_continuations: 3
+  minimum_selected_action_fraction: 0.20
+  minimum_practical_mean_advantage_log10: 0.01
+  maximum_primary_one_sided_p_value: 0.05
+  minimum_positive_structure_fraction: 0.75
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_phase_tracking_error_rad: 1.0e-10
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+save_raw_eeg: false
+save_spikes: false

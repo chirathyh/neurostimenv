@@ -1,0 +1,44 @@
+# Two-stage Condition-B stimulation reachability experiment.
+#
+# The action is [uniform-field amplitude (V/m), frequency (Hz)]. These values
+# describe the field at the modeled tissue, not a scalp current. The upper
+# 2 V/m level is an exploratory bound; 0.2--0.8 V/m is the conventional-human
+# range represented by the grid.
+simulator: online
+burn_in_steps: 2
+stimulation_steps: 4
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+
+condition_a_inhibition_scale: 1.0
+condition_b_inhibition_scale: 0.5
+
+discovery:
+  n_seeds: 4
+  seed_offset: 1000
+  amplitudes_v_per_m: [0.2, 0.5, 0.8, 1.2, 2.0]
+  frequencies_hz: [5.0, 10.0, 20.0, 40.0]
+  top_k: 3
+
+validation:
+  n_seeds: 8
+  seed_offset: 2000
+  n_bootstrap: 5000
+
+# Fixed before looking at responses; compact enough for a small reference set.
+distance_features:
+  - log10_total_power_1_80
+  - relative_theta_power
+  - relative_alpha_power
+  - relative_beta_power
+  - relative_gamma_power
+  - spectral_entropy
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+
+save_raw_eeg: false

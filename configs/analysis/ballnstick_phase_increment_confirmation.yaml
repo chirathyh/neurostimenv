@@ -1,0 +1,130 @@
+# D0b: seed-disjoint confirmation of the phase-increment EEG endpoint selected
+# after the failed global-resultant endpoint in D0. No state or threshold is
+# refitted here, and no tACS is applied.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+smoke_test: false
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 12
+  stimulation_steps: 1
+  washout_steps: 1
+  block_ramp_ms: 0.0
+  stimulation_analysis_trim_ms: 0.0
+
+source_d0:
+  result_dir: ../../results/ballnstick_phase_diffusion_validation_full/phase_diffusion_validation
+  expected_sha256:
+    conclusion: 65470609d47c00852b0ee2a260f16f858e5c80339bf8a5d7bdf8eed98adff1d3
+    generator: 5c5affb6baea991f9791b384e9a63562baded5f00792b1082d41e936ab029bac
+    metrics: d990ea7e0564c3e48be2c11eb9cb4b0a2acced22422d7245baab78815fbc96a8
+  # D0 failed its original global-resultant observability gate. These are the
+  # only two failed source checks expected and motivate the new frozen metric.
+  expected_failed_checks:
+    - low_high_diffusion_classifiable_from_heldout_structure_EEG
+    - diffusion_signal_exceeds_within_trajectory_temporal_noise
+
+states:
+  modulation_depth: 0.04
+  frequencies_hz: [9.0, 11.0]
+  phase_diffusion_levels:
+    - {label: low_diffusion, diffusion_rad2_per_s: 0.5}
+    - {label: high_diffusion, diffusion_rad2_per_s: 2.0}
+  phase_diffusion_integration_dt_ms: 1.0
+
+frozen_endpoint:
+  name: eeg_lag1_phase_increment_coherence_real
+  phase_window_s: 1.0
+  formula: mean_cosine_of_successive_demodulated_EEG_phase_increments
+  # Midpoint of the D0 discovery means: low=0.7021899103492087 and
+  # high=0.3339978710233058. Low diffusion is predicted when C1 >= threshold.
+  classification_threshold: 0.5180938906862573
+  expected_source_low_mean: 0.7021899103492087
+  expected_source_high_mean: 0.3339978710233058
+  expected_source_low_minus_high: 0.36819203932590305
+  threshold_tolerance: 1.0e-12
+
+crossed_design:
+  # Structures are independent inferential units. Frequencies and histories
+  # are paired repeated measurements. Two histories estimate phase-path noise.
+  n_structure_seeds: 6
+  n_history_seeds: 2
+  structure_seed_offset: 418000
+  drive_seed_offset: 436000
+  phase_seed_offset: 437000
+  trial_seed_offset: 438000
+
+reference:
+  frequency_hz: 9.0
+  phase_rad: 0.0
+  populations: [E, I]
+  thinning_envelope_modulation_depth: 0.16
+
+# Compatibility metadata for the shared persistent episode helpers. Every D0b
+# episode uses the zero-amplitude action for all epochs.
+tacs:
+  amplitude_v_per_m: 0.0
+  frequency_hz: 9.0
+  axial_montage: axial
+  phase_rad: 0.0
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: transverse_x
+  amplitude_v_per_m: 0.0
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: 0.0
+  block_ramp_ms: 0.0
+
+measurement:
+  phase_window_s: ${analysis.frozen_endpoint.phase_window_s}
+  temporal_chunk_s: 4.0
+  phase_horizon_audit_s: [0.5, 1.0]
+  spectral_core_half_width_hz: 0.25
+  spectral_neighbourhood_half_width_hz: 1.5
+
+power_design:
+  alpha_one_sided: 0.05
+  target_power: 0.80
+  minimum_mean_low_minus_high: 0.15
+  # Structure-level SD from D0's post-hoc endpoint discovery.
+  anticipated_structure_sd: 0.12114158508815162
+  planned_independent_structures: 6
+
+inference:
+  exact_sign_flip_max_structures: 20
+  monte_carlo_sign_flips: 200000
+  bootstrap_resamples: 20000
+  random_seed_offset: 439000
+
+criteria:
+  minimum_structure_seeds: 6
+  minimum_history_seeds: 2
+  minimum_mean_low_minus_high: ${analysis.power_design.minimum_mean_low_minus_high}
+  maximum_primary_one_sided_p_value: 0.05
+  minimum_positive_structure_fraction: 0.8333333333333334
+  minimum_frozen_threshold_balanced_accuracy: 0.75
+  minimum_structures_above_chance_classification_fraction: 0.8333333333333334
+  minimum_state_to_temporal_noise_ratio: 1.0
+  minimum_frequency_detection_accuracy: 0.90
+  minimum_recent_phase_measurable_fraction: 0.80
+  minimum_recent_resultant_to_rms: 0.03
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+alpha_low_hz: 8.0
+alpha_high_hz: 12.0
+stimulus_exclusion_half_width_hz: 0.75
+phase_null:
+  n_surrogates: 0
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+save_raw_eeg: false
+save_spikes: false

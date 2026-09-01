@@ -1,0 +1,73 @@
+# Low-cost open-loop system identification before any RL experiment.
+simulator: online
+condition_a_inhibition_scale: 1.0
+condition_b_inhibition_scale: 0.5
+
+timeline:
+  burn_in_steps: 1
+  stimulation_steps: 2
+  block_ramp_ms: 100.0
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+excluded_frequencies_hz: [10.0, 40.0]
+stimulus_exclusion_half_width_hz: 1.0
+
+# This remains the prespecified endpoint from the mechanism experiment.
+distance_features:
+  - log10_total_power_1_80_excluding_actions
+  - relative_gamma_power_excluding_actions
+
+# All primary screen actions obey |DC| + AC <= 0.8 V/m. The transverse action
+# is a geometry negative control and is excluded from the control basis.
+actions:
+  - {id: sham, montage: axial, dc_offset_v_per_m: 0.0, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, include_in_subspace: false}
+  - {id: axial_dc_m0p2, montage: axial, dc_offset_v_per_m: -0.2, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, include_in_subspace: true}
+  - {id: axial_dc_p0p2, montage: axial, dc_offset_v_per_m: 0.2, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, include_in_subspace: true}
+  - {id: axial_dc_m0p5, montage: axial, dc_offset_v_per_m: -0.5, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, include_in_subspace: true}
+  - {id: axial_dc_p0p5, montage: axial, dc_offset_v_per_m: 0.5, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, include_in_subspace: true}
+  - {id: axial_dc_m0p8, montage: axial, dc_offset_v_per_m: -0.8, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, include_in_subspace: true}
+  - {id: axial_dc_p0p8, montage: axial, dc_offset_v_per_m: 0.8, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, include_in_subspace: true}
+  - {id: axial_ac_0p8_10hz_p0, montage: axial, dc_offset_v_per_m: 0.0, ac_amplitude_v_per_m: 0.8, frequency_hz: 10.0, phase_rad: 0.0, include_in_subspace: true}
+  - {id: axial_ac_0p8_10hz_p90, montage: axial, dc_offset_v_per_m: 0.0, ac_amplitude_v_per_m: 0.8, frequency_hz: 10.0, phase_rad: 1.5707963267948966, include_in_subspace: true}
+  - {id: axial_ac_0p8_40hz_p0, montage: axial, dc_offset_v_per_m: 0.0, ac_amplitude_v_per_m: 0.8, frequency_hz: 40.0, phase_rad: 0.0, include_in_subspace: true}
+  - {id: axial_mixed_m0p5_ac0p3_10hz, montage: axial, dc_offset_v_per_m: -0.5, ac_amplitude_v_per_m: 0.3, frequency_hz: 10.0, phase_rad: 0.0, include_in_subspace: true}
+  - {id: axial_mixed_p0p5_ac0p3_10hz, montage: axial, dc_offset_v_per_m: 0.5, ac_amplitude_v_per_m: 0.3, frequency_hz: 10.0, phase_rad: 0.0, include_in_subspace: true}
+  - {id: transverse_dc_p0p8, montage: transverse_x, dc_offset_v_per_m: 0.8, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, include_in_subspace: false}
+
+discovery:
+  n_seeds: 1
+  seed_offset: 81000
+  top_k: 2
+
+# Zero gives a quick screen. Set this to at least 8 only after a signal passes
+# the exploratory gate; selected protocols are then frozen before these seeds.
+validation:
+  n_seeds: 0
+  seed_offset: 82000
+
+subspace:
+  relative_singular_value_threshold: 0.10
+
+exploratory_gate:
+  minimum_mean_fractional_improvement: 0.03
+  minimum_mean_improvement_beyond_synthetic: 0.03
+  minimum_positive_seed_fraction: 0.80
+  minimum_alignment: 0.20
+  minimum_response_to_target_norm_ratio: 0.05
+
+validation_gate:
+  minimum_positive_seed_fraction: 0.75
+  minimum_positive_beyond_synthetic_seed_fraction: 0.75
+  minimum_median_alignment: 0.0
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.25
+
+n_bootstrap: 2000
+save_raw_eeg: false

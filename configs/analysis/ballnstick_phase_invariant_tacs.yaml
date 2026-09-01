@@ -1,0 +1,101 @@
+# Confirmatory follow-up to the hierarchical tACS pilot.
+#
+# The preceding EEG-only hierarchy recovered 60 Hz but showed that absolute
+# Fourier phase was not a reproducible property of the asynchronous-to-rhythmic
+# state transition.  This design therefore freezes the previously discovered
+# frequency, fixes phase by convention, and validates a phase-invariant EEG
+# endpoint on new circuit seeds.  The hidden reference.frequency_hz is used
+# only to construct B and for a post-hoc audit; it is not used to change the
+# frozen protocol.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 1
+  stimulation_steps: 3
+  washout_steps: 1
+  block_ramp_ms: 250.0
+
+reference:
+  modulation_depth: 0.04
+  frequency_hz: 60.0
+  phase_rad: 0.0
+  populations: [E, I]
+  thinning_envelope_modulation_depth: 0.06
+
+# This is frozen from the prior EEG-only hierarchical discovery.  The new
+# calibration data independently audit whether 60 Hz is again the strongest
+# A/B spectral difference, but never change this value.
+frozen_protocol:
+  frequency_hz: 60.0
+  phase_rad: 0.0
+  primary_amplitude_v_per_m: 0.8
+  lower_amplitude_v_per_m: 0.5
+  provenance: ballnstick_hierarchical_tacs_pilot EEG-only discovery
+
+candidate_frequencies_hz: [40.0, 60.0, 80.0]
+# Namespace retained for the shared EEG feature extractor.
+target_discovery:
+  band_half_width_hz: 2.0
+
+# These seeds fit only the frozen phase-invariant A/B target distribution.
+# They are disjoint from every prior experiment and from validation below.
+calibration:
+  n_seeds: 4
+  seed_offset: 140000
+
+# Eight validation seeds are the minimum confirmatory set.  The lower dose is
+# optional and disabled by default to keep the laptop experiment compact; it
+# can be enabled as a secondary dose arm without changing the primary test.
+validation:
+  n_seeds: 8
+  seed_offset: 141000
+  include_lower_dose: false
+
+tacs:
+  axial_montage: axial
+  transverse_montage: transverse_x
+
+# Shared keys consumed by the persistent online episode utilities.
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: ${analysis.tacs.transverse_montage}
+  amplitude_v_per_m: ${analysis.frozen_protocol.primary_amplitude_v_per_m}
+  frequency_hz: ${analysis.frozen_protocol.frequency_hz}
+  phase_rad: ${analysis.frozen_protocol.phase_rad}
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+stimulus_exclusion_half_width_hz: 2.0
+
+# Used only for hidden spike-PPC bias correction and phase-null diagnostics.
+# It never contributes to the EEG target or reward.
+phase_null:
+  n_surrogates: 500
+
+criteria:
+  minimum_calibration_seeds: 4
+  minimum_validation_seeds: 8
+  minimum_positive_seed_fraction: 0.6666666667
+  minimum_reference_classification_accuracy: 0.75
+  minimum_window_classification_accuracy: 0.65
+  minimum_rate_safe_seed_fraction: 1.0
+  minimum_washout_recovery_seed_fraction: 0.6666666667
+  maximum_washout_residual_fraction: 0.50
+  maximum_baseline_relative_rms_error: 1.0e-8
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+n_bootstrap: 3000
+n_permutations: 10000
+save_raw_eeg: false
+save_spikes: false

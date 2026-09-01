@@ -1,0 +1,119 @@
+# F0-FP: low-cost, full-information feasibility map for EEG-conditioned
+# frequency/phase tACS. This is system identification, not a bandit and not a
+# confirmatory efficacy experiment.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+smoke_test: false
+
+timeline:
+  burn_in_steps: 1
+  # Six stimulation-free seconds resolve 9 versus 11 Hz and provide two
+  # independent 3-s halves for phase-stability screening.
+  baseline_steps: 6
+  stimulation_steps: 6
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  stimulation_analysis_trim_ms: 500.0
+
+reference_calibration:
+  # B is calibrated without stimulation on seeds disjoint from all A contexts.
+  n_seeds: 6
+  seed_offset: 426000
+
+states:
+  modulation_depth: 0.04
+  frequencies_hz: [9.0, 11.0]
+  labels: [elevated_alpha_9hz, elevated_alpha_11hz]
+
+crossed_design:
+  # Structure is the scientific unit. One randomized predecision phase history
+  # per frequency is sufficient for F0 because every context has a unique
+  # continuous hidden afferent phase. Futures estimate conditional response.
+  n_structure_seeds: 3
+  n_history_seeds: 1
+  n_future_continuations: 2
+  structure_seed_offset: 427000
+  history_seed_offset: 428000
+  future_seed_offset: 429000
+  phase_seed_offset: 430000
+  trial_seed_offset: 431000
+
+reference:
+  # reference.frequency_hz is overwritten on copied configs for each hidden A
+  # state. B has modulation depth zero, so its nominal frequency has no effect.
+  frequency_hz: 9.0
+  phase_rad: 0.0
+  populations: [E, I]
+  thinning_envelope_modulation_depth: 0.16
+
+tacs:
+  amplitude_v_per_m: 0.4
+  frequencies_hz: [9.0, 11.0]
+  relative_phase_offsets_rad: [0.0, 3.141592653589793]
+  axial_montage: axial
+  # Shared scalar used by the existing online relative-phase utilities. It is
+  # overwritten on an action-specific copy before every active replay.
+  frequency_hz: 9.0
+
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: transverse_x
+  amplitude_v_per_m: ${analysis.tacs.amplitude_v_per_m}
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: 0.0
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+spectral_target:
+  candidate_frequencies_hz: [9.0, 11.0]
+  band_half_width_hz: 0.75
+  minimum_scale_log10: 0.05
+  reference_quantile: 0.95
+
+screening:
+  minimum_peak_excess_log10: 0.10
+  maximum_phase_split_error_deg: 45.0
+  minimum_resultant_to_rms: 0.05
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+alpha_low_hz: 8.0
+alpha_high_hz: 12.0
+stimulus_exclusion_half_width_hz: 0.75
+
+phase_null:
+  n_surrogates: 100
+
+criteria:
+  minimum_reference_seeds: 6
+  minimum_eligible_contexts: 4
+  minimum_structure_seeds: 3
+  minimum_contexts_per_hidden_frequency: 2
+  minimum_future_continuations: 2
+  minimum_frequency_detection_accuracy: 0.80
+  minimum_frequency_crossover_improvement: 0.01
+  minimum_phase_specific_improvement: 0.005
+  minimum_policy_advantage_over_best_fixed: 0.01
+  minimum_positive_structure_fraction: 0.6666666666666666
+  maximum_context_shuffle_p_value: 0.20
+  minimum_hidden_E_ppc_reduction: 0.0
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_phase_tracking_error_rad: 1.0e-10
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+
+context_shuffle:
+  n_permutations: 2000
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+n_bootstrap: 1000
+n_permutations: 2000
+save_raw_eeg: false
+save_spikes: false

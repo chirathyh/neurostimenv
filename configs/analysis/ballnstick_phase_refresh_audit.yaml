@@ -1,0 +1,147 @@
+# D1-R: exploratory causal phase-maintenance audit. This preserves the frozen
+# D1 result and asks whether periodic EEG feedback improves over its one-time
+# phase initialization at the same 0.2-V/m dose.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+smoke_test: false
+smoke_context_limit: 0
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 12
+  # Five seconds with 0.5-s onset/offset ramps leaves a four-second endpoint.
+  stimulation_steps: 5
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  stimulation_analysis_trim_ms: 500.0
+
+source_d0b:
+  result_dir: ../../results/ballnstick_phase_increment_confirmation_full/phase_increment_confirmation
+  expected_sha256:
+    conclusion: 806c6fa40a65197f15eb1aba2e6d6845f636cc4f8a4bd497c3e93e9d9b1c5b07
+    provenance: 7212e933d30639c072d7634711ea44cdb97896351782aa83b7dcf466f9b83b7e
+    metrics: c028dda887c125fec87d47a5d84598d4e17bde779c6a03f77c13a9c0ae521e16
+
+source_f0:
+  result_dir: ../../results/ballnstick_frequency_phase_feasibility_full/frequency_phase_feasibility
+  expected_sha256:
+    conclusion: cd401bdc09ff66559937e94a40cdc8e42210f4543fd9910a2009a5f9c1fe7d89
+    provenance: 0722582464fae499aa54c9c8aeba91cd926eb6bc263fb67de2185ab81af83738
+    metrics: be5270a4b4a48307299011f6b0a3f2ae1de58487d830e5527bd12fd5b1e48157
+    calibration: 764716344b5a84f6fc921595a51b1f95d0c9e44c9248274cb3f6e4f52d69dc6e
+
+source_d1:
+  result_dir: ../../results/ballnstick_phase_diffusion_action_map_full/phase_diffusion_action_map
+  expected_sha256:
+    conclusion: fdfe125bb4c616d96542e091230555c7d37aa800478f846455dd60a9a6806c40
+    provenance: 41d223500e4ca089857940518af3c42283eb3457e191f990930f4c6a39d7e5c1
+    metrics: 0e244a78e861bd931b20395ca6d8b424e7de8f8c5c1f12c282c12f2aeede8b58
+    screening: 7cc3aeb3973ea422f1dc589033ea6fab13de58a5f548265744f150a6e8364208
+
+reference_calibration:
+  # More reference seeds and a duration-matched four-second endpoint reduce
+  # the target uncertainty observed in D1.
+  n_seeds: 12
+  seed_offset: 419000
+  upper_quantile: 0.95
+  minimum_scale_log10: 0.05
+
+states:
+  modulation_depth: 0.04
+  frequencies_hz: [9.0, 11.0]
+  phase_diffusion_levels:
+    - {label: low_diffusion, diffusion_rad2_per_s: 0.5}
+    - {label: high_diffusion, diffusion_rad2_per_s: 2.0}
+  phase_diffusion_integration_dt_ms: 1.0
+
+crossed_design:
+  # Structure is independent; frequency, D, and futures are repeats.
+  n_structure_seeds: 3
+  n_history_seeds: 1
+  n_future_continuations: 4
+  structure_seed_offset: 420000
+  history_seed_offset: 417000
+  phase_seed_offset: 415000
+  trial_seed_offset: 414000
+  future_seed_offset: 413000
+
+reference:
+  frequency_hz: 9.0
+  phase_rad: 0.0
+  populations: [E, I]
+  thinning_envelope_modulation_depth: 0.16
+
+actions:
+  amplitude_v_per_m: 0.2
+  controller_modes: [sham, one_time, phase_refreshed]
+
+tacs:
+  frequency_hz: 9.0
+  relative_phase_offset_rad: 3.141592653589793
+  axial_montage: axial
+  # Compatibility with the frozen D1 prospective-screen phase-quality audit.
+  phase_estimation_steps: 1
+  phase_estimation_history_ms: 1000.0
+  refresh_interval_ms: 250.0
+  # Phase correction is implemented as a continuous frequency slew. At a
+  # 250-ms update, +/-2 Hz can correct any wrapped error in [-pi, pi].
+  maximum_frequency_correction_hz: 2.0
+
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: transverse_x
+  amplitude_v_per_m: ${analysis.actions.amplitude_v_per_m}
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: 0.0
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+measurement:
+  phase_window_s: 1.0
+  temporal_chunk_s: 4.0
+  spectral_core_half_width_hz: 0.25
+  spectral_neighbourhood_half_width_hz: 1.5
+
+spectral_target:
+  candidate_frequencies_hz: [9.0, 11.0]
+  band_half_width_hz: 0.75
+
+screening:
+  minimum_alpha_excess_log10: 0.05
+  minimum_recent_resultant_to_rms: 0.03
+
+criteria:
+  minimum_reference_seeds: 12
+  minimum_eligible_contexts: 6
+  minimum_structure_seeds: 3
+  minimum_future_continuations: 4
+  minimum_frequency_detection_accuracy: 0.80
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_causal_timing_error_ms: 1.0e-9
+  maximum_field_boundary_discontinuity_v_per_m: 1.0e-10
+  maximum_frequency_correction_hz: 2.000000001
+  practical_refresh_advantage_log10: 0.01
+  minimum_positive_structure_fraction: 0.6666666666666666
+  minimum_realized_winner_agreement_fraction: 0.75
+  maximum_refresh_to_one_time_future_sd_ratio: 1.0
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+alpha_low_hz: 8.0
+alpha_high_hz: 12.0
+stimulus_exclusion_half_width_hz: 0.75
+phase_null:
+  n_surrogates: 0
+
+save_raw_eeg: false
+save_spikes: false

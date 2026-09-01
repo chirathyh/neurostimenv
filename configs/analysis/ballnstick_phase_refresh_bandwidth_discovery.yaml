@@ -1,0 +1,186 @@
+# H4-BW: small, exploratory controller-bandwidth discovery before the frozen
+# 12-structure H4 confirmation. This experiment selects a deterministic causal
+# phase tracker; it is not itself confirmatory and does not train a bandit.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+smoke_test: false
+smoke_context_limit: 0
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 12
+  # Five seconds with 0.5-s onset/offset ramps leaves a four-second endpoint.
+  stimulation_steps: 5
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  stimulation_analysis_trim_ms: 500.0
+
+# D0b/F0/D1 remain explicit upstream dependencies. The loader verifies these
+# hashes before it verifies and loads the completed D1-R target and result.
+source_d0b:
+  result_dir: ../../results/ballnstick_phase_increment_confirmation_full/phase_increment_confirmation
+  expected_sha256:
+    conclusion: 806c6fa40a65197f15eb1aba2e6d6845f636cc4f8a4bd497c3e93e9d9b1c5b07
+    provenance: 7212e933d30639c072d7634711ea44cdb97896351782aa83b7dcf466f9b83b7e
+    metrics: c028dda887c125fec87d47a5d84598d4e17bde779c6a03f77c13a9c0ae521e16
+
+source_f0:
+  result_dir: ../../results/ballnstick_frequency_phase_feasibility_full/frequency_phase_feasibility
+  expected_sha256:
+    conclusion: cd401bdc09ff66559937e94a40cdc8e42210f4543fd9910a2009a5f9c1fe7d89
+    provenance: 0722582464fae499aa54c9c8aeba91cd926eb6bc263fb67de2185ab81af83738
+    metrics: be5270a4b4a48307299011f6b0a3f2ae1de58487d830e5527bd12fd5b1e48157
+    calibration: 764716344b5a84f6fc921595a51b1f95d0c9e44c9248274cb3f6e4f52d69dc6e
+
+source_d1:
+  result_dir: ../../results/ballnstick_phase_diffusion_action_map_full/phase_diffusion_action_map
+  expected_sha256:
+    conclusion: fdfe125bb4c616d96542e091230555c7d37aa800478f846455dd60a9a6806c40
+    provenance: 41d223500e4ca089857940518af3c42283eb3457e191f990930f4c6a39d7e5c1
+    metrics: 0e244a78e861bd931b20395ca6d8b424e7de8f8c5c1f12c282c12f2aeede8b58
+    screening: 7cc3aeb3973ea422f1dc589033ea6fab13de58a5f548265744f150a6e8364208
+
+source_d1r:
+  result_dir: ../../results/ballnstick_phase_refresh_audit_full/phase_refresh_audit
+  expected_sha256:
+    conclusion: 5986ee15afb99754b8092cafe6b1a17c33e5a3b66fd5aa1fad2ea0408bef0961
+    provenance: 4819e54b726384032b77c2eada04386db4b87dbda4ac6a5d42040e436acb7f5a
+    target: d41e79e89b0fdab0d8a03581f7962e226dd4ab883a4ead92d1872dc74b9e9b91
+    calibration: 06d104ed377fd43efb17e642f3c1d0bdb07f96a36b0f10f997f75602cddad5e3
+    screening: 7bc6faff95cc031bd091f75f2dde8e6010c0ac6be1dc2cb591edffd2ff83d5d6
+    metrics: e8257cec1ed6fe5cc4c7e9af76da2770425694f72c07b975aee02534ab73c05b
+    updates: 3af19aa135d2359ab74bd592110098c8d6e8b0286f7c3d4e7cb924bc9437d8a2
+
+states:
+  modulation_depth: 0.04
+  frequencies_hz: [9.0, 11.0]
+  phase_diffusion_levels:
+    - {label: low_diffusion, diffusion_rad2_per_s: 0.5}
+    - {label: high_diffusion, diffusion_rad2_per_s: 2.0}
+  phase_diffusion_integration_dt_ms: 1.0
+
+crossed_design:
+  # Structure is independent; frequency, D, and futures are paired repeats.
+  n_structure_seeds: 3
+  n_history_seeds: 1
+  n_future_continuations: 4
+  structure_seed_offset: 310000
+  history_seed_offset: 311000
+  phase_seed_offset: 312000
+  trial_seed_offset: 313000
+  future_seed_offset: 314000
+
+reference:
+  frequency_hz: 9.0
+  phase_rad: 0.0
+  populations: [E, I]
+  thinning_envelope_modulation_depth: 0.16
+
+actions:
+  amplitude_v_per_m: 0.2
+  controller_modes:
+    - sham
+    - one_time
+    - refresh_1000ms_250ms
+    - refresh_500ms_250ms
+    - refresh_500ms_125ms
+
+# All arms initialize from the same final one-second prestimulation EEG. The
+# refreshed arms differ only after onset. A fixed 250-ms correction horizon
+# prevents a 125-ms observation update from silently doubling feedback gain.
+controller_profiles:
+  sham:
+    adaptive: false
+    history_ms: 1000.0
+    update_interval_ms: 250.0
+  one_time:
+    adaptive: false
+    history_ms: 1000.0
+    update_interval_ms: 250.0
+  refresh_1000ms_250ms:
+    adaptive: true
+    history_ms: 1000.0
+    update_interval_ms: 250.0
+  refresh_500ms_250ms:
+    adaptive: true
+    history_ms: 500.0
+    update_interval_ms: 250.0
+  refresh_500ms_125ms:
+    adaptive: true
+    history_ms: 500.0
+    update_interval_ms: 125.0
+
+tacs:
+  frequency_hz: 9.0
+  relative_phase_offset_rad: 3.141592653589793
+  axial_montage: axial
+  phase_estimation_steps: 1
+  initialization_history_ms: 1000.0
+  correction_horizon_ms: 250.0
+  maximum_frequency_correction_hz: 2.0
+
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: transverse_x
+  amplitude_v_per_m: ${analysis.actions.amplitude_v_per_m}
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: 0.0
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+measurement:
+  phase_window_s: 1.0
+  temporal_chunk_s: 4.0
+  spectral_core_half_width_hz: 0.25
+  spectral_neighbourhood_half_width_hz: 1.5
+
+spectral_target:
+  candidate_frequencies_hz: [9.0, 11.0]
+  band_half_width_hz: 0.75
+
+screening:
+  minimum_alpha_excess_log10: 0.05
+  minimum_recent_resultant_to_rms: 0.03
+
+selection:
+  benchmark_controller: refresh_1000ms_250ms
+  candidates: [refresh_500ms_250ms, refresh_500ms_125ms]
+  tie_preference: [refresh_500ms_250ms, refresh_500ms_125ms]
+  practical_tie_log10: 0.01
+
+criteria:
+  minimum_eligible_contexts: 6
+  minimum_structure_seeds: 3
+  minimum_future_continuations: 4
+  minimum_frequency_detection_accuracy: 0.80
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_causal_timing_error_ms: 1.0e-9
+  maximum_field_boundary_discontinuity_v_per_m: 1.0e-10
+  maximum_frequency_correction_hz: 2.000000001
+  practical_advantage_over_one_time_log10: 0.01
+  current_tracker_noninferiority_margin_log10: 0.01
+  minimum_positive_structure_fraction: 0.6666666666666666
+  minimum_realized_candidate_win_fraction: 0.75
+  maximum_candidate_to_one_time_future_sd_ratio: 1.0
+  minimum_phase_estimate_actionable_fraction: 0.95
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+alpha_low_hz: 8.0
+alpha_high_hz: 12.0
+stimulus_exclusion_half_width_hz: 0.75
+phase_null:
+  n_surrogates: 0
+
+save_raw_eeg: false
+save_spikes: false

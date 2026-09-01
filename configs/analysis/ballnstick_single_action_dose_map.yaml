@@ -1,0 +1,120 @@
+# CDM1-S: low-cost, full-information system identification for a future
+# one-context/one-action tACS bandit.  The policy is not trained here.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+
+timeline:
+  burn_in_steps: 1
+  # Six stimulation-free seconds provide three non-overlapping 2-s estimates
+  # of context stability before any action is delivered.
+  baseline_steps: 6
+  stimulation_steps: 6
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  stimulation_analysis_trim_ms: 500.0
+
+frozen_candidate:
+  result_dir: ../../results/ballnstick_alpha_suppression_dose_audit/alpha_suppression_dose_audit
+  expected_modulation_depth: 0.04
+  expected_frequency_hz: 10.0
+  expected_amplitude_v_per_m: 0.4
+  expected_relative_phase_offset_rad: 3.141592653589793
+  expected_montage: axial
+
+states:
+  # These are explicit, mean-rate-matched toy alpha states.  The latent depth
+  # is never supplied to an EEG policy and is distinct from the tACS action.
+  modulation_depths: [0.02, 0.04, 0.06]
+  labels: [mild, moderate, strong]
+
+crossed_design:
+  # The defaults are deliberately a low-cost directional screen: 3 states x
+  # 2 structures x 1 history = 6 observed contexts. Each context is replayed
+  # with two independent post-decision Poisson continuations per action.
+  n_structure_seeds: 2
+  n_history_seeds: 1
+  n_future_continuations: 2
+  structure_seed_offset: 380000
+  history_seed_offset: 382000
+  future_seed_offset: 384000
+  fixed_phase_seed_offset: 386000
+  trial_seed_offset: 388000
+
+actions:
+  # Sham is a causal comparator, not a required future policy action. Every
+  # replay receives exactly one constant amplitude for the intervention block.
+  sham_dose_v_per_m: 0.0
+  active_doses_v_per_m: [0.1, 0.2, 0.3, 0.4]
+
+reference:
+  frequency_hz: 10.0
+  phase_rad: 0.0
+  populations: [E, I]
+  # Common thinning envelope preserves matched candidate events across state
+  # depths while each state retains the same expected mean afferent rate.
+  thinning_envelope_modulation_depth: 0.16
+
+tacs:
+  frequency_hz: 10.0
+  relative_phase_offset_rad: 3.141592653589793
+  axial_montage: axial
+
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: transverse_x
+  amplitude_v_per_m: 0.4
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: ${analysis.tacs.relative_phase_offset_rad}
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+context:
+  window_ms: 2000.0
+  # Only these phase-invariant, stimulation-free EEG features enter the
+  # exploratory leave-one-structure-out action model.
+  policy_features:
+    - context_alpha_excess_log10
+    - context_coherent_alpha_fraction
+    - context_alpha_peak_prominence_db
+    - context_alpha_temporal_sd_log10
+  ridge_penalty: 1.0
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+alpha_low_hz: 8.0
+alpha_high_hz: 12.0
+stimulus_exclusion_half_width_hz: 2.0
+
+phase_null:
+  n_surrogates: 100
+
+phase_quality:
+  maximum_split_half_error_deg: 45.0
+  minimum_10hz_resultant_to_rms: 0.05
+
+criteria:
+  minimum_eligible_contexts: 4
+  minimum_eligible_state_levels: 2
+  minimum_future_continuations: 2
+  practical_advantage_log10: 0.01
+  minimum_practical_nonfixed_contexts: 1
+  minimum_expected_active_action_count: 2
+  minimum_realized_oracle_agreement_fraction: 0.50
+  minimum_mean_expected_oracle_advantage_log10: 0.005
+  minimum_contextual_advantage_over_best_fixed_log10: 0.0
+  minimum_state_signal_to_temporal_noise: 1.0
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_phase_tracking_error_rad: 1.0e-10
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+save_raw_eeg: false
+save_spikes: false

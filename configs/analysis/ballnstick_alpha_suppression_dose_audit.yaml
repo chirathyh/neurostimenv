@@ -1,0 +1,95 @@
+# Low-cost exploratory audit of whether a lower dose can retain spike-timing
+# desynchronization without increasing ideal neural EEG alpha power.  This is
+# not a confirmation experiment and any selected dose must be frozen and
+# evaluated on new seeds.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 4
+  stimulation_steps: 6
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  stimulation_analysis_trim_ms: 500.0
+
+frozen_source:
+  result_dir: ../../results/ballnstick_alpha_suppression_pilot/alpha_suppression
+  expected_modulation_depth: 0.04
+  expected_frequency_hz: 10.0
+  expected_amplitude_v_per_m: 0.8
+  expected_relative_phase_offset_rad: 3.141592653589793
+  expected_montage: axial
+
+# Sham is represented separately. Keep this grid small: the purpose is to test
+# the predeclared lower-dose hypothesis, not search a large action space.
+doses_v_per_m: [0.2, 0.4, 0.6, 0.8]
+require_frozen_amplitude_in_grid: true
+
+exploration:
+  # Four seeds are a directional screen only. Even perfect sign consistency
+  # cannot reach a two-sided exact sign-flip p-value below 0.05.
+  n_seeds: 4
+  seed_offset: 180000
+
+reference:
+  frequency_hz: 10.0
+  phase_rad: 0.0
+  populations: [E, I]
+  thinning_envelope_modulation_depth: 0.16
+
+tacs:
+  frequency_hz: 10.0
+  axial_montage: axial
+  transverse_montage: transverse_x
+
+# Shared namespace used by the persistent online episode helpers. Active arms
+# override amplitude while retaining frequency, phase policy, and montage.
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: ${analysis.tacs.transverse_montage}
+  amplitude_v_per_m: 0.8
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: ${analysis.frozen_source.expected_relative_phase_offset_rad}
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+alpha_low_hz: 8.0
+alpha_high_hz: 12.0
+stimulus_exclusion_half_width_hz: 2.0
+
+phase_null:
+  n_surrogates: 500
+
+phase_quality:
+  maximum_split_half_error_deg: 45.0
+  minimum_10hz_resultant_to_rms: 0.05
+
+criteria:
+  minimum_exploration_seeds: 4
+  minimum_candidate_positive_seeds: 3
+  minimum_candidate_mean_suppression_log10: 0.0
+  minimum_reference_positive_fraction: 0.75
+  minimum_phase_quality_fraction: 0.75
+  minimum_rate_safe_fraction: 1.0
+  minimum_field_removal_fraction: 0.75
+  # Recovery is evaluated independently of effect direction. The absolute
+  # floor prevents a nearly zero acute effect from making the ratio undefined.
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+  maximum_baseline_relative_rms_error: 1.0e-8
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+n_bootstrap: 5000
+n_permutations: 5000
+save_raw_eeg: false
+save_spikes: false

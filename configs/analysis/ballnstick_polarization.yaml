@@ -1,0 +1,23 @@
+# Isolated-cell validation of the uniform-field actuator.
+# Field amplitudes are local tissue values, not scalp-current doses.
+baseline_ms: 200.0
+stimulation_ms: 400.0
+measurement_ms: 100.0
+
+actions:
+  - {id: sham, dc_offset_v_per_m: 0.0, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, field_direction: [0.0, 0.0, 1.0]}
+  - {id: axial_dc_m0p2, dc_offset_v_per_m: -0.2, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, field_direction: [0.0, 0.0, 1.0]}
+  - {id: axial_dc_p0p2, dc_offset_v_per_m: 0.2, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, field_direction: [0.0, 0.0, 1.0]}
+  - {id: axial_dc_m0p5, dc_offset_v_per_m: -0.5, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, field_direction: [0.0, 0.0, 1.0]}
+  - {id: axial_dc_p0p5, dc_offset_v_per_m: 0.5, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, field_direction: [0.0, 0.0, 1.0]}
+  - {id: axial_dc_m0p8, dc_offset_v_per_m: -0.8, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, field_direction: [0.0, 0.0, 1.0]}
+  - {id: axial_dc_p0p8, dc_offset_v_per_m: 0.8, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, field_direction: [0.0, 0.0, 1.0]}
+  - {id: transverse_dc_p0p8, dc_offset_v_per_m: 0.8, ac_amplitude_v_per_m: 0.0, frequency_hz: 0.0, phase_rad: 0.0, field_direction: [1.0, 0.0, 0.0]}
+  - {id: axial_ac_0p8_10hz_p0, dc_offset_v_per_m: 0.0, ac_amplitude_v_per_m: 0.8, frequency_hz: 10.0, phase_rad: 0.0, field_direction: [0.0, 0.0, 1.0]}
+  - {id: axial_ac_0p8_10hz_p90, dc_offset_v_per_m: 0.0, ac_amplitude_v_per_m: 0.8, frequency_hz: 10.0, phase_rad: 1.5707963267948966, field_direction: [0.0, 0.0, 1.0]}
+  - {id: axial_ac_0p8_40hz_p0, dc_offset_v_per_m: 0.0, ac_amplitude_v_per_m: 0.8, frequency_hz: 40.0, phase_rad: 0.0, field_direction: [0.0, 0.0, 1.0]}
+
+criteria:
+  minimum_abs_axial_dc_soma_gain_mV_per_v_per_m: 0.01
+  minimum_axial_dc_linearity_r2: 0.95
+  maximum_transverse_to_axial_gain_ratio: 0.10

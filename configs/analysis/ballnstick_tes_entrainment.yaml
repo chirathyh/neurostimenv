@@ -1,0 +1,88 @@
+# T1: reversible acute weak-field entrainment in the unchanged 40-cell
+# BallAndStick circuit.  This is a generic tES actuation benchmark, not a
+# depression or treatment model.
+simulator: online
+inhibition_scale: 1.0
+
+# Field magnitude at modeled tissue.  All discovery and validation actions are
+# constrained to the approximate upper range measured during conventional
+# human transcranial stimulation.
+maximum_field_v_per_m: 0.8
+
+timeline:
+  # Each step is env.simulation.obs_win_len, normally 1000 ms.  Baseline,
+  # stimulation, and washout are one persistent episode without reinitializing.
+  burn_in_steps: 2
+  baseline_steps: 4
+  stimulation_steps: 6
+  washout_steps: 4
+  # One envelope spans the complete stimulation block; it is not restarted at
+  # online decision boundaries.
+  block_ramp_ms: 250.0
+
+protocol:
+  axial_montage: axial
+  transverse_montage: transverse_x
+  phase_rad: 0.0
+  # Populated with each candidate for shared EEG/synthetic-control helpers.
+  amplitude_v_per_m: 0.0
+  frequency_hz: 10.0
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+# Discovery is deliberately modest.  It maps dose and frequency before a
+# protocol is frozen.  Increase seeds only after the reduced smoke run works.
+discovery:
+  n_seeds: 4
+  seed_offset: 91000
+  amplitudes_v_per_m: [0.2, 0.4, 0.6, 0.8]
+  frequencies_hz: [5.0, 10.0, 20.0, 40.0, 60.0]
+  minimum_rate_safe_fraction: 0.75
+
+# Validation seeds are disjoint.  The frozen action is compared with the same
+# waveform in a transverse direction, neighbouring discovery frequencies, and
+# the discovery doses at the frozen frequency.
+validation:
+  n_seeds: 12
+  seed_offset: 92000
+  include_frequency_neighbors: true
+  # Re-evaluate every discovery dose at the frozen frequency so smoothness is
+  # assessed on held-out circuits rather than only on the ranking cohort.
+  include_dose_controls: true
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+stimulus_exclusion_half_width_hz: 1.0
+
+# Uniform random phases with the observed spike count define the finite-count
+# PLV null.  PPC remains the primary, spike-count-unbiased endpoint.
+phase_null:
+  n_surrogates: 1000
+
+synthetic_control:
+  match_driven_band_power: true
+  phase_rad: 0.0
+
+criteria:
+  minimum_validation_seeds: 8
+  minimum_mean_E_ppc_gain: 0.005
+  minimum_positive_seed_fraction: 0.75
+  minimum_above_null_seed_fraction: 0.75
+  minimum_rate_safe_seed_fraction: 1.0
+  minimum_washout_recovery_seed_fraction: 0.75
+  maximum_washout_residual_fraction: 0.50
+  maximum_baseline_relative_rms_error: 1.0e-8
+  minimum_dose_levels: 3
+  minimum_dose_spearman_rho: 0.50
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+n_bootstrap: 5000
+n_permutations: 20000
+save_raw_eeg: false
+save_spikes: false

@@ -1,0 +1,65 @@
+# Causal controllability ladder for the BallAndStick test bed.
+#
+# Stage 1 validates that the prespecified EEG distance tracks the actual
+# I-to-E conductance intervention. Stage 2 asks whether a population-selective
+# increase in excitatory background conductance onto I cells can compensate
+# for reduced I-to-E inhibition. This is a mechanistic positive-control
+# actuator, not a model of transcranial stimulation.
+simulator: online
+
+condition_a_inhibition_scale: 1.0
+condition_b_inhibition_scale: 0.5
+
+timeline:
+  burn_in_steps: 4
+  analysis_steps: 8
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+
+distance_features:
+  - log10_total_power_1_80
+  - relative_gamma_power
+
+causal_interpolation:
+  inhibition_scales: [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  high_scale_for_gate: 0.9
+
+selective_i_drive:
+  # Multiplies the 0.001-uS excitatory background-synapse weight onto I cells.
+  # The same Poisson event trains and recurrent circuit are retained within a
+  # matched seed. Values are unitless and are not a TES dose.
+  background_weight_multipliers: [1.0, 1.025, 1.05, 1.10, 1.20, 1.40]
+  top_k: 2
+
+discovery:
+  n_seeds: 8
+  seed_offset: 60000
+
+validation:
+  n_seeds: 24
+  seed_offset: 70000
+
+criteria:
+  # Metric-validity gate for the held-out inhibition-scale interpolation.
+  maximum_median_scale_distance_spearman: -0.80
+  minimum_negative_spearman_seed_fraction: 0.80
+  minimum_high_scale_mean_improvement: 0.50
+
+  # Directional and equivalence gates for the frozen selective-I protocol.
+  minimum_mean_improvement: 0.10
+  minimum_positive_seed_fraction: 0.80
+  equivalence_z_margin: 0.50
+  minimum_equivalent_seed_fraction: 0.80
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.25
+
+n_bootstrap: 5000
+n_permutations: 20000
+save_raw_eeg: true

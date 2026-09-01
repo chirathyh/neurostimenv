@@ -1,0 +1,159 @@
+# S1-C: disjoint stationary-phase confirmation of the observable phenotype
+# (H1), causal frequency/phase-specific tACS modulation (H2), and a frozen
+# one-decision EEG-conditioned rule (H3). This is not a bandit, a clinical
+# treatment experiment, or a model of a neurological/psychiatric disorder.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+smoke_test: false
+
+timeline:
+  burn_in_steps: 1
+  # Twelve stimulation-free seconds support a 0.25-Hz paper PSD and stable
+  # causal frequency/phase estimation.
+  baseline_steps: 12
+  # Five seconds with 0.5-s onset/offset ramps leaves a four-second endpoint.
+  stimulation_steps: 5
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  stimulation_analysis_trim_ms: 500.0
+
+frozen_f0:
+  result_dir: ../../results/ballnstick_frequency_phase_feasibility_full/frequency_phase_feasibility
+  expected_sha256:
+    conclusion: cd401bdc09ff66559937e94a40cdc8e42210f4543fd9910a2009a5f9c1fe7d89
+    provenance: 0722582464fae499aa54c9c8aeba91cd926eb6bc263fb67de2185ab81af83738
+    metrics: be5270a4b4a48307299011f6b0a3f2ae1de58487d830e5527bd12fd5b1e48157
+    calibration: 764716344b5a84f6fc921595a51b1f95d0c9e44c9248274cb3f6e4f52d69dc6e
+  expected_best_fixed_action_id: f9_antiphase
+  expected_preferred_relative_phase_rad: 3.141592653589793
+  expected_amplitude_v_per_m: 0.4
+
+reference_calibration:
+  n_seeds: 16
+  seed_offset: 300000
+
+states:
+  modulation_depth: 0.04
+  frequencies_hz: [9.0, 11.0]
+  labels: [elevated_alpha_9hz, elevated_alpha_11hz]
+
+crossed_design:
+  # Sixteen candidate structures test H1 without outcome-based selection.
+  # The first twelve structures for which both frequency contexts pass the
+  # prospective EEG screen are enrolled for H2/H3. Frequency and futures are
+  # repeated measurements; structure remains the inferential unit.
+  n_structure_seeds: 16
+  n_enrolled_structure_seeds: 12
+  n_history_seeds: 1
+  n_future_continuations: 4
+  structure_seed_offset: 301000
+  history_seed_offset: 302000
+  phase_seed_offset: 303000
+  trial_seed_offset: 304000
+  future_seed_offset: 305000
+
+reference:
+  frequency_hz: 9.0
+  phase_rad: 0.0
+  populations: [E, I]
+  thinning_envelope_modulation_depth: 0.16
+
+tacs:
+  amplitude_v_per_m: 0.4
+  frequencies_hz: [9.0, 11.0]
+  relative_phase_offsets_rad: [0.0, 3.141592653589793]
+  axial_montage: axial
+  transverse_montage: transverse_x
+  frequency_hz: 9.0
+
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: ${analysis.tacs.transverse_montage}
+  amplitude_v_per_m: ${analysis.tacs.amplitude_v_per_m}
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: 0.0
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+spectral_target:
+  candidate_frequencies_hz: [9.0, 11.0]
+  band_half_width_hz: 0.75
+  minimum_scale_log10: 0.05
+  reference_quantile: 0.95
+
+screening:
+  minimum_peak_excess_log10: 0.10
+  maximum_phase_split_error_deg: 45.0
+  minimum_resultant_to_rms: 0.05
+
+paper_psd:
+  segment_seconds: 4.0
+  overlap_fraction: 0.5
+  minimum_plot_hz: 1.0
+  maximum_plot_hz: 30.0
+  zoom_minimum_hz: 5.0
+  zoom_maximum_hz: 15.0
+  bootstrap_resamples: 2000
+
+orientation_control:
+  enabled: true
+  # This is a mechanistic audit, not part of the H2 primary contrast.
+  n_futures_per_context: 1
+
+power_design:
+  alpha_one_sided: 0.05
+  target_power: 0.80
+  H1_minimum_standardized_effect_dz: 0.70
+  H1_planned_independent_structures: 16
+  H2_H3_minimum_standardized_effect_dz: 0.80
+  H2_H3_planned_independent_structures: 12
+
+criteria:
+  minimum_reference_seeds: 16
+  minimum_candidate_structures: 16
+  minimum_enrolled_structures: 12
+  minimum_future_continuations: 4
+  minimum_frequency_detection_accuracy: 0.80
+  minimum_H1_alpha_excess_log10: 0.10
+  minimum_H1_positive_structure_fraction: 0.6666666666666666
+  minimum_H1_balanced_accuracy: 0.75
+  minimum_H2_matched_antiphase_improvement: 0.10
+  minimum_H2_frequency_crossover: 0.10
+  minimum_H2_phase_crossover: 0.10
+  minimum_H2_positive_structure_fraction: 0.6666666666666666
+  maximum_H2_secondary_FDR_q: 0.05
+  minimum_H3_policy_advantage_over_fixed: 0.25
+  minimum_H3_policy_advantage_over_random: 0.10
+  minimum_H3_positive_structure_fraction: 0.6666666666666666
+  maximum_H3_context_shuffle_p_value: 0.05
+  maximum_primary_p_value: 0.05
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_phase_tracking_error_rad: 1.0e-10
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+
+inference:
+  exact_sign_flip_max_structures: 20
+  monte_carlo_sign_flips: 100000
+  bootstrap_resamples: 10000
+  random_seed_offset: 309000
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+alpha_low_hz: 8.0
+alpha_high_hz: 12.0
+stimulus_exclusion_half_width_hz: 0.75
+
+phase_null:
+  n_surrogates: 0
+
+save_raw_eeg: false
+save_spikes: false

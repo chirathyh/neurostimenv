@@ -1,0 +1,105 @@
+# Minimal EEG-primary A -> B-like entrainment-state reachability experiment.
+#
+# A and B are fixed before this experiment. B is produced by stochastic
+# synaptic-rate modulation; tACS is applied only to A. Spike metrics are hidden
+# mechanistic checks and never enter the primary state score.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 1
+  stimulation_steps: 3
+  washout_steps: 1
+  block_ramp_ms: 250.0
+
+reference:
+  modulation_depth: 0.04
+  frequency_hz: 60.0
+  phase_rad: 0.0
+  populations: [E, I]
+  # This affects common-random-number coupling only, not the marginal event
+  # rate in either condition. It is retained from the previous pilot.
+  thinning_envelope_modulation_depth: 0.06
+
+tacs:
+  frequency_hz: 60.0
+  # The prior pilot found that phase-zero tACS output lagged the B spike phase
+  # by about 108 degrees. A fixed -90-degree shift is the nearest simple
+  # quadrature correction. It is frozen here and is not selected on these data.
+  phase_rad: 4.71238898038469
+  primary_amplitude_v_per_m: 0.8
+  lower_amplitude_v_per_m: 0.5
+  axial_montage: axial
+  transverse_montage: transverse_x
+
+# A and B only: fit a transparent standardized centroid axis using EEG. No
+# stimulation response is visible while this state mapping is constructed.
+discovery:
+  n_seeds: 4
+  seed_offset: 120000
+
+# Held-out matched circuits: A, B, two axial doses, and one transverse control.
+# Six seeds are sufficient for a go/no-go pilot; use >= 12 new seeds only after
+# this compact experiment establishes a consistent signal.
+validation:
+  n_seeds: 6
+  seed_offset: 121000
+
+# Shared keys required by the existing online episode/EEG utilities.
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: ${analysis.tacs.transverse_montage}
+  amplitude_v_per_m: ${analysis.tacs.primary_amplitude_v_per_m}
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: ${analysis.tacs.phase_rad}
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+stimulus_exclusion_half_width_hz: 1.0
+
+# Primary ideal-EEG state. The quadratures encode the amplitude and phase of
+# the observed 60-Hz EEG component without using spikes or firing rates.
+primary_eeg_features:
+  - log10_total_power_1_80
+  - relative_gamma_power
+  - eeg_target_cosine
+  - eeg_target_sine
+
+# Secondary robustness state: it cannot pass by changing only the 60-Hz bins.
+fundamental_excluded_eeg_features:
+  - log10_total_power_1_80_excluding_stimulus
+  - relative_gamma_power_excluding_stimulus
+
+phase_null:
+  n_surrogates: 500
+
+synthetic_control:
+  # Add a sine only to A's observation until its 60-Hz band power matches the
+  # primary tACS arm. This never changes the simulated circuit.
+  match_target_band_power: true
+
+criteria:
+  minimum_validation_seeds: 6
+  minimum_positive_seed_fraction: 0.6666666667
+  minimum_reference_classification_accuracy: 0.75
+  minimum_window_classification_accuracy: 0.65
+  minimum_rate_safe_seed_fraction: 1.0
+  minimum_washout_recovery_seed_fraction: 0.6666666667
+  maximum_washout_residual_fraction: 0.50
+  maximum_baseline_relative_rms_error: 1.0e-8
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+n_bootstrap: 2000
+n_permutations: 5000
+save_raw_eeg: false
+save_spikes: false

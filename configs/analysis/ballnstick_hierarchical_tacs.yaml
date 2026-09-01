@@ -1,0 +1,97 @@
+# Hierarchical EEG-only identification of a simple tACS action.
+#
+# The selector never reads reference.frequency_hz. That value is used only to
+# construct the hidden B circuit and for a post-hoc ground-truth audit.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 1
+  stimulation_steps: 3
+  washout_steps: 1
+  block_ramp_ms: 250.0
+
+reference:
+  modulation_depth: 0.04
+  frequency_hz: 60.0
+  phase_rad: 0.0
+  populations: [E, I]
+  thinning_envelope_modulation_depth: 0.06
+
+# Stage 1: learn a frequency-generic A/B spectral target from unstimulated EEG.
+target_discovery:
+  n_seeds: 4
+  seed_offset: 130000
+  candidate_frequencies_hz: [40.0, 60.0, 80.0]
+  band_half_width_hz: 2.0
+
+# Stage 2: at one fixed amplitude and phase, test only the three predeclared
+# frequencies. Selection uses EEG distance, never spikes or hidden B settings.
+frequency_discovery:
+  n_seeds: 2
+  seed_offset: 131000
+  amplitude_v_per_m: 0.8
+  phase_rad: 0.0
+
+# Stage 3: test four phase quadrants only at the EEG-selected frequency.
+phase_discovery:
+  n_seeds: 2
+  seed_offset: 132000
+  amplitude_v_per_m: 0.8
+  phases_rad: [0.0, 1.5707963267948966, 3.141592653589793,
+               4.71238898038469]
+
+# Stage 4: freeze frequency and phase, then evaluate the minimal future policy
+# actions {sham, 0.5, 0.8 V/m} on disjoint circuit seeds. The transverse field
+# and complex-matched observation sine are controls, not policy actions.
+validation:
+  n_seeds: 6
+  seed_offset: 133000
+  lower_amplitude_v_per_m: 0.5
+  primary_amplitude_v_per_m: 0.8
+
+tacs:
+  axial_montage: axial
+  transverse_montage: transverse_x
+
+# Shared keys required by the existing persistent online episode utilities.
+# Frequency and phase are overwritten on copied configs for each action.
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: ${analysis.tacs.transverse_montage}
+  amplitude_v_per_m: ${analysis.validation.primary_amplitude_v_per_m}
+  frequency_hz: 1.0
+  phase_rad: 0.0
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+stimulus_exclusion_half_width_hz: 2.0
+
+phase_null:
+  n_surrogates: 500
+
+criteria:
+  minimum_validation_seeds: 6
+  minimum_positive_seed_fraction: 0.6666666667
+  minimum_reference_classification_accuracy: 0.75
+  minimum_window_classification_accuracy: 0.65
+  minimum_rate_safe_seed_fraction: 1.0
+  minimum_washout_recovery_seed_fraction: 0.6666666667
+  maximum_washout_residual_fraction: 0.50
+  maximum_baseline_relative_rms_error: 1.0e-8
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+n_bootstrap: 2000
+n_permutations: 5000
+save_raw_eeg: false
+save_spikes: false

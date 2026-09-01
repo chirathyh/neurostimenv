@@ -1,0 +1,98 @@
+# Minimal acute entrainment-state reachability benchmark.
+#
+# A and B differ only in the temporal statistics of independent excitatory
+# afferent synaptic events. They do not differ in inhibition, connectivity,
+# synaptic weights, morphology, mean afferent event rate, or cell mechanisms.
+# tACS is applied only to A and is never used to construct B.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+
+timeline:
+  # With 1000-ms windows this is a six-second persistent episode. The rhythm
+  # exists throughout B; the field exists only in the intervention block.
+  burn_in_steps: 1
+  baseline_steps: 1
+  stimulation_steps: 3
+  washout_steps: 1
+  block_ramp_ms: 250.0
+
+reference:
+  frequency_hz: 60.0
+  phase_rad: 0.0
+  # Both populations receive independent excitatory afferent trains whose
+  # instantaneous rates share the B rhythm. A uses depth zero.
+  populations: [E, I]
+  # This target is intentionally inside the E-PPC range reached by the prior
+  # T1 0.8-V/m, 60-Hz field results. Calibration changes only the B input-rate
+  # modulation depth; it does not tune the field action.
+  target_E_ppc: 0.02
+  # Held fixed for A and every B candidate to provide common random numbers.
+  thinning_envelope_modulation_depth: 0.06
+
+calibration:
+  # Two seeds modestly reduce target-selection noise without turning this
+  # laptop pilot into a broad stimulation sweep.
+  n_seeds: 2
+  seed_offset: 110000
+  # Even shallow rate modulation is amplified across 64 afferent synapses per
+  # cell. These intentionally small values avoid constructing an unrealistically
+  # strong reference oscillator that a weak field cannot approach.
+  modulation_depths: [0.02, 0.04, 0.06]
+  minimum_rate_matched_fraction: 1.0
+
+tacs:
+  # Fixed from the previous T1 evidence; the new calibration does not select
+  # this action. Field strength is specified at modeled tissue.
+  amplitude_v_per_m: 0.8
+  frequency_hz: 60.0
+  phase_rad: 0.0
+  axial_montage: axial
+  transverse_montage: transverse_x
+
+validation:
+  # Four held-out matched circuits make this a low-cost mechanistic pilot, not
+  # a powered confirmatory study. Increase to >=8 only after the pilot passes.
+  n_seeds: 4
+  seed_offset: 111000
+
+# Shared keys used by the existing T1 online episode and analysis utilities.
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: ${analysis.tacs.transverse_montage}
+  amplitude_v_per_m: ${analysis.tacs.amplitude_v_per_m}
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: ${analysis.tacs.phase_rad}
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+stimulus_exclusion_half_width_hz: 1.0
+
+phase_null:
+  n_surrogates: 500
+
+criteria:
+  minimum_validation_seeds: 4
+  minimum_reference_E_ppc_shift: 0.005
+  minimum_tacs_E_ppc_gain: 0.005
+  minimum_target_distance_improvement_E_ppc: 0.002
+  minimum_positive_seed_fraction: 0.75
+  minimum_above_null_seed_fraction: 0.75
+  minimum_rate_safe_seed_fraction: 1.0
+  minimum_washout_recovery_seed_fraction: 0.75
+  maximum_washout_residual_fraction: 0.50
+  maximum_baseline_relative_rms_error: 1.0e-8
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+n_bootstrap: 2000
+n_permutations: 5000
+save_raw_eeg: false
+save_spikes: false

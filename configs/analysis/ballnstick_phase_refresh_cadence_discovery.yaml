@@ -1,0 +1,99 @@
+defaults:
+  - ballnstick_phase_refresh_bandwidth_discovery
+  - _self_
+
+# H4-BW2: targeted reliability discovery after the frozen H4-BW gate failure.
+# It adds the missing 1-s/125-ms controller and uses a duration-matched target,
+# common phase auditor, and paired-effect variability. It remains discovery.
+smoke_test: false
+smoke_context_limit: 0
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 12
+  # Nine seconds with 0.5-s ramps leaves an eight-second primary endpoint.
+  stimulation_steps: 9
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  stimulation_analysis_trim_ms: 500.0
+
+source_h4bw:
+  result_dir: ../../results/ballnstick_phase_refresh_bandwidth_discovery_full/phase_refresh_bandwidth_discovery
+  expected_sha256:
+    conclusion: 33af48b25c7cc7959d54b5b50db4a544b80f033858f73e58e45709ab14111ef6
+    provenance: f5fd642dd6ace4c7f62c293aecb0dd90867f9dd4c22105c861ca1408c0f889a7
+    screening: cfacfe70db3454589aa92c4ac668a4fbd380e02cfe750eed52d67d2dee2de6ca
+    metrics: 26b6753b1f7ce29895f7304465ed298c5e537648009ecab294a6757fb7536997
+    updates: 4df8d6a342d0ed77c3ef9bd086920cb42e93537207edfe5adc086249afd0bc45
+    summary: 4fa3c622bfe9ab6f2bf0523e30e19e38b5ba851ce6ec91c5bae7835a4155221b
+
+reference_calibration:
+  # New homogeneous-B seeds calibrate only the eight-second outcome target.
+  # The frozen D1-R screening target is retained unchanged.
+  n_seeds: 12
+  seed_offset: 315000
+  upper_quantile: 0.95
+  minimum_scale_log10: 0.05
+
+crossed_design:
+  n_structure_seeds: 3
+  n_history_seeds: 1
+  n_future_continuations: 6
+  structure_seed_offset: 316000
+  history_seed_offset: 317000
+  phase_seed_offset: 318000
+  trial_seed_offset: 319000
+  future_seed_offset: 320000
+
+actions:
+  amplitude_v_per_m: 0.2
+  controller_modes:
+    - sham
+    - one_time
+    - refresh_1000ms_250ms
+    - refresh_1000ms_125ms
+    - refresh_500ms_125ms
+
+controller_profiles:
+  refresh_1000ms_125ms:
+    adaptive: true
+    history_ms: 1000.0
+    update_interval_ms: 125.0
+
+tacs:
+  frequency_hz: 9.0
+  relative_phase_offset_rad: 3.141592653589793
+  axial_montage: axial
+  phase_estimation_steps: 1
+  initialization_history_ms: 1000.0
+  correction_horizon_ms: 250.0
+  maximum_frequency_correction_hz: 2.0
+  # This does not control the action. It evaluates all controllers with the
+  # same one-second estimator on common 250-ms boundaries.
+  common_audit_history_ms: 1000.0
+  common_audit_interval_ms: 250.0
+
+selection:
+  benchmark_controller: refresh_1000ms_250ms
+  candidates: [refresh_1000ms_125ms, refresh_500ms_125ms]
+  tie_preference: [refresh_1000ms_125ms, refresh_500ms_125ms]
+  practical_tie_log10: 0.01
+
+criteria:
+  minimum_reference_seeds: 12
+  minimum_eligible_contexts: 6
+  minimum_structure_seeds: 3
+  minimum_future_continuations: 6
+  minimum_frequency_detection_accuracy: 0.80
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_causal_timing_error_ms: 1.0e-9
+  maximum_field_boundary_discontinuity_v_per_m: 1.0e-10
+  maximum_frequency_correction_hz: 2.000000001
+  practical_advantage_over_one_time_log10: 0.01
+  current_tracker_noninferiority_margin_log10: 0.01
+  minimum_positive_structure_fraction: 0.6666666666666666
+  minimum_realized_candidate_win_fraction: 0.75
+  maximum_paired_effect_sd_ratio_to_current: 1.0
+  minimum_common_phase_estimate_actionable_fraction: 0.95
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6

@@ -1,0 +1,115 @@
+# CL1-P: prospective common-probe system identification for a later
+# contextual bandit. Every eligible active arm receives an identical 0.2-V/m
+# probe before diverging to maintain 0.2 or smoothly escalate to 0.4 V/m.
+# This is a paired full-information feasibility map, not an RL experiment.
+simulator: online
+inhibition_scale: 1.0
+maximum_field_v_per_m: 0.8
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 4
+  probe_steps: 3
+  decision_steps: 6
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  amplitude_transition_ms: 500.0
+  # The probe is short, so use its final two seconds. A disjoint B calibration
+  # below supplies a duration-matched population target for this context.
+  probe_analysis_trim_start_ms: 1000.0
+  decision_analysis_trim_start_ms: 500.0
+  decision_analysis_trim_end_ms: 500.0
+
+frozen_candidate:
+  result_dir: ../../results/ballnstick_alpha_suppression_dose_audit/alpha_suppression_dose_audit
+  expected_modulation_depth: 0.04
+  expected_frequency_hz: 10.0
+  expected_amplitude_v_per_m: 0.4
+  expected_relative_phase_offset_rad: 3.141592653589793
+  expected_montage: axial
+
+probe_target_calibration:
+  # These B-reference seeds are disjoint from prior studies and CL1 contexts.
+  n_seeds: 4
+  seed_offset: 280000
+
+crossed_design:
+  # Directional gate only. Structure remains the inferential grouping unit.
+  n_structure_seeds: 3
+  n_drive_seeds: 3
+  structure_seed_offset: 240000
+  drive_seed_offset: 250000
+  fixed_phase_seed_offset: 260000
+  trial_seed_offset: 270000
+
+actions:
+  probe_dose_v_per_m: 0.2
+  maintain_dose_v_per_m: 0.2
+  escalate_dose_v_per_m: 0.4
+  # Frozen mechanistic policy: do not escalate once the duration-matched
+  # probe EEG has reached or crossed the population B alpha target.
+  probe_stop_escalation_threshold_log10: 0.0
+
+reference:
+  frequency_hz: 10.0
+  phase_rad: 0.0
+  populations: [E, I]
+  thinning_envelope_modulation_depth: 0.16
+
+tacs:
+  frequency_hz: 10.0
+  axial_montage: axial
+
+protocol:
+  axial_montage: ${analysis.tacs.axial_montage}
+  transverse_montage: transverse_x
+  amplitude_v_per_m: ${analysis.actions.escalate_dose_v_per_m}
+  frequency_hz: ${analysis.tacs.frequency_hz}
+  phase_rad: ${analysis.frozen_candidate.expected_relative_phase_offset_rad}
+  block_ramp_ms: ${analysis.timeline.block_ramp_ms}
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+alpha_low_hz: 8.0
+alpha_high_hz: 12.0
+stimulus_exclusion_half_width_hz: 2.0
+
+phase_null:
+  n_surrogates: 200
+
+phase_quality:
+  maximum_split_half_error_deg: 45.0
+  minimum_10hz_resultant_to_rms: 0.05
+
+criteria:
+  minimum_probe_target_calibration_seeds: 4
+  minimum_eligible_contexts: 4
+  minimum_eligible_structure_seeds: 3
+  minimum_eligible_drive_seeds: 2
+  practical_advantage_log10: 0.01
+  minimum_mean_oracle_advantage_log10: 0.005
+  minimum_practical_maintain_contexts: 2
+  minimum_practical_maintain_structures: 2
+  minimum_probe_rule_selected_action_count: 2
+  minimum_mean_probe_rule_advantage_log10: 0.0
+  minimum_positive_structure_fraction: 0.6666666666666666
+  maximum_context_shuffle_p_value: 0.10
+  maximum_predecision_relative_rms_error: 1.0e-8
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_phase_tracking_error_rad: 1.0e-10
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+
+context_shuffle:
+  n_permutations: 5000
+
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+rate_reference_tolerance_fraction: 0.20
+
+save_raw_eeg: false
+save_spikes: false

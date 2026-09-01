@@ -1,0 +1,21 @@
+defaults:
+  - ballnstick_field_controllability
+  - _self_
+
+# Rigorous discovery/validation schedule. Run only if the broad and targeted
+# quick screens both retain a non-trivial, rate-safe response.
+timeline:
+  burn_in_steps: 2
+  stimulation_steps: 4
+  block_ramp_ms: 250.0
+
+discovery:
+  n_seeds: 4
+  seed_offset: 85000
+  top_k: 2
+
+validation:
+  n_seeds: 8
+  seed_offset: 86000
+
+n_bootstrap: 5000
