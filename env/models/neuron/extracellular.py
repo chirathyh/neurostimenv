@@ -10,9 +10,16 @@ class ExtracellularModels:
         self.stim_electrode = 0  # Electrode position, based on the provided EEG configuration.
         self.stim_type = args.env.ts.type
 
-        electrodeParameters=dict(x=np.array(args.env.network.position[0], dtype=float),  # µm
-                                 y=np.array(args.env.network.position[1], dtype=float),  # µm
-                                 z=np.array(args.env.network.position[2], dtype=float),  # µm
+        # The microscopic point-source position is intentionally distinct from
+        # the macroscopic four-sphere dipole location. Scientific online runs
+        # use a uniform field and therefore do not use this point source.
+        point_source_position = args.env.ts.get(
+            "point_source_position_um",
+            [-10.0, 0.0, 0.0],
+        )
+        electrodeParameters=dict(x=np.array(point_source_position[0], dtype=float),  # µm
+                                 y=np.array(point_source_position[1], dtype=float),  # µm
+                                 z=np.array(point_source_position[2], dtype=float),  # µm
                                  N=np.array([[0., 0., 1.] for _ in range(1)]),
                                  r=args.env.ts.electrodeParameters.r,
                                  n=args.env.ts.electrodeParameters.n,

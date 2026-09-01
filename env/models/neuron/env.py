@@ -197,6 +197,78 @@ class NeuronEnv(gym.Env):
             print("Exploration rollout successfully completed.\n")
         return reward  # the returned reward is always the last segment.
 
+    def analysis_rollout(self, policy_seq, buffer, steps, **kwargs):
+        RANK = self.MPI_VAR['RANK']
+        COMM = self.MPI_VAR['COMM']
+        print("\n==> Running exploration simulations...") if RANK == 0 else None
+        # TODO: this is inefficient. e.g., for an episilon-greedy algo exploration required "evaluation_rollout"
+        # NOTE: Therefore; can explore offline RL algorithms which would be more suitable.
+        self.network.tstart, self.network.tstop = 0., self.args.env.simulation.obs_win_len * steps
+        reward = None
+        chunked_eeg = None
+        if RANK == 0:
+            i_stim, t_stim = prep_stim_seq(action=policy_seq, step_size=self.args.env.simulation.obs_win_len, steps=steps, dt=self.network.dt)
+        else:
+            i_stim, t_stim = None, None
+        i_stim = COMM.bcast(i_stim, root=0)
+        t_stim = COMM.bcast(t_stim, root=0)
+        COMM.Barrier()
+
+        # Redirect NEURON output to the log file and use tqdm progress bar.
+        time_pattern = re.compile(r"t = (\d+\.\d+) ms")
+        log_file_path = self.args.experiment.dir+'/neuron_exploration_sim_output.log'
+        with open(log_file_path, "w") as log_file:
+            original_stdout = sys.stdout  # Save the original stdout
+            sys.stdout = log_file
+            try:
+                with tqdm(total=self.network.tstop, unit="ms", desc="Simulation Progress", disable=not self.args.experiment.tqdm) as pbar:
+                    full_eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
+                    log_file.flush()  # Ensure file buffer is written
+                    sys.stdout = original_stdout  # Restore stdout temporarily
+                    with open(log_file_path, "r") as log_reader:
+                        last_time = 0
+                        for line in log_reader:
+                            match = time_pattern.search(line)
+                            if match:
+                                t_current = float(match.group(1))
+                                pbar.update(t_current - last_time)  # Update progress bar
+                                last_time = t_current
+                    sys.stdout = log_file  # Redirect back to log file
+            finally:
+                sys.stdout = original_stdout  # Restore original stdout
+        #full_eeg = self.step_n(i_stim, t_stim, stim_elec=0)  # run the simulation
+
+        if RANK == 0:
+            # save the EEG signal for mbandit algorithm
+            save = kwargs.get("save", False)
+            save_seed = kwargs.get("seed", 0)
+            save_mode = kwargs.get("mode", 'training')
+            if (self.args.agent.agent == 'mbandit' or self.args.agent.agent == 'ucbbandit') and save:
+                FILE = self.args.experiment.dir+"/"+save_mode+"/EEG_BANDIT_"+str(save_seed)+".csv"
+                np.savetxt(FILE, full_eeg, delimiter=",")
+                print("### EEG Saved.")
+
+            eeg_1d = np.asarray(full_eeg[0], dtype=np.float64).reshape(-1)
+            chunked_eeg = [
+                chunk.copy()
+                for chunk in np.array_split(eeg_1d, steps)
+            ]
+
+            cur_state, cur_action = [], []
+            for c in range(0, len(chunked_eeg)):
+                cur_action = policy_seq[c]
+                reward = features.reward_func_simple(np.array([chunked_eeg[c]]), self.sampling_rate)
+                obs = features.feature_space(eeg=np.array([chunked_eeg[c]]), fs=self.sampling_rate, ts=cur_action)
+                states = [obs[key].item() if isinstance(obs[key], np.ndarray) else obs[key] for key in obs]
+                next_state = np.array(states)
+
+                if c > 1 and buffer is not None:  # start saving transitions, avoid first and second
+                    buffer.store(cur_state, cur_action, torch.tensor([reward]), next_state, torch.tensor([0.]))
+                    # print(reward, cur_action)
+                cur_state = next_state
+            print("Exploration rollout successfully completed.\n")
+        return reward, chunked_eeg  # the returned reward is always the last segment.
+
     def step_n(self, i_stim, t_ext, stim_elec):
         COMM = self.MPI_VAR['COMM']
         RANK = self.MPI_VAR['RANK']

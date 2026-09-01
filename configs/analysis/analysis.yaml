@@ -1,0 +1,37 @@
+# Add these fields to the active analysis config used by configs/config.yaml.
+n_circuits: 20
+n_steps: 10
+burn_in_steps: 2
+simulator: online
+
+# EEG preprocessing after concatenating post-burn-in windows.
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+
+# Paired-circuit inference.
+n_bootstrap: 5000
+n_permutations: 20000
+classifier_permutations: 2000
+classification_features:
+  - log10_total_power_1_80
+  - relative_theta_power
+  - relative_alpha_power
+  - relative_beta_power
+  - relative_gamma_power
+  - spectral_entropy
+
+conditions:
+  A:
+    label: "A: reference inhibition"
+    overrides:
+      env:
+        network:
+          inhibition_scale: 1.0
+
+  B:
+    label: "B: reduced I-to-E inhibition"
+    overrides:
+      env:
+        network:
+          inhibition_scale: 0.5

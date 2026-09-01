@@ -1,0 +1,18 @@
+# Merge these fields into configs/env/ballnstick.yaml.
+# Existing pulse settings remain valid and unchanged.
+
+online:
+  max_step_ms: 10.0
+  points_per_electrode: 5
+  field_model: inf
+  ramp_ms: 0.0
+
+# For the example actions in run_ballnstick_online.py, the episode must be long
+# enough for six 1-second decision windows.
+simulation:
+  duration: 6000.0
+  obs_win_len: 1000.0
+
+ts:
+  apply: true
+  type: sin

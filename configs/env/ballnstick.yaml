@@ -2,11 +2,41 @@ name: 'ballnstick'
 
 simulation:
   duration: 10000  #ms
-  obs_win_len: 100 #1000.0  #ms
-  MDD: True  # healthy OR MDD
-  DRUG: False  # add drugs
+  # One second is the control interval. Spectral state features should use
+  # several consecutive windows (the analysis scripts use 8 s after burn-in).
+  obs_win_len: 1000.0  # ms
+  # Compatibility labels used by generic runners; BallAndStick condition
+  # semantics are controlled by network.inhibition_scale, not these flags.
+  MDD: True
+  DRUG: False
+
+online:
+  max_step_ms: 10.0
+  # "configured" sets global h.celsius explicitly. "legacy_default" exists
+  # only to reproduce runs made when LFPy 2.3 left h.celsius at 6.3 C.
+  temperature_mode: configured
+  points_per_electrode: 5
+  field_model: inf
+  ramp_ms: 0.0
+  stimulation:
+    # Scientific experiments parameterize the field at the modeled tissue.
+    # The legacy microscopic point-source mode remains available as
+    # point_source_current, with action amplitude in mA.
+    parameterization: uniform_field
+    field_direction: [0.0, 0.0, 1.0]
+    # A scientific mapping action may select one of these local cortical-field
+    # directions. These are idealized tissue-field vectors, not scalp montages;
+    # a translational study should replace them with head-model-derived vectors.
+    default_montage: axial
+    montages:
+      axial: [0.0, 0.0, 1.0]
+      transverse_x: [1.0, 0.0, 0.0]
+      transverse_y: [0.0, 1.0, 0.0]
+      oblique_xz: [0.5, 0.0, 0.8660254037844386]
 
 state_dim: 14
+# Legacy agents still use [AC amplitude, frequency]. Mapping actions additionally
+# expose signed DC, phase, and montage; RL use is deferred until controllability.
 action_dim: 2
 
 features:
@@ -25,15 +55,19 @@ features:
   - 'stimAmplitude'
   - 'stimFreq'
 
-stimAmplitude_min: 0.001  # 1e-3
-stimAmplitude_max: 0.01  # 10e-3
+# Online uniform-field action bounds (V/m at modeled tissue). Older legacy
+# point-source agents must override these and interpret their action in mA.
+stimAmplitude_min: 0.0
+stimAmplitude_max: 2.0
 stimFreq_min: 1
-stimFreq_max: 20
+stimFreq_max: 80
 
 ts:
   apply: True
-  method: 'tdcs'  # 'tacs, tdcs, tms
-  type: 'pulse' #'tdcs'  # tdcs, pulse, sin
+  method: 'tacs'
+  type: 'sin'
+  # Used only by the legacy microscopic point-source parameterization.
+  point_source_position_um: [-10.0, 0.0, 0.0]
   # run simnibs to generate extracellular current density
   calc: False
   simnibs_params:
@@ -41,9 +75,7 @@ ts:
     positions: ['Fz', 'I2']
     currents: # n actions, Amperes
       - [0.001, -0.001]   # sum to 0
-      - [0.01, -0.01]
-      - [0.05, -0.05]
-      - [0.1, -0.1]
+      - [0.002, -0.002]
     shapes: ['ellipse', 'ellipse']  # Set the shape, default to 'rect'
     dimensions: [50, 50]  # Set the dimensions, default to 50x50 mm
     thicknesses: 4  # Set the thickness, default to 4 mm
@@ -56,10 +88,10 @@ ts:
 
   # extracellular position in network: RecExtElectrode
   electrodeParameters:
-    # get the location < x, y, z in µm > from the network position: network.position
+    # Point-source geometry only; location is ts.point_source_position_um.
     r: 20.  # µm; radius of each contact surface
     n: 50  # number of discrete points used to compute the n-point average potential on each circular contact point
-    sigma: 1  # extracellular conductivity in units of (S/m)
+    sigma: 0.3  # extracellular conductivity in units of (S/m)
     method: "linesource"   # soma_as_point (this was replaced in 2.3 by) root_as_point, linesource
     # switch between the assumption of 'linesource', 'pointsource',
     # 'root_as_point' to represent each compartment when computing
@@ -69,26 +101,132 @@ network:
   dt: 0.0625  # ms
   tstart: 0
   v_init: -65.
-  celsius: 36.5
+  # Canonical NEURON hh kinetics are referenced to 6.3 C. This is a
+  # model-native temperature, not mammalian physiological temperature.
+  celsius: 6.3
   verbose: False
 
-  position: [-10., 0., 0.]  # µm, also used as single dipole reference for EEG/ECoG: 78200
+  # Dipole source 1 mm below the 79-mm brain surface in the four-sphere head.
+  position: [0., 0., 78000.]  # µm
+
+  population:
+    sizes:
+      E: 32
+      I: 8
+    radius_um: 100.0
+    z_mean_um: 0.0
+    z_sd_um: 20.0
+    rotation_x_rad: 0.0
+    rotation_y_rad: 0.0
+
+  # Rows are presynaptic, columns postsynaptic. The denser inhibitory
+  # probabilities compensate for the very small (8-cell) I population and
+  # prevent many E cells from receiving no recurrent inhibition at all.
+  connection_probability:
+    ee: 0.10
+    ei: 0.10
+    ie: 0.50
+    ii: 0.50
+
+  synapse_kinetics:
+    excitatory:
+      tau1_ms: 0.2
+      tau2_ms: 1.8
+      reversal_mV: 0.0
+    inhibitory:
+      tau1_ms: 0.1
+      tau2_ms: 9.0
+      reversal_mV: -80.0
+
+  recurrent_weights:
+    # Exp2Syn/NetCon conductances in µS.
+    ee_mean: 0.001
+    ei_mean: 0.001
+    ie_mean: 0.010
+    ii_mean: 0.010
+
+  recurrent:
+    weight_cv: 0.10
+    minimum_weight_uS: 0.0
+    delay_mean_ms: 1.5
+    delay_sd_ms: 0.3
+    minimum_delay_ms: 0.3
+    # Denser I connectivity uses one contact per connected pair; its expected
+    # total number of I contacts matches the old p=0.1, mean=5 setup.
+    multapse_mean:
+      ee: 2.0
+      ei: 2.0
+      ie: 1.0
+      ii: 1.0
+    multapse_sd:
+      ee: 0.5
+      ei: 0.5
+      ie: 0.2
+      ii: 0.2
+    excitatory_location:
+      soma_z_mean_um: 0.0
+      apic_z_mean_um: 500.0
+      z_sd_um: 100.0
+      soma_weight: 0.5
+      apic_weight: 1.0
+    inhibitory_location:
+      soma_z_mean_um: 0.0
+      apic_z_mean_um: 100.0
+      z_sd_um: 100.0
+      soma_weight: 1.0
+      apic_weight: 0.5
+
+  inhibition_scale: 1.0
+
+  background:
+    E:
+      n_synapses: 64
+      weight: 0.001
+      interval_ms: 40.0
+      start_ms: 0.0
+      tau1_ms: 0.2
+      tau2_ms: 1.8
+      reversal_mV: 0.0
+      # Optional stochastic afferent-rate modulation. Disabled by default, so
+      # all existing BallAndStick experiments retain their original event
+      # trains. The entrainment-state experiment enables this explicitly.
+      rhythm:
+        enabled: false
+        modulation_depth: 0.0
+        frequency_hz: 60.0
+        phase_rad: 0.0
+        # Optional shared afferent phase process dphi=2*pi*f*dt+sqrt(2D)dW.
+        # D=0 preserves the historical deterministic sinusoid exactly.
+        phase_diffusion_rad2_per_s: 0.0
+        phase_diffusion_integration_dt_ms: 1.0
+        thinning_envelope_modulation_depth: 0.0
+    I:
+      n_synapses: 64
+      weight: 0.001
+      interval_ms: 30.0
+      start_ms: 0.0
+      tau1_ms: 0.2
+      tau2_ms: 1.8
+      reversal_mV: 0.0
+      rhythm:
+        enabled: false
+        modulation_depth: 0.0
+        frequency_hz: 60.0
+        phase_rad: 0.0
+        phase_diffusion_rad2_per_s: 0.0
+        phase_diffusion_integration_dt_ms: 1.0
+        thinning_envelope_modulation_depth: 0.0
 
   syn_activity: True
-  synapse:
-    start: 0.
-    interval: 10.
-    number: 1000
-    noise: 1.0
 
   networkSimulationArguments:
     rec_imem: False
-    rec_vmem: True
+    rec_vmem: False
     rec_ipas: False # AttributeError: i_pas, the mechanism does not exist at BallAndStickTemplate[0].soma[0](0.5)
-    rec_icap: True
-    rec_isyn: True
-    rec_vmemsyn: True
-    rec_istim: True
+    rec_icap: False
+    rec_isyn: False
+    rec_vmemsyn: False
+    rec_istim: False
     rec_pop_contributions: False #True # originally False
     rec_variables: []
     to_memory: True
@@ -118,4 +256,3 @@ networkParameters:
   celsius: ${env.network.celsius}
   OUTPUTPATH: ${experiment.dir}
   verbose: ${env.network.verbose}
-
