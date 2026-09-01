@@ -8,7 +8,6 @@ from experiments.case_study.bootstrap import bootstrap_ci
 
 dt, fs, nperseg, _, t1 = get_configs()
 
-
 def process_eeg(file_path):
     file_list = [file_path + str(i) + ".csv" for i in range(10, 70)]
     b, a = ss.butter(N=2, Wn=[.1, 100.], btype='bandpass', fs=fs, output='ba')  # Filter coefficients
