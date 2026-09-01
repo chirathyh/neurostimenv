@@ -16,3 +16,27 @@ experiments/compute_analysis/
 experiments/drl/
 experiments/feature_analysis/
 experiments/validation/
+
+# Local manuscript work. Manuscripts are maintained outside the code history.
+/experiments/ballnstick_analysis/paper/
+/experiments/ballnstick_analysis/paper_v2/
+/experiments/ballnstick_analysis/paper_h1h3/
+
+# Local repository backups and generated/compiled simulator artifacts.
+/repo-backup.git/
+/setup/circuits/*/x86_64/
+
+# Large local SimNIBS/head-model assets.
+/env/ts/simnibs/leadfield/
+/env/ts/simnibs/leadfield_J/
+/env/ts/simnibs/m2m_ernie/
+/env/ts/simnibs/optimization/
+
+# Generated case-study and dipole-analysis outputs.
+/experiments/case_study/figures/png/
+/experiments/case_study/neurostimenv-casestudy-data.zip
+/experiments/dipole_analysis/EEG/
+/experiments/dipole_analysis/figures/
+/experiments/dipole_analysis/simulation/
+/experiments/dipoles/*.fif
+/experiments/dipoles/*.png
