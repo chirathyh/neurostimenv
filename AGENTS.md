@@ -133,6 +133,8 @@ Run commands from this repository root.
   `experiments/ballnstick_analysis/run_ballnstick_h5_controller_profile_feasibility.py`
 - H5-I0 robust individual-alpha-frequency measurement validation:
   `experiments/ballnstick_analysis/run_ballnstick_h5_iaf_measurement_validation.py`
+- H5-I0b multitaper pooled-evidence carrier measurement validation:
+  `experiments/ballnstick_analysis/run_ballnstick_h5_multitaper_measurement_validation.py`
 - Frozen EEG phase-increment observability confirmation (D0b):
   `experiments/ballnstick_analysis/run_ballnstick_phase_increment_confirmation.py`
 - Phase-diffusion full-information action mapping (D1):
@@ -350,6 +352,22 @@ shared-drive and structure generalization, subwindow stability, recent phase
 actionability, and rate safety before H5-P1. H5-I0 validates only a toy noisy-
 EEG measurement pipeline; it does not apply tACS, validate clinical IAF,
 train a policy, or establish H5.
+
+For H5-I0b, hash-lock the negative H5-I0 conclusion, frozen-estimator record,
+discovery metrics, summary, and selection table. Keep the same 30-s
+stimulation-free 9/11-Hz by low/high-diffusion by partial/full-shared-drive
+grid and frozen AR(1) observation noise. The H5-I0 Gaussian log-Welch method
+is a benchmark only. Select only between the predeclared whole-record and
+temporally robust DPSS multitaper pooled-evidence estimators on six new
+structures, freeze every spectral, evidence, confidence, and abstention
+parameter, and only then simulate twelve disjoint confirmation structures.
+Estimator inputs and selection use noisy predecision EEG only; neural-only EEG
+is an attribution audit and hidden carrier frequency is an evaluation label.
+Structure is the statistical unit. Save processed EEG, spectral evidence,
+temporal evidence, configuration/provenance, inference tables, and PNG/PDF
+figures. Stop before confirmation if discovery fails. H5-I0b applies no tACS,
+does not validate clinical IAF, and cannot establish H5 or justify policy
+training unless the complete frozen confirmation gate passes.
 
 For D0b, treat the failed D0 global-resultant endpoint as discovery only. Load
 and hash-lock the D0 conclusion, generator, and EEG table; freeze the one-step

@@ -2367,3 +2367,68 @@ Results are written to
 72 stimulation-free network episodes: 24 discovery and 48 confirmation. If no
 robust estimator passes discovery, the runner stops after the first 24 rather
 than spending compute on confirmation.
+
+## Experiment 31: H5-I0b multitaper pooled-evidence measurement validation
+
+H5-I0 correctly stopped after discovery: its best Gaussian log-Welch method
+mapped 22/24 contexts to the right 9/11-Hz carrier and was correct in every
+accepted context, but accepted only 17/24 contexts against the frozen 18/24
+coverage requirement. H5-I0b preserves that result by hash and tests the
+specific measurement hypothesis that phase-diffusion-broadened carrier
+evidence is present but is poorly summarized by a single spectral maximum and
+a hard vote across short windows. It changes no circuit, generator, noise, or
+stimulation parameter, and every run remains at exactly zero field.
+
+The primary spectrum is an eigenvalue-weighted five-taper DPSS estimate of the
+complete 30-s noisy baseline. Aperiodic log power is fit on the same 6--8 and
+12--14-Hz sidebands used in H5-I0. The estimator integrates the residual dB
+evidence with a cosine kernel over 9+/-0.75 and 11+/-0.75 Hz and selects the
+larger of the two action-specific scores. Six-second, 50%-overlapping
+multitaper windows provide graded temporal evidence. Unlike H5-I0, window
+contributions retain their magnitude: a weak contradictory interval cannot
+outvote a strong carrier-consistent interval merely by count. Explicit
+minimum residual evidence, score margin, and soft-support thresholds retain a
+causal abstention option.
+
+The frozen H5-I0 Gaussian estimator is a benchmark and cannot be selected.
+Six new structures (48 complete crossed contexts) select between the
+whole-record and robust-temporal pooled-evidence candidates. If neither passes
+the discovery gate, the experiment stops. Otherwise, the complete estimator
+is frozen before twelve disjoint structures provide 96 confirmation contexts.
+The confirmation requires >=0.90 overall accuracy, >=0.80 decision coverage,
+>=0.90 accepted accuracy, <=0.10 wrong active-selection rate, accuracy across
+frequency/diffusion/shared-drive strata, structure-level consistency, phase
+actionability, zero field, and firing-rate safety. Structure is the
+independent unit. The paired Gaussian comparison uses an exact structure-level
+sign-flip audit; neural-only EEG is saved and analyzed only to attribute noisy
+measurement failures and never enters estimator selection.
+
+The runner saves processed neural/noisy EEG for every context, full estimator
+tables, representative multitaper spectra, temporal evidence, structure-level
+statistics, provenance, and manuscript PNG/PDF figures. This is still a
+measurement experiment: it applies no tACS and trains no machine-learning
+policy.
+
+Run the full experiment with sixteen physical-core MPI ranks on the
+workstation:
+
+```bash
+export OMP_NUM_THREADS=1
+export HYDRA_FULL_ERROR=1
+
+mpiexec -n 16 --bind-to core --map-by core python \
+  experiments/ballnstick_analysis/run_ballnstick_h5_multitaper_measurement_validation.py \
+  experiment.name=ballnstick_h5_multitaper_measurement_validation_full \
+  experiment.seed=1 \
+  env=ballnstick \
+  analysis=ballnstick_h5_multitaper_measurement_validation \
+  env.simulation.obs_win_len=1000 \
+  experiment.plot=true \
+  experiment.tqdm=false
+```
+
+Results are written to
+`../../results/<name>/h5_multitaper_measurement_validation/`. A complete run
+contains at most 144 stimulation-free network episodes: 48 discovery and 96
+confirmation. A failed discovery gate is a valid stopping result and must not
+be rescued by changing thresholds after inspecting these outcomes.

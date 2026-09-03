@@ -1,0 +1,94 @@
+defaults:
+  - ballnstick_h5_iaf_measurement_validation
+  - _self_
+
+# H5-I0b is a stimulation-free measurement rescue study.  It preserves the
+# negative H5-I0 result and asks whether the carrier evidence is present but
+# spread over a phase-diffusion-broadened spectral feature that is poorly
+# summarized by a single peak and a hard majority vote.
+smoke_test: false
+smoke_contexts_per_split: 4
+
+source_h5i0:
+  result_dir: ../../results/ballnstick_h5_iaf_measurement_validation_full/h5_iaf_measurement_validation
+  expected_sha256:
+    conclusion: 7e1fdde65e0bee9afa757f80e505f647b333f6a4d423d46479c17d28c65417a6
+    frozen_estimator: bccc45509c2e849aecdba3c5eed04663062bd14a50c716baa08aa2195a920fe8
+    context_metrics: b1b89da0b101d74d127f54cea29720ee576d422ebc1239736a7de1b9c35f6561
+    estimator_summary: 049d9cd3cc7d6002cdabad978fd72b9700d4022a6b979963ee7b01bde4328fe4
+    estimator_selection: 0b7b498c09f8729609fb9bbe7b2404f5f9195a5bb24ad77b35539ac2bc045c85
+
+crossed_design:
+  # Six structures develop and select one estimator.  Twelve disjoint
+  # structures then provide the manuscript-scale frozen confirmation.
+  n_discovery_structure_seeds: 6
+  n_confirmation_structure_seeds: 12
+  structure_seed_offset: 390000
+  history_seed_offset: 470000
+  phase_seed_offset: 471000
+  trial_seed_offset: 472000
+
+observation_noise:
+  seed_offset: 473000
+
+multitaper:
+  # The full 30-s record provides the primary spectrum.  Six-second windows
+  # quantify temporal uncertainty without reducing the decision to hard peak
+  # votes.  DPSS half-bandwidth is NW/T: 0.1 Hz for the full record and
+  # approximately 0.42 Hz for each temporal window.
+  full_time_bandwidth: 3.0
+  full_number_of_tapers: 5
+  temporal_time_bandwidth: 2.5
+  temporal_number_of_tapers: 4
+  temporal_window_s: 6.0
+  temporal_overlap_fraction: 0.5
+  zero_padding_s: 32.0
+  evidence_half_width_hz: 0.75
+  evidence_kernel: cosine
+  minimum_residual_evidence_db: 0.25
+  minimum_evidence_margin_db: 0.10
+  minimum_soft_support_fraction: 0.55
+  trim_fraction: 0.20
+  selectable_estimators:
+    - multitaper_pooled_evidence
+    - multitaper_temporal_pooled_evidence
+  benchmark_estimators:
+    - gaussian_log_welch_peak
+  tie_break_priority:
+    - multitaper_pooled_evidence
+    - multitaper_temporal_pooled_evidence
+
+selection:
+  # Discovery criteria remain deliberately less strict than confirmation.
+  # Estimator choice is lexicographic after every gate passes: lower wrong
+  # active-selection rate, then higher coverage, then lower frequency error.
+  minimum_discovery_accuracy: 0.85
+  minimum_discovery_accepted_fraction: 0.75
+  minimum_discovery_accepted_accuracy: 0.90
+  minimum_discovery_frequency_accuracy: 0.75
+  minimum_discovery_diffusion_accuracy: 0.75
+  minimum_discovery_shared_drive_accuracy: 0.75
+  minimum_discovery_structure_accuracy: 0.75
+
+criteria:
+  minimum_discovery_structure_seeds: 6
+  minimum_confirmation_structure_seeds: 12
+  minimum_confirmation_accuracy: 0.90
+  minimum_confirmation_accepted_fraction: 0.80
+  minimum_confirmation_accepted_accuracy: 0.90
+  maximum_confirmation_wrong_action_rate: 0.10
+  minimum_confirmation_frequency_accuracy: 0.80
+  minimum_confirmation_diffusion_accuracy: 0.80
+  minimum_confirmation_shared_drive_accuracy: 0.80
+  minimum_structure_accuracy: 0.75
+  minimum_structures_meeting_accuracy_fraction: 0.8333333333333334
+  minimum_phase_actionable_fraction: 0.80
+  minimum_recent_resultant_to_rms: 0.03
+  minimum_rate_safe_fraction: 1.0
+
+# Processed 500-Hz neural and noisy EEG are retained so future estimator
+# development can reuse the measurement data without rerunning NEURON.  They
+# are audits only; estimator selection and deployable inputs use noisy EEG.
+save_processed_eeg: true
+save_raw_eeg: false
+save_spikes: false
