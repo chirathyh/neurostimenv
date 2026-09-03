@@ -1,0 +1,113 @@
+defaults:
+  - ballnstick_h5_controller_profile_feasibility
+  - _self_
+
+# H5-I0 repairs the measurement bottleneck found in H5-P0 before any new
+# stimulation-response mapping or machine-learning policy is attempted. Every
+# run is stimulation-free. Estimator selection uses discovery structures only;
+# the selected estimator is frozen before confirmation structures are run.
+simulator: online
+inhibition_scale: 1.0
+smoke_test: false
+smoke_contexts_per_split: 4
+
+source_h5p0:
+  result_dir: ../../results/ballnstick_h5_controller_profile_feasibility_full/h5_controller_profile_feasibility
+  expected_sha256:
+    conclusion: 071e061e9a715d2d689f0637ed86fd941546969861f74796423dbc500d2c401b
+    audit: 5131faca5c93f259ea26d884b9af6cccef4a7b480c2b950fd7bf7601d001d3c2
+    screening: 4b1eb5b2a982990921a987bae205ac63cda919ed38a9ac1342dc0aaab084b57f
+    metrics: 6138a8588e0a81e64bedce72e6a9161430e661289b0e4fcc95f1749d8197bca2
+    provenance: 5057b4ff13738bdaf2bdc4aa379282902369111342e7ea3480ec31b8019dd771
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 30
+  # Compatibility epochs remain stimulation-free and are excluded from IAF
+  # estimation. Keeping them nonempty preserves the common online lifecycle.
+  stimulation_steps: 1
+  washout_steps: 1
+  block_ramp_ms: 0.0
+  stimulation_analysis_trim_ms: 0.0
+
+crossed_design:
+  # Structure is the independent unit. Frequency, diffusion, and shared-drive
+  # fraction are crossed repeats within each structure.
+  n_discovery_structure_seeds: 3
+  n_confirmation_structure_seeds: 6
+  # H5-P0 future continuations extend into 336xxx, so the structure namespace
+  # starts at 372xxx while remaining below NEURON's uint32 seed-mapping limit.
+  structure_seed_offset: 372000
+  history_seed_offset: 445000
+  phase_seed_offset: 446000
+  trial_seed_offset: 447000
+
+# This is the same controlled observation model used in H5-P0. It is a sensor-
+# noise robustness model, not a fitted human EEG or tACS-artifact model.
+observation_noise:
+  enabled: true
+  rms_fraction_of_baseline_neural_eeg: 0.25
+  ar1_coefficient: 0.95
+  seed_offset: 448000
+
+iaf:
+  alpha_low_hz: 8.0
+  alpha_high_hz: 12.0
+  aperiodic_sidebands_hz: [[6.0, 8.0], [12.0, 14.0]]
+  epoch_length_s: 4.0
+  epoch_overlap_fraction: 0.5
+  zero_padding_s: 8.0
+  smoothing_width_hz: 0.75
+  smoothing_polynomial_order: 2
+  minimum_peak_prominence_db: 1.5
+  minimum_gaussian_r2: 0.20
+  minimum_window_vote_fraction: 0.60
+  gaussian_minimum_sigma_hz: 0.15
+  gaussian_maximum_sigma_hz: 2.0
+  candidate_action_frequencies_hz: [9.0, 11.0]
+  selectable_estimators:
+    - smoothed_log_welch_peak
+    - gaussian_log_welch_peak
+  benchmark_estimators:
+    - raw_periodogram_12s
+    - raw_periodogram_30s
+  # A deterministic tie-break avoids selecting a more complex estimator after
+  # inspecting confirmation results.
+  tie_break_priority:
+    - smoothed_log_welch_peak
+    - gaussian_log_welch_peak
+
+iaf_selection:
+  minimum_discovery_accuracy: 0.80
+  minimum_discovery_accepted_fraction: 0.75
+  minimum_discovery_accepted_accuracy: 0.85
+  minimum_discovery_frequency_accuracy: 0.75
+  minimum_discovery_structure_accuracy: 0.625
+
+criteria:
+  minimum_discovery_structure_seeds: 3
+  minimum_confirmation_structure_seeds: 6
+  minimum_confirmation_accuracy: 0.90
+  minimum_confirmation_accepted_fraction: 0.80
+  minimum_confirmation_accepted_accuracy: 0.90
+  minimum_confirmation_frequency_accuracy: 0.80
+  minimum_confirmation_diffusion_accuracy: 0.80
+  minimum_confirmation_shared_drive_accuracy: 0.80
+  minimum_structure_accuracy: 0.75
+  minimum_structures_meeting_accuracy_fraction: 0.8333333333333334
+  minimum_mean_window_vote_fraction: 0.75
+  minimum_phase_actionable_fraction: 0.80
+  minimum_recent_resultant_to_rms: 0.03
+  minimum_rate_safe_fraction: 1.0
+
+target_fs_hz: 500
+low_hz: 0.5
+high_hz: 100.0
+rate_guardrails_hz:
+  E_min: 0.1
+  E_max: 30.0
+  I_min: 0.1
+  I_max: 60.0
+
+save_raw_eeg: false
+save_spikes: false

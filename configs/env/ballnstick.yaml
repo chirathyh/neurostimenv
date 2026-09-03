@@ -199,6 +199,10 @@ network:
         # D=0 preserves the historical deterministic sinusoid exactly.
         phase_diffusion_rad2_per_s: 0.0
         phase_diffusion_integration_dt_ms: 1.0
+        # Fraction of background synapses participating in the population-
+        # shared rhythmic rate modulation. Nonparticipants remain homogeneous
+        # and mean-rate matched. One preserves all historical experiments.
+        shared_modulated_fraction: 1.0
         thinning_envelope_modulation_depth: 0.0
     I:
       n_synapses: 64
@@ -215,6 +219,7 @@ network:
         phase_rad: 0.0
         phase_diffusion_rad2_per_s: 0.0
         phase_diffusion_integration_dt_ms: 1.0
+        shared_modulated_fraction: 1.0
         thinning_envelope_modulation_depth: 0.0
 
   syn_activity: True

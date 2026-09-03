@@ -21,6 +21,7 @@ experiments/validation/
 /experiments/ballnstick_analysis/paper/
 /experiments/ballnstick_analysis/paper_v2/
 /experiments/ballnstick_analysis/paper_h1h3/
+/experiments/ballnstick_analysis/paper_h4/
 
 # Local repository backups and generated/compiled simulator artifacts.
 /repo-backup.git/

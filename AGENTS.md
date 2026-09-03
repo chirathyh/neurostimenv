@@ -129,6 +129,10 @@ Run commands from this repository root.
   `experiments/ballnstick_analysis/run_ballnstick_phase_refresh_cadence_discovery.py`
 - Disjoint adaptive phase-maintenance confirmation (H4-C):
   `experiments/ballnstick_analysis/run_ballnstick_h4_confirmation.py`
+- H5-P0 EEG-contextual controller-profile feasibility mapping:
+  `experiments/ballnstick_analysis/run_ballnstick_h5_controller_profile_feasibility.py`
+- H5-I0 robust individual-alpha-frequency measurement validation:
+  `experiments/ballnstick_analysis/run_ballnstick_h5_iaf_measurement_validation.py`
 - Frozen EEG phase-increment observability confirmation (D0b):
   `experiments/ballnstick_analysis/run_ballnstick_phase_increment_confirmation.py`
 - Phase-diffusion full-information action mapping (D1):
@@ -313,6 +317,39 @@ PNG/PDF figure artifacts. H4-C can establish only deterministic adaptive
 feedback in ideal neural EEG under toy phase diffusion; it is not learned
 prediction, a contextual bandit, a clinical result, or proof that adaptation
 is necessary against all possible open-loop controllers.
+
+For H5-P0, hash-lock the positive H4-C conclusion and every upstream source.
+Keep the H4-confirmed responsive profile (0.5-s phase history, 125-ms update)
+and the conservative profile (1-s history, 250-ms update) at the same 0.2-V/m
+axial field, EEG-selected 9/11-Hz carrier, pi-relative target, one-second
+initialization, and 250-ms correction horizon. Add only the fraction of
+afferents participating in the shared rate rhythm, crossed at 0.5 and 1.0;
+nonparticipating afferents remain homogeneous mean-rate-matched Poisson
+processes and all synapses retain independent event streams. Supply the
+context extractor and phase tracker with the frozen AR(1) observation-noise
+realization, but evaluate efficacy on ideal neural-only EEG. Split both neural
+and observation randomness at the decision boundary and estimate each
+profile's expected response from paired futures. First require that noisy,
+phase-invariant predecision EEG exposes the shared-drive state and that a
+post-hoc expected-outcome oracle selects both profiles with a practical,
+cross-structure advantage over the best fixed profile. H5-P0 is exploratory
+system identification: do not train a policy, call the oracle deployable, or
+claim H5. A failed opportunity gate is a stopping result, not permission to
+tune on these outcomes.
+
+For H5-I0, preserve the negative H5-P0 result and its carrier-identification
+failure by file hash. Apply no stimulation and retain the frozen 9/11-Hz by
+low/high-diffusion by partial/full-shared-drive generator and the H5-P0 AR(1)
+observation noise. Compare the legacy whole-record periodogram only as a
+benchmark. Select between the predeclared smoothed-log-Welch and Gaussian-fit
+estimators on three discovery structures, save and freeze the complete
+estimator before simulating six disjoint confirmation structures, and score
+hidden generator frequency only as an evaluation label. Require all-context
+and accepted-context accuracy, identification coverage, frequency, diffusion,
+shared-drive and structure generalization, subwindow stability, recent phase
+actionability, and rate safety before H5-P1. H5-I0 validates only a toy noisy-
+EEG measurement pipeline; it does not apply tACS, validate clinical IAF,
+train a policy, or establish H5.
 
 For D0b, treat the failed D0 global-resultant endpoint as discovery only. Load
 and hash-lock the D0 conclusion, generator, and EEG table; freeze the one-step

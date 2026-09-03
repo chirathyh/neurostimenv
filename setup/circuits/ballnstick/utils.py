@@ -250,6 +250,25 @@ def make_background_phase_seed(*, global_seed: int) -> int:
     return int(seed_sequence.generate_state(n_words=1, dtype=np.uint32)[0])
 
 
+def shared_rhythm_synapse_count(
+    *, n_synapses: int, shared_modulated_fraction: float
+) -> int:
+    """Return the nested number of afferents receiving the shared rhythm.
+
+    The fraction is a minimal population-coherence control: selected synapses
+    share the latent rate phase, whereas the remaining synapses retain a
+    homogeneous mean-rate-matched Poisson drive. Selection is by the stable
+    per-cell synapse index. Segment locations are already randomized, so this
+    creates an exact, nested fraction without adding another random namespace.
+    """
+    if int(n_synapses) != n_synapses or int(n_synapses) < 0:
+        raise ValueError("n_synapses must be a non-negative integer.")
+    fraction = float(shared_modulated_fraction)
+    if not np.isfinite(fraction) or not 0.0 <= fraction <= 1.0:
+        raise ValueError("shared_modulated_fraction must be in [0, 1].")
+    return int(np.floor(float(n_synapses) * fraction + 0.5))
+
+
 def generate_phase_diffusion_path(
     *,
     start_ms: float,
@@ -716,6 +735,19 @@ def setup_network_ballnstick(network, args, MPI_VAR) -> None:
                 f"non-negative, received {background_weight}."
             )
 
+        rhythm = background.get("rhythm", None)
+        rhythm_enabled = rhythm is not None and bool(
+            rhythm.get("enabled", False)
+        )
+        shared_modulated_fraction = (
+            float(rhythm.get("shared_modulated_fraction", 1.0))
+            if rhythm_enabled else 0.0
+        )
+        n_shared_rhythm_synapses = shared_rhythm_synapse_count(
+            n_synapses=n_background_synapses,
+            shared_modulated_fraction=shared_modulated_fraction,
+        )
+
         for local_cell_index, cell in enumerate(
             network.populations[population_name].cells
         ):
@@ -765,10 +797,6 @@ def setup_network_ballnstick(network, args, MPI_VAR) -> None:
                     )
                 )
 
-                rhythm = background.get("rhythm", None)
-                rhythm_enabled = rhythm is not None and bool(
-                    rhythm.get("enabled", False)
-                )
                 diffusion = (
                     float(rhythm.get("phase_diffusion_rad2_per_s", 0.0))
                     if rhythm_enabled else 0.0
@@ -828,7 +856,10 @@ def setup_network_ballnstick(network, args, MPI_VAR) -> None:
                     future_seed=future_synapse_seed,
                     rhythm_enabled=rhythm_enabled,
                     modulation_depth=(
-                        float(rhythm.modulation_depth) if rhythm_enabled else 0.0
+                        float(rhythm.modulation_depth)
+                        if rhythm_enabled
+                        and synapse_index < n_shared_rhythm_synapses
+                        else 0.0
                     ),
                     frequency_hz=(
                         float(rhythm.frequency_hz) if rhythm_enabled else 0.0

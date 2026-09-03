@@ -2213,3 +2213,157 @@ mpiexec -n 8 python \
 
 Results are written to `../../results/<name>/h4_confirmation/`. H4 is confirmed
 only if the runner reports `H4 adaptive phase maintenance: CONFIRMED`.
+
+## Experiment 29: H5-P0 controller-profile feasibility map
+
+H5-P0 is the required system-identification stage before fitting an H5
+machine-learning policy. It asks a narrower causal question: after frequency
+and phase are handled by the frozen H3/H4 signal-processing rules, is there a
+replicable EEG-observable context in which the preferred phase-tracker
+bandwidth changes? A negative result means this action space does not justify
+learning, even though H4 itself remains confirmed.
+
+The new biological state axis is the fraction \(q\) of background afferents
+participating in one population-shared rhythmic rate modulation. For synapse
+\(j\),
+
+\[
+\lambda_j(t)=\lambda_0\left[1+m I_j
+\cos\phi(t)\right],\qquad
+d\phi=2\pi f\,dt+\sqrt{2D}\,dW,
+\]
+
+where \(m=0.04\), \(f\in\{9,11\}\) Hz,
+\(D\in\{0.5,2.0\}\,\mathrm{rad^2/s}\), and exactly a fraction
+\(q\in\{0.5,1.0\}\) has \(I_j=1\). The remaining afferents have
+\(I_j=0\) and retain homogeneous Poisson drive at \(\lambda_0\). Thus \(q\)
+changes population coherence rather than mean afferent rate. Every synapse has
+its own Poisson event stream; only the latent rate phase is shared. The q=0.5
+set is an exact nested subset of q=1 under common random numbers.
+
+The two active actions are complete controller profiles, not mixtures or
+within-episode choices: (i) the conservative 1-s/250-ms phase tracker and (ii)
+the H4-confirmed responsive 0.5-s/125-ms tracker. Both use the same EEG-selected
+9/11-Hz carrier, pi-relative phase target, 0.2-V/m axial field, one-second
+initialization, fixed 250-ms correction horizon, ramps, and eight-second
+endpoint. Sham is retained for causal and washout audits. Selecting a profile
+therefore changes only the estimator/controller bandwidth.
+
+To represent a minimal measurement limitation, the policy-facing EEG is
+
+\[
+y_k=x_k+\sigma\eta_k,\qquad
+\eta_k=0.95\eta_{k-1}+\sqrt{1-0.95^2}\,\epsilon_k,
+\]
+
+with noise RMS frozen to 25% of baseline neural-EEG RMS. The context features
+and causal phase tracker see \(y\); the scientific efficacy endpoint remains
+the ideal neural-only EEG \(x\). This is a controlled robustness model, not a
+fitted human EEG or stimulation-artifact model. Predecision observation noise,
+neural history, topology, and afferent history are identical across
+counterfactual profiles; independent postdecision futures estimate expected
+response.
+
+The full exploratory design has three independent structures, the complete
+2-frequency by 2-diffusion by 2-shared-drive grid, and four paired futures per
+profile: 24 contexts and 288 total episodes including sham. The deployable EEG
+feature candidates are phase-invariant coherence, linewidth/concentration,
+alpha excess, and recent resultant magnitude. A leave-one-structure-out
+classifier audits whether q is observable, but no policy is fitted. The
+full-information oracle is defined only from each profile's mean response over
+futures. Progression requires both profiles to be optimal in replicated
+contexts and structures, a mean oracle advantage of at least 0.01 log10 over
+the best fixed profile, a q-by-profile response interaction, cross-structure
+opportunity, and at least 0.75 future-wise winner agreement, along with causal,
+continuity, rate, washout, carrier-detection, and noisy-EEG observability gates.
+This is discovery, not statistical confirmation of H5.
+
+Run the full H5-P0 map with eight MPI ranks:
+
+```bash
+source /home/chirath/Documents/depression-simulator/bin/activate
+export OMP_NUM_THREADS=1
+
+mpiexec -n 8 python \
+  experiments/ballnstick_analysis/run_ballnstick_h5_controller_profile_feasibility.py \
+  experiment.name=ballnstick_h5_controller_profile_feasibility_full \
+  experiment.seed=1 \
+  env=ballnstick \
+  analysis=ballnstick_h5_controller_profile_feasibility \
+  env.simulation.obs_win_len=1000 \
+  experiment.plot=true \
+  experiment.tqdm=false
+```
+
+Results are written to
+`../../results/<name>/h5_controller_profile_feasibility/`. Proceed to policy
+development only if the runner reports
+`Contextual controller-profile opportunity: PASSED`. Even then, H5 requires a
+frozen policy and disjoint confirmation against the best fixed profile and the
+H4 rule; this experiment neither trains nor tests that policy.
+
+## Experiment 30: H5-I0 robust IAF measurement validation
+
+H5-P0 stopped for three reasons, one of which precedes any treatment-policy
+question: its raw whole-baseline periodogram selected the correct 9/11-Hz
+carrier in only 66.7% of eligible noisy-EEG contexts. H5-I0 therefore applies
+no stimulation and asks whether a more defensible individual-alpha-frequency
+(IAF) measurement pipeline generalizes before another response map is run.
+It hash-locks the negative H5-P0 outputs and retains the same mean-rate-matched
+9/11-Hz by low/high-phase-diffusion by q=0.5/1.0 shared-drive grid and the same
+AR(1) observation noise with RMS equal to 25% of neural-EEG RMS.
+
+After one second of burn-in, each circuit provides 30 seconds of stimulation-
+free observed EEG. Two additional one-second compatibility epochs also remain
+at exactly zero field and are not used for IAF estimation. The robust spectral
+pipeline divides the 30-second record into four-second Hann epochs with 50%
+overlap, log-transforms each epoch PSD before averaging, fits an aperiodic
+background on 6--8 and 12--14 Hz sidebands, and smooths the residual spectrum.
+The two selectable estimators are (i) the maximum of that smoothed residual
+and (ii) a bounded Gaussian fit to that peak. Peak prominence and agreement of
+the 9/11-Hz decision across subwindows provide an explicit identifiable/not-
+identifiable decision. The exact H5-P0-style 12-second raw periodogram and a
+30-second raw periodogram are benchmarks only and cannot be selected; this
+separates the benefit of a longer observation from the robust estimator.
+
+Three discovery structures, each with the complete eight-context crossed
+grid, rank the robust estimators using only their known simulator labels. The
+complete selected method and thresholds are written to
+`frozen_iaf_estimator.json` before any confirmation structure is simulated.
+Six new structures then provide 48 confirmation contexts. Structure is the
+independent unit; frequency, diffusion, and q are repeated measurements. The
+primary validation requires at least 0.90 carrier accuracy, at least 0.80
+identification coverage, at least 0.90 accuracy among identified contexts,
+and at least 0.80 accuracy in every frequency, diffusion, and shared-drive
+stratum. At least five of six structures must individually reach 0.75
+accuracy. Subwindow agreement, recent one-second phase actionability, finite
+EEG, exact zero field, and firing-rate safety are mandatory checks.
+
+This is a computational measurement validation, not a clinical IAF study.
+The continuous peak estimate is mapped to the already frozen finite 9/11-Hz
+action grid, hidden generator frequency is used only for scoring, and no
+machine-learning policy is fitted. Proceed to an H5-P1 stimulation-response
+opportunity map only if the disjoint confirmation passes.
+
+Run the full H5-I0 experiment with eight MPI ranks:
+
+```bash
+source /home/chirath/Documents/depression-simulator/bin/activate
+export OMP_NUM_THREADS=1
+
+mpiexec -n 8 python \
+  experiments/ballnstick_analysis/run_ballnstick_h5_iaf_measurement_validation.py \
+  experiment.name=ballnstick_h5_iaf_measurement_validation_full \
+  experiment.seed=1 \
+  env=ballnstick \
+  analysis=ballnstick_h5_iaf_measurement_validation \
+  env.simulation.obs_win_len=1000 \
+  experiment.plot=true \
+  experiment.tqdm=false
+```
+
+Results are written to
+`../../results/<name>/h5_iaf_measurement_validation/`. The full design contains
+72 stimulation-free network episodes: 24 discovery and 48 confirmation. If no
+robust estimator passes discovery, the runner stops after the first 24 rather
+than spending compute on confirmation.

@@ -1,0 +1,87 @@
+defaults:
+  - ballnstick_h4_confirmation
+  - _self_
+
+# H5-P0: exploratory full-information feasibility map for an EEG-contextual
+# choice between two already safe causal phase-tracker profiles. No learned
+# policy is trained or confirmed here.
+smoke_test: false
+smoke_context_limit: 0
+
+source_h4c:
+  result_dir: ../../results/ballnstick_h4_confirmation_full/h4_confirmation
+  expected_sha256:
+    conclusion: 697f34e3279ac0489484b54c52b14facf9996916d9f48c82c5fbc71d413ea5b6
+    provenance: 28d3276b07380c27b82b5044bbf836a062434c730fc02b3c5f57ec8d95232643
+    screening: 53680f022cf6b4058f54ce805a5e775973877319e7cd1a9a3542843206659854
+    metrics: a1f5e4d0c1e70366fe70bead115e0c2613730f6eee465232add5b7629732ff9a
+    inference: 508f82a3902d86cdd4034cc00ea779c1125eebc55804602334329cd1097e4c21
+
+states:
+  modulation_depth: 0.04
+  frequencies_hz: [9.0, 11.0]
+  phase_diffusion_levels:
+    - {label: low_diffusion, diffusion_rad2_per_s: 0.5}
+    - {label: high_diffusion, diffusion_rad2_per_s: 2.0}
+  # Partial participation in the common rate rhythm changes population
+  # coherence without changing mean afferent rate or copying Poisson events.
+  shared_drive_levels:
+    - {label: partial_shared_drive, shared_modulated_fraction: 0.5}
+    - {label: full_shared_drive, shared_modulated_fraction: 1.0}
+  phase_diffusion_integration_dt_ms: 1.0
+
+crossed_design:
+  # Three structures x 2 frequencies x 2 D levels x 2 shared-drive levels.
+  # Frequency, D, shared drive, and futures are repeats; structure is the unit.
+  n_structure_seeds: 3
+  n_history_seeds: 1
+  n_future_continuations: 4
+  structure_seed_offset: 331000
+  history_seed_offset: 332000
+  phase_seed_offset: 333000
+  trial_seed_offset: 334000
+  future_seed_offset: 335000
+
+actions:
+  amplitude_v_per_m: 0.2
+  controller_modes:
+    - sham
+    - refresh_1000ms_250ms
+    - refresh_500ms_125ms
+
+# Frozen moderate observation noise is supplied only to EEG context extraction
+# and the causal phase estimators. Neural-only EEG remains the efficacy target.
+# This is a controlled robustness layer, not a fitted clinical noise model.
+observation_noise:
+  enabled: true
+  rms_fraction_of_baseline_neural_eeg: 0.25
+  ar1_coefficient: 0.95
+  # Kept well outside the future-drive namespace, including its +10,000
+  # split-future observation-noise subnamespace.
+  seed_offset: 360000
+
+selection:
+  candidate_controllers:
+    - refresh_1000ms_250ms
+    - refresh_500ms_125ms
+  minimum_practical_oracle_advantage_log10: 0.01
+
+criteria:
+  minimum_eligible_contexts: 12
+  minimum_structure_seeds: 3
+  minimum_future_continuations: 4
+  minimum_frequency_detection_accuracy: 0.80
+  minimum_shared_drive_classification_balanced_accuracy: 0.65
+  minimum_contexts_per_optimal_profile: 2
+  minimum_structures_per_optimal_profile: 2
+  minimum_realized_winner_agreement_fraction: 0.75
+  minimum_oracle_advantage_over_best_fixed_log10: 0.01
+  minimum_shared_drive_response_interaction_log10: 0.005
+  minimum_positive_structure_oracle_fraction: 0.6666666666666666
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_causal_timing_error_ms: 1.0e-9
+  maximum_field_boundary_discontinuity_v_per_m: 1.0e-10
+  maximum_frequency_correction_hz: 2.000000001
+  minimum_common_phase_estimate_actionable_fraction: 0.80
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6

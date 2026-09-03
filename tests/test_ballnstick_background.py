@@ -9,10 +9,33 @@ from setup.circuits.ballnstick.utils import (
     generate_poisson_spike_train,
     generate_sinusoidally_modulated_poisson_spike_train,
     generate_split_background_spike_train,
+    shared_rhythm_synapse_count,
 )
 
 
 class BallAndStickBackgroundTests(unittest.TestCase):
+    def test_shared_rhythm_fraction_is_exact_nested_and_validated(self):
+        self.assertEqual(
+            shared_rhythm_synapse_count(
+                n_synapses=64, shared_modulated_fraction=0.5
+            ),
+            32,
+        )
+        self.assertEqual(
+            shared_rhythm_synapse_count(
+                n_synapses=64, shared_modulated_fraction=1.0
+            ),
+            64,
+        )
+        with self.assertRaises(ValueError):
+            shared_rhythm_synapse_count(
+                n_synapses=64, shared_modulated_fraction=1.01
+            )
+        with self.assertRaises(ValueError):
+            shared_rhythm_synapse_count(
+                n_synapses=-1, shared_modulated_fraction=0.5
+            )
+
     def test_zero_diffusion_path_is_exact_deterministic_phase(self):
         times, phase = generate_phase_diffusion_path(
             start_ms=0.0,
