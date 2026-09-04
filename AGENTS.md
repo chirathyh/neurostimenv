@@ -137,6 +137,8 @@ Run commands from this repository root.
   `experiments/ballnstick_analysis/run_ballnstick_h5_multitaper_measurement_validation.py`
 - H5-P1 frozen-carrier full-information controller response mapping:
   `experiments/ballnstick_analysis/run_ballnstick_h5_response_mapping.py`
+- H5-P2A stimulation-free causal phase-tracker trade-off discovery:
+  `experiments/ballnstick_analysis/run_ballnstick_h5_phase_tracker_tradeoff.py`
 - Frozen EEG phase-increment observability confirmation (D0b):
   `experiments/ballnstick_analysis/run_ballnstick_phase_increment_confirmation.py`
 - Phase-diffusion full-information action mapping (D1):
@@ -389,6 +391,28 @@ phase-invariant EEG feature and relative controller response. H5-P1 is
 exploratory full-information system identification. It neither trains a
 deployable policy nor establishes H5; a failed opportunity gate stops policy
 development rather than licensing post-hoc generator or threshold changes.
+
+For H5-P2A, hash-lock the exact negative H5-P1 response map and positive
+H5-I0b carrier estimator. Apply no stimulation and fix the shared rhythmic-
+afferent fraction to one, leaving only the crossed 9/11-Hz and
+`D={0.5,2.0}` generator states. From each new structure obtain one persistent
+one-second-burn-in plus 38-second stimulation-free EEG trajectory: use the
+first 30 seconds for the frozen carrier decision and neural-to-latent phase-
+offset audit, and reserve the following eight seconds for causal tracker
+evaluation. Add paired AR(1) sensor-noise views with RMS fractions
+`{0.25,0.5,0.75}` offline; generate one unit-noise realization per neural
+context, normalize it using the first 30 seconds only, and scale that same
+path at all three levels. Compare only the frozen 1-s/250-ms and 0.5-s/125-ms
+trackers on common 125-ms boundaries. An accepted but incorrect carrier must
+remain in the phase-error endpoint; hidden carrier, diffusion, and latent
+phase are scoring/audit labels and cannot enter either tracker. Select the
+smallest high-noise condition showing the prespecified crossover: the fast
+tracker wins at high diffusion/low noise, while the slow tracker wins at low
+diffusion/high noise, with carrier, actionability, cross-structure, transfer-
+coherence, and safety gates. H5-P2A is stimulation-free controller-design
+discovery, not evidence for tACS efficacy, a learned policy, clinical sensor
+performance, or H5. Only a pass freezes conditions for a disjoint active
+response map.
 
 For D0b, treat the failed D0 global-resultant endpoint as discovery only. Load
 and hash-lock the D0 conclusion, generator, and EEG table; freeze the one-step

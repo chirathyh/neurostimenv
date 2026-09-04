@@ -2503,3 +2503,102 @@ sham screen plus eleven additional paired counterfactual replays per context.
 At sixteen workstation ranks, budget approximately 8--10 hours. Exclusions
 reduce the active replay count. A failed H5-P1 gate is a valid stopping result
 and does not establish that a learned policy is needed.
+
+## Experiment 33: H5-P2A causal phase-tracker bias--variance discovery
+
+H5-P1 found that the shared-afferent fraction was observable from noisy EEG,
+but the two H4-derived controller profiles differed by only 0.0068 log10 on
+the post-hoc oracle endpoint, their realized winner agreement was only 0.643,
+and no predecision EEG feature survived the response-association gate. A
+principled H5 task needs an observable variable that changes which action is
+causally preferable. H5-P2A therefore tests that prerequisite at the
+measurement layer before running another large stimulation experiment.
+
+The candidate mechanism is the standard tracking bias--variance trade-off.
+The latent afferent phase remains
+
+```text
+d phi(t) = 2 pi f dt + sqrt(2 D) dW(t),
+```
+
+so higher `D` demands recent measurements. In contrast, additive correlated
+sensor noise makes a short phase-estimation history more variable, whereas a
+long history averages that noise at the cost of lagging a changing phase.
+This motivates a prespecified crossover: at low measurement noise and high
+diffusion, the 0.5-s-history/125-ms-update tracker should have lower causal
+phase error; at high measurement noise and low diffusion, the
+1-s-history/250-ms-update tracker should have lower error. These are two fixed
+controller-profile actions, not continuously tuned hyperparameters.
+
+H5-P2A applies no electric field. Six new independent circuit structures are
+crossed with carriers `{9,11}` Hz and diffusion `{0.5,2.0}` rad2/s, with the
+shared rhythmic-afferent fraction fixed at `q=1.0`. This produces 24 network
+episodes. After one second of burn-in, one persistent 38-second neural-EEG
+record is collected. The first 30 seconds supply the already frozen H5-I0b
+multitaper 9/11-Hz carrier estimate. The subsequent eight seconds are held
+later in time for causal tracker evaluation. The final two one-second online
+epochs remain zero-field compatibility/washout audits, so the complete neural
+episode is 41 seconds and never contains stimulation.
+
+For each neural trajectory, a unit-RMS AR(1) observation-noise path with
+coefficient 0.95 is generated once and normalized from predecision samples
+only. Three paired observed-EEG views are then formed without resimulating the
+network:
+
+```text
+y_r(t) = x_neural(t) + r * RMS_pre[x_neural] * epsilon(t),
+r in {0.25, 0.50, 0.75}.
+```
+
+Using the same `epsilon(t)` at every `r` makes noise severity the only changed
+measurement variable. This is an engineering sensitivity model, not a claim
+that real EEG artifacts are AR(1) or have these exact amplitudes.
+
+Both causal trackers use only preceding noisy EEG and are compared on common
+125-ms boundaries. The primary audit reference is the exact simulated latent
+afferent phase plus a circular-mean neural-EEG phase offset estimated only in
+the first 30 seconds. This hidden reference is never passed to either tracker.
+The same-profile observed-versus-neural phase difference separately quantifies
+measurement error. Importantly, every carrier accepted by the frozen
+estimator is tracked; hidden correctness cannot exclude a difficult case.
+
+The low-noise anchor is fixed at 0.25. The smallest candidate high-noise level
+among `{0.50,0.75}` is frozen only if all predeclared gates pass: carrier
+coverage at least 0.80; accepted carrier accuracy at least 0.90; tracker
+actionability at least 0.80; at least 0.02-rad mean advantage in each expected
+direction; at least 0.05-rad summed crossover contrast; each direction positive
+in at least four of six structures; long-history reduction of observed-versus-
+neural error; coherent neural-to-latent phase transfer; finite rate-safe EEG;
+and exact zero field. This is a discovery gate and does not use a tACS outcome.
+
+The runner saves carrier/noise tables, all causal 125-ms tracker boundaries,
+context and structure summaries, the frozen candidate record with upstream
+hashes, provenance, representative multitaper PSD data, and seven PNG/PDF
+figures covering carrier robustness, phase-error profiles, the crossover,
+measurement attribution, structure directions, PSD evidence, and a temporal
+phase-error trace.
+
+Run on the workstation with sixteen physical-core MPI ranks:
+
+```bash
+export OMP_NUM_THREADS=1
+export HYDRA_FULL_ERROR=1
+
+mpiexec -n 16 --bind-to core --map-by core python \
+  experiments/ballnstick_analysis/run_ballnstick_h5_phase_tracker_tradeoff.py \
+  experiment.name=ballnstick_h5_phase_tracker_tradeoff_full \
+  experiment.seed=1 \
+  env=ballnstick \
+  analysis=ballnstick_h5_phase_tracker_tradeoff \
+  env.simulation.obs_win_len=1000 \
+  experiment.plot=true \
+  experiment.tqdm=false
+```
+
+Results are written to
+`../../results/<name>/h5_phase_tracker_tradeoff/`. Budget approximately
+20--35 minutes at sixteen physical-core MPI ranks based on the existing
+workstation H5-I0b timing; filesystem and MPI scaling can widen this estimate.
+Proceed to a new active H5-P2B response map only if the final line reports
+`H5-P2A phase-tracker trade-off: PASSED`. A negative result means this tested
+phase-tracking mechanism does not justify controller-profile learning.

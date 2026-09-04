@@ -1,0 +1,98 @@
+defaults:
+  - ballnstick_h5_multitaper_measurement_validation
+  - _self_
+
+# H5-P2A is a stimulation-free measurement/control-design study. It asks
+# whether biological phase diffusion and observation uncertainty create the
+# predeclared slow-versus-fast phase-tracker bias--variance crossover required
+# before another active H5 response-mapping experiment is justified.
+smoke_test: false
+smoke_context_limit: 0
+
+source_h5p1:
+  result_dir: ../../results/ballnstick_h5_response_mapping_full/h5_response_mapping
+  expected_sha256:
+    conclusion: 85a756c3ecc97e21e14e34355b354d8ac1b012cf9fc26b3713d1556793588a89
+    audit: 018ea29ea620c2d857c26285f1fa30a98a7601fb45b2a86314b36e2ff0f8cf38
+    screening: 88097727eb2b92a3342f03cfa96496a58f9dd64b7bd7c074053ab5fe9fc4afa9
+    metrics: 4bb3c427bc124577b7b34a0def6cd434e9c17269148cca868f2008fb0a93c8af
+    response_map: 11f501c8b9976362f4d2f2c36f94b6e1ef291d46e1f2fb9bd709cf9541f5f0fc
+    associations: 02a266d0f4247c57cd7d6df6eca6fd39db042b1b8dbc87baece79ef04e5c5551
+    provenance: 3c275c0487e6e39196cd800b078f959072ce6f7073548f8ce75d2bb9a082bb9c
+
+source_h5i0b:
+  result_dir: ../../results/ballnstick_h5_multitaper_measurement_validation_full/h5_multitaper_measurement_validation
+  expected_sha256:
+    conclusion: 5e158fca909651d7b6a234b248823f41fae72c30a36bd127ce712957ca4cfe5f
+    frozen_estimator: 8337268c41755e2dbf6513bfe7b33cf3e5ba90218e3bd5d45b5b2360fba85487
+    selection: 3d341002cf5d855953d20f5f8f0dcd257d63a6fd964ea3093a32c0b70bacded9
+    discovery_metrics: 29b2b32a3c21db9356cf37089c5275fd201007a1a53103af27531db2d4328920
+    discovery_summary: ff8477e01b3ca3035ee286de9e03959cbbdcf6edf896ebefdc051e4807bbce01
+    confirmation_metrics: b7a33736f2665efda4ebd2ce403a4c79170569c26e03c513af022ca5759a977b
+    inference: d7d71f133833a74c4b0e6b1a74610060595bf3f50f34452f4a115be4448f467b
+    provenance: 9e85ea6b2622cb3f541888024a3b7060a00412da085b26dfe1373ecfd1d629da
+
+timeline:
+  burn_in_steps: 1
+  # One persistent, stimulation-free baseline contains the frozen 30-s
+  # carrier/context record followed by an independent-in-time 8-s tracker
+  # evaluation tail. Compatibility stimulation/washout epochs remain sham.
+  baseline_steps: 38
+  stimulation_steps: 1
+  washout_steps: 1
+  block_ramp_ms: 0.0
+  stimulation_analysis_trim_ms: 0.0
+
+crossed_design:
+  n_structure_seeds: 6
+  n_history_seeds: 1
+  structure_seed_offset: 410000
+  history_seed_offset: 550000
+  phase_seed_offset: 560000
+  trial_seed_offset: 570000
+  noise_seed_offset: 620000
+
+states:
+  # Shared drive is fixed at one to isolate phase process noise from
+  # observation noise. Partial drive becomes a later robustness condition.
+  shared_drive_levels:
+    - label: full_shared_drive
+      shared_modulated_fraction: 1.0
+
+phase_tracker_tradeoff:
+  frozen_estimator: multitaper_pooled_evidence
+  predecision_duration_s: 30.0
+  evaluation_duration_s: 8.0
+  observation_noise_fractions: [0.25, 0.50, 0.75]
+  fixed_low_noise_fraction: 0.25
+  candidate_high_noise_fractions: [0.50, 0.75]
+  ar1_coefficient: 0.95
+  common_audit_interval_ms: 125.0
+  latent_transfer_calibration_history_ms: 1000.0
+  latent_transfer_calibration_interval_ms: 250.0
+  phase_actionability_resultant_to_rms: 0.03
+  tracker_profiles:
+    refresh_1000ms_250ms:
+      history_ms: 1000.0
+      update_interval_ms: 250.0
+    refresh_500ms_125ms:
+      history_ms: 500.0
+      update_interval_ms: 125.0
+  selection_preference: smallest_passing_high_noise_fraction
+
+criteria:
+  minimum_independent_structures: 6
+  minimum_contexts: 24
+  minimum_carrier_coverage_each_selected_noise: 0.80
+  minimum_accepted_carrier_accuracy_each_selected_noise: 0.90
+  minimum_tracker_actionable_fraction: 0.80
+  minimum_latent_transfer_coherence: 0.50
+  minimum_fast_advantage_high_diffusion_low_noise_rad: 0.02
+  minimum_slow_advantage_low_diffusion_high_noise_rad: 0.02
+  minimum_crossover_contrast_rad: 0.05
+  minimum_directional_structure_fraction: 0.6666666666666666
+  minimum_rate_safe_fraction: 1.0
+
+save_processed_eeg: false
+save_raw_eeg: false
+save_spikes: false
