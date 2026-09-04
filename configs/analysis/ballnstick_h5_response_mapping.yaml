@@ -1,0 +1,133 @@
+defaults:
+  - ballnstick_h5_multitaper_measurement_validation
+  - _self_
+
+# H5-P1 is a full-information response-mapping gate. It does not train a
+# deployable policy. It asks whether noisy predecision EEG contains information
+# that predicts which of two already-safe phase-maintenance profiles gives the
+# better expected neural-EEG endpoint.
+smoke_test: false
+smoke_context_limit: 0
+
+source_h5p0:
+  result_dir: ../../results/ballnstick_h5_controller_profile_feasibility_full/h5_controller_profile_feasibility
+  expected_sha256:
+    conclusion: 071e061e9a715d2d689f0637ed86fd941546969861f74796423dbc500d2c401b
+    audit: 5131faca5c93f259ea26d884b9af6cccef4a7b480c2b950fd7bf7601d001d3c2
+    screening: 4b1eb5b2a982990921a987bae205ac63cda919ed38a9ac1342dc0aaab084b57f
+    metrics: 6138a8588e0a81e64bedce72e6a9161430e661289b0e4fcc95f1749d8197bca2
+    provenance: 5057b4ff13738bdaf2bdc4aa379282902369111342e7ea3480ec31b8019dd771
+
+source_h5i0b:
+  result_dir: ../../results/ballnstick_h5_multitaper_measurement_validation_full/h5_multitaper_measurement_validation
+  expected_sha256:
+    conclusion: 5e158fca909651d7b6a234b248823f41fae72c30a36bd127ce712957ca4cfe5f
+    frozen_estimator: 8337268c41755e2dbf6513bfe7b33cf3e5ba90218e3bd5d45b5b2360fba85487
+    selection: 3d341002cf5d855953d20f5f8f0dcd257d63a6fd964ea3093a32c0b70bacded9
+    discovery_metrics: 29b2b32a3c21db9356cf37089c5275fd201007a1a53103af27531db2d4328920
+    discovery_summary: ff8477e01b3ca3035ee286de9e03959cbbdcf6edf896ebefdc051e4807bbce01
+    confirmation_metrics: b7a33736f2665efda4ebd2ce403a4c79170569c26e03c513af022ca5759a977b
+    inference: d7d71f133833a74c4b0e6b1a74610060595bf3f50f34452f4a115be4448f467b
+    provenance: 9e85ea6b2622cb3f541888024a3b7060a00412da085b26dfe1373ecfd1d629da
+
+# Exact H4-BW2 population-B target, embedded so the workstation needs only
+# the hash-locked H5-P0 and H5-I0b result directories. The source file SHA-256
+# is 67412b211172d894d7eb31673c7e32d32be4c36e3a4f23ad86f4f4f0c2543f41.
+frozen_target:
+  screening:
+    mean_log10_alpha: -20.79470927369282
+    sd_log10_alpha: 0.06335970226604679
+    upper_quantile: 0.95
+    upper_quantile_log10_alpha: -20.702992372161752
+    minimum_elevated_threshold_log10_alpha: -20.74470927369282
+  outcome:
+    mean_log10_alpha: -20.834968281097733
+    sd_log10_alpha: 0.07549217730220126
+  reference_E_firing_rate_hz: 3.2048611111111107
+  reference_I_firing_rate_hz: 7.601851851851852
+  target_is_population_reference_not_seed_specific: true
+  screening_and_outcome_durations_matched_separately: true
+  frozen_C1_threshold: 0.5180938906862573
+  screening_target_remains_frozen_from_D1R: true
+  outcome_target_calibrated_before_active_outcomes: true
+  outcome_duration_s: 8.0
+  source_sha256: 67412b211172d894d7eb31673c7e32d32be4c36e3a4f23ad86f4f4f0c2543f41
+
+timeline:
+  burn_in_steps: 1
+  # The carrier estimator was confirmed only for a complete 30-s baseline.
+  baseline_steps: 30
+  # Preserve the duration-matched H4 neural-EEG endpoint.
+  stimulation_steps: 8
+  washout_steps: 1
+  block_ramp_ms: 0.0
+  stimulation_analysis_trim_ms: 0.0
+
+crossed_design:
+  # Six independent structures provide an exploratory response map. Frequency,
+  # diffusion, shared-drive fraction, and futures are repeated conditions.
+  n_structure_seeds: 6
+  n_history_seeds: 1
+  n_future_continuations: 4
+  structure_seed_offset: 402000
+  history_seed_offset: 500000
+  phase_seed_offset: 510000
+  trial_seed_offset: 520000
+  future_seed_offset: 530000
+
+observation_noise:
+  enabled: true
+  rms_fraction_of_baseline_neural_eeg: 0.25
+  ar1_coefficient: 0.95
+  seed_offset: 600000
+
+actions:
+  amplitude_v_per_m: 0.2
+  controller_modes:
+    - sham
+    - refresh_1000ms_250ms
+    - refresh_500ms_125ms
+
+response_mapping:
+  frozen_estimator: multitaper_pooled_evidence
+  safe_abstention_action: sham
+  h4_reference_profile: refresh_500ms_125ms
+  conservative_profile: refresh_1000ms_250ms
+  responsive_profile: refresh_500ms_125ms
+  practical_context_margin_log10: 0.01
+  association_permutations: 10000
+  association_fdr_alpha: 0.10
+  association_seed_offset: 610000
+
+criteria:
+  minimum_screened_contexts: 48
+  minimum_eligible_contexts: 32
+  minimum_structure_seeds: 6
+  minimum_future_continuations: 4
+  minimum_carrier_identification_coverage: 0.80
+  minimum_accepted_carrier_accuracy: 0.90
+  minimum_contexts_per_state_axis_level: 12
+  minimum_contexts_per_optimal_profile: 4
+  minimum_structures_per_optimal_profile: 3
+  minimum_practical_contexts_per_profile: 3
+  minimum_practical_structures_per_profile: 2
+  minimum_realized_winner_agreement_fraction: 0.75
+  minimum_oracle_advantage_over_best_fixed_log10: 0.01
+  minimum_oracle_advantage_over_h4_profile_log10: 0.01
+  minimum_shared_drive_response_interaction_log10: 0.005
+  minimum_positive_structure_oracle_fraction: 0.6666666666666666
+  minimum_shared_drive_classification_balanced_accuracy: 0.65
+  minimum_response_feature_abs_spearman: 0.30
+  maximum_response_feature_fdr_q: 0.10
+  minimum_response_feature_structure_sign_fraction: 0.6666666666666666
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_causal_timing_error_ms: 1.0e-9
+  maximum_field_boundary_discontinuity_v_per_m: 1.0e-10
+  maximum_frequency_correction_hz: 2.000000001
+  minimum_common_phase_estimate_actionable_fraction: 0.80
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+
+save_raw_eeg: false
+save_spikes: false
+save_representative_spectra: true

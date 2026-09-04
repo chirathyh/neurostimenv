@@ -2432,3 +2432,74 @@ Results are written to
 contains at most 144 stimulation-free network episodes: 48 discovery and 96
 confirmation. A failed discovery gate is a valid stopping result and must not
 be rescued by changing thresholds after inspecting these outcomes.
+
+## Experiment 32: H5-P1 frozen-carrier controller response mapping
+
+H5-I0b removed the discrete carrier-measurement bottleneck, but it did not
+repair the two response-opportunity failures in H5-P0. H5-P1 therefore remains
+a full-information system-identification experiment and does not train a
+machine-learning policy. It asks whether better causal carrier measurement
+reveals a practically important, repeatable context-by-controller interaction
+that was obscured in H5-P0.
+
+The state generator remains exactly the mean-rate-matched 9/11-Hz by
+`D={0.5,2.0}` rad2/s by `q={0.5,1.0}` shared-afferent grid. Each context starts
+with one second of burn-in and 30 seconds of stimulation-free EEG. The frozen
+H5-I0b DPSS multitaper estimator selects 9 or 11 Hz using noisy EEG only. Its
+evidence, margin, and temporal-support rejection rules are unchanged. A
+rejected carrier, absent elevated-alpha screen, nonactionable recent phase, or
+unsafe baseline rate invokes the prespecified sham fallback; hidden generator
+frequency is used only to audit measurement accuracy.
+
+Eligible contexts are replayed through four independent paired postdecision
+futures. Every future compares sham, the conservative 1-s-history/250-ms-update
+tracker, and the H4-confirmed responsive 0.5-s-history/125-ms-update tracker.
+Both active arms use the EEG-selected carrier, a 0.2-V/m axial field, the same
+pi-relative phase target and 250-ms correction horizon, and one fixed
+controller profile for the complete eight-second intervention. Controller
+updates use only preceding noisy EEG and preserve waveform continuity. The
+efficacy endpoint is ideal-neural-EEG distance to the frozen duration-matched
+population-B target; a one-second zero-field washout audits reversibility.
+
+Six independent circuit structures provide 48 screened contexts. Frequency,
+diffusion, shared-drive level, and the four future continuations are repeats;
+structure remains the inferential unit. Before policy development, H5-P1
+requires both profiles to win practically in multiple contexts and structures,
+the post-hoc expected-outcome oracle to improve by at least 0.01 log10 over
+both the best fixed profile and the frozen H4 responsive profile, at least 75%
+future-wise winner agreement, and positive opportunity across structures.
+Shared drive must remain observable from predecision EEG. Associations between
+the predeclared phase-invariant EEG features and the paired relative response
+use within-structure centering, structure-preserving permutation tests, and
+Benjamini--Hochberg FDR. Any selected response feature is exploratory and must
+be frozen for later policy development and disjoint policy confirmation.
+
+The runner saves complete screening, future-level, expected-response,
+controller-update, trajectory, structure, observability, feature-association,
+provenance, and conclusion tables. It also saves PNG/PDF carrier-screening,
+representative PSD, EEG-context, controller-response, interaction,
+structure-opportunity, future-reliability, and phase-tracking figures.
+
+Run on the workstation with sixteen physical-core MPI ranks:
+
+```bash
+export OMP_NUM_THREADS=1
+export HYDRA_FULL_ERROR=1
+
+mpiexec -n 16 --bind-to core --map-by core python \
+  experiments/ballnstick_analysis/run_ballnstick_h5_response_mapping.py \
+  experiment.name=ballnstick_h5_response_mapping_full \
+  experiment.seed=1 \
+  env=ballnstick \
+  analysis=ballnstick_h5_response_mapping \
+  env.simulation.obs_win_len=1000 \
+  experiment.plot=true \
+  experiment.tqdm=false
+```
+
+Results are written to `../../results/<name>/h5_response_mapping/`. If all 48
+contexts enroll, the run contains 576 full network episodes: one prospective
+sham screen plus eleven additional paired counterfactual replays per context.
+At sixteen workstation ranks, budget approximately 8--10 hours. Exclusions
+reduce the active replay count. A failed H5-P1 gate is a valid stopping result
+and does not establish that a learned policy is needed.

@@ -135,6 +135,8 @@ Run commands from this repository root.
   `experiments/ballnstick_analysis/run_ballnstick_h5_iaf_measurement_validation.py`
 - H5-I0b multitaper pooled-evidence carrier measurement validation:
   `experiments/ballnstick_analysis/run_ballnstick_h5_multitaper_measurement_validation.py`
+- H5-P1 frozen-carrier full-information controller response mapping:
+  `experiments/ballnstick_analysis/run_ballnstick_h5_response_mapping.py`
 - Frozen EEG phase-increment observability confirmation (D0b):
   `experiments/ballnstick_analysis/run_ballnstick_phase_increment_confirmation.py`
 - Phase-diffusion full-information action mapping (D1):
@@ -368,6 +370,25 @@ temporal evidence, configuration/provenance, inference tables, and PNG/PDF
 figures. Stop before confirmation if discovery fails. H5-I0b applies no tACS,
 does not validate clinical IAF, and cannot establish H5 or justify policy
 training unless the complete frozen confirmation gate passes.
+
+For H5-P1, hash-lock both the negative H5-P0 opportunity result and positive
+H5-I0b measurement result. Keep the H5-I0b multitaper estimator, every
+estimator threshold, the 30-s noisy predecision EEG, H4 population-B target,
+9/11-Hz by low/high-diffusion by partial/full-shared-drive generator, 0.2-V/m
+field, axial montage, and pi-relative phase target frozen. An estimator
+abstention or failed prestimulation phenotype/safety screen must map to sham;
+hidden carrier correctness cannot determine enrollment. On six new structures
+with four paired futures, compare exactly sham, the 1-s/250-ms conservative
+tracker, and the H4-confirmed 0.5-s/125-ms responsive tracker. Use observed
+noisy EEG for carrier selection, phase tracking, and context; use ideal neural
+EEG only for efficacy. Require practical optimal-profile crossovers, expected
+oracle advantage over both the best fixed and frozen H4 profiles, paired-future
+winner reliability, cross-structure opportunity, shared-drive observability,
+and an FDR-controlled structure-preserving association between a predeclared
+phase-invariant EEG feature and relative controller response. H5-P1 is
+exploratory full-information system identification. It neither trains a
+deployable policy nor establishes H5; a failed opportunity gate stops policy
+development rather than licensing post-hoc generator or threshold changes.
 
 For D0b, treat the failed D0 global-resultant endpoint as discovery only. Load
 and hash-lock the D0 conclusion, generator, and EEG table; freeze the one-step
