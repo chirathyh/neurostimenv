@@ -2602,3 +2602,94 @@ workstation H5-I0b timing; filesystem and MPI scaling can widen this estimate.
 Proceed to a new active H5-P2B response map only if the final line reports
 `H5-P2A phase-tracker trade-off: PASSED`. A negative result means this tested
 phase-tracking mechanism does not justify controller-profile learning.
+
+## Experiment 34: H5-P2B active phase-tracker response mapping
+
+H5-P2A established a stimulation-free bias--variance crossover: the
+0.5-s/125-ms tracker was preferable when phase diffusion was high and sensor
+noise was low, whereas the 1-s/250-ms tracker was preferable when diffusion
+was low and sensor noise was higher. H5-P2B asks the necessary causal question
+that H5-P2A could not answer: does that measurement-layer trade-off transfer
+to a meaningful difference in the neural response to tACS? This is still
+full-information system identification. It does not train a policy.
+
+The generator is frozen at a fully shared (`q=1.0`), mean-rate-matched
+rhythmic afferent drive, crossed over carrier `{9,11}` Hz and phase diffusion
+`D={0.5,2.0}` rad2/s. The measurement layer is crossed independently at the
+H5-P2A-selected AR(1) noise fractions `{0.25,0.50}` with coefficient 0.95.
+For each structure/frequency/diffusion combination, both noise conditions use
+the same neural generator seeds, future seeds, and standardized noise path;
+only the path's RMS scale changes. This paired design isolates measurement
+severity from biological process noise.
+
+Each context has one second of burn-in and 30 seconds of stimulation-free
+observed EEG. The frozen H5-I0b DPSS multitaper method selects 9 or 11 Hz. The
+prospective screen has no access to stimulation outcomes, hidden carrier, or
+hidden diffusion. Estimator abstention, failure of the frozen elevated-alpha
+screen, nonactionable recent phase, or unsafe baseline rate invokes sham. An
+accepted but incorrect carrier is not removed after comparison with the hidden
+label. Predecision phase-invariant spectral features are augmented by causal
+tracker innovations, resultants, and fast--slow phase disagreement, all
+computed from the preceding noisy EEG only.
+
+Every eligible context is replayed over four independent paired future
+continuations. Each future compares exactly:
+
+- sham;
+- the conservative 1-s phase-history/250-ms-update controller; and
+- the responsive 0.5-s phase-history/125-ms-update controller.
+
+The two active controllers use the same EEG-selected carrier, 0.2-V/m axial
+field, pi-relative target, one-second initialization, and 250-ms bounded
+correction horizon. Each controller profile remains fixed throughout the
+eight-second intervention; updates use only preceding observed EEG and the
+field waveform remains continuous. A one-second zero-field washout audits
+field removal. Efficacy is evaluated from ideal neural-only EEG as distance to
+the frozen eight-second population-B alpha-power target, while noisy EEG is
+the deployable measurement supplied to signal processing.
+
+Six new independent circuit structures yield 48 screened contexts before any
+exclusion. Four futures and the frequency/diffusion/noise conditions are
+paired repeats; circuit structure remains the inferential unit. Advancement
+requires both controller profiles to have practical optimal contexts across
+multiple structures, fast-controller benefit in the high-diffusion/low-noise
+corner, slow-controller benefit in the low-diffusion/high-noise corner, a
+practical crossover and post-hoc expected oracle advantage over the best fixed
+profile, at least 75% future-wise optimal-profile agreement, cross-structure
+support, and alignment between causal phase-error advantage and neural tACS
+response. Candidate EEG response associations use within-structure centering,
+structure-preserving permutations, and Benjamini--Hochberg FDR. At least one
+predeclared noisy-predecision-EEG feature must pass this exploratory mapping
+gate before any policy is developed.
+
+The runner saves prospective screening, carrier-by-noise, future-level and
+expected response maps, one-second neural-EEG trajectories, every causal phase
+update, structure summaries, feature associations, frozen-source hashes,
+provenance, and seven PNG/PDF figures including the representative PSD and the
+active controller-response crossover.
+
+Run on the workstation with sixteen physical-core MPI ranks:
+
+```bash
+export OMP_NUM_THREADS=1
+export HYDRA_FULL_ERROR=1
+
+mpiexec -n 16 --bind-to core --map-by core python \
+  experiments/ballnstick_analysis/run_ballnstick_h5_phase_tracker_response_mapping.py \
+  experiment.name=ballnstick_h5_phase_tracker_response_mapping_full \
+  experiment.seed=1 \
+  env=ballnstick \
+  analysis=ballnstick_h5_phase_tracker_response_mapping \
+  env.simulation.obs_win_len=1000 \
+  experiment.plot=true \
+  experiment.tqdm=false
+```
+
+Results are written to
+`../../results/<name>/h5_phase_tracker_response_mapping/`. If all 48 contexts
+enroll, the design contains 576 full network episodes: one screen/sham episode
+and eleven additional action/future replays per context. Budget approximately
+8--10 hours at sixteen physical-core MPI ranks, comparable to H5-P1. A failed
+H5-P2B gate is evidence that the P2A estimator crossover did not create a
+reliable active-control learning opportunity and is not permission to tune a
+policy on hidden labels or the same outcomes.

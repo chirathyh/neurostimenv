@@ -139,6 +139,8 @@ Run commands from this repository root.
   `experiments/ballnstick_analysis/run_ballnstick_h5_response_mapping.py`
 - H5-P2A stimulation-free causal phase-tracker trade-off discovery:
   `experiments/ballnstick_analysis/run_ballnstick_h5_phase_tracker_tradeoff.py`
+- H5-P2B active phase-tracker response mapping:
+  `experiments/ballnstick_analysis/run_ballnstick_h5_phase_tracker_response_mapping.py`
 - Frozen EEG phase-increment observability confirmation (D0b):
   `experiments/ballnstick_analysis/run_ballnstick_phase_increment_confirmation.py`
 - Phase-diffusion full-information action mapping (D1):
@@ -413,6 +415,27 @@ coherence, and safety gates. H5-P2A is stimulation-free controller-design
 discovery, not evidence for tACS efficacy, a learned policy, clinical sensor
 performance, or H5. Only a pass freezes conditions for a disjoint active
 response map.
+
+For H5-P2B, hash-lock the exact negative H5-P1 response map and positive
+H5-P2A trade-off result. Freeze the H5-P2A `q=1.0`, 9/11-Hz,
+`D={0.5,2.0}` by observation-noise `{0.25,0.50}` grid and use six new
+independent structures. Every screened context must use the frozen H5-I0b
+multitaper carrier estimator on 30 seconds of noisy predecision EEG; an
+abstention, phenotype failure, phase failure, or unsafe baseline maps to sham,
+and accepted incorrect carriers remain enrolled. Compare exactly sham, the
+1-s/250-ms conservative tracker, and the 0.5-s/125-ms responsive tracker over
+four paired eight-second futures, with both active profiles fixed at 0.2 V/m,
+axial montage, and pi-relative phase. Pair the neural trajectory and the
+standardized AR(1) noise realization across the two noise severities. Use
+observed EEG for carrier selection, phase tracking, and candidate context
+features, but ideal neural-only EEG for the frozen population-B efficacy
+endpoint. Require the active-response crossover in both target corners,
+cross-structure support, practical oracle advantage over the best fixed
+profile, future-wise winner reproducibility, phase-error-to-response transfer,
+an FDR-controlled predecision EEG feature association, causality, continuity,
+safety, and field removal before policy development. H5-P2B is exploratory
+full-information system identification: it does not fit a policy, establish
+H5, or validate clinical EEG/tACS.
 
 For D0b, treat the failed D0 global-resultant endpoint as discovery only. Load
 and hash-lock the D0 conclusion, generator, and EEG table; freeze the one-step

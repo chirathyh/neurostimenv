@@ -1,0 +1,125 @@
+defaults:
+  - ballnstick_h5_response_mapping
+  - _self_
+
+# H5-P2B is an active, full-information response map. It tests whether the
+# measurement-layer controller crossover frozen by H5-P2A transfers to the
+# neural tACS endpoint. It does not fit or confirm a deployable ML policy.
+smoke_test: false
+smoke_context_limit: 0
+
+source_h5p1:
+  result_dir: ../../results/ballnstick_h5_response_mapping_full/h5_response_mapping
+  expected_sha256:
+    conclusion: 85a756c3ecc97e21e14e34355b354d8ac1b012cf9fc26b3713d1556793588a89
+    audit: 018ea29ea620c2d857c26285f1fa30a98a7601fb45b2a86314b36e2ff0f8cf38
+    screening: 88097727eb2b92a3342f03cfa96496a58f9dd64b7bd7c074053ab5fe9fc4afa9
+    metrics: 4bb3c427bc124577b7b34a0def6cd434e9c17269148cca868f2008fb0a93c8af
+    response_map: 11f501c8b9976362f4d2f2c36f94b6e1ef291d46e1f2fb9bd709cf9541f5f0fc
+    associations: 02a266d0f4247c57cd7d6df6eca6fd39db042b1b8dbc87baece79ef04e5c5551
+    provenance: 3c275c0487e6e39196cd800b078f959072ce6f7073548f8ce75d2bb9a082bb9c
+
+source_h5p2a:
+  result_dir: ../../results/ballnstick_h5_phase_tracker_tradeoff_full/h5_phase_tracker_tradeoff
+  expected_sha256:
+    conclusion: ed1f62a38555a0e8b0643bd8b3b1e258d1db8ec8c30d13d346605e934ac01c1f
+    frozen_conditions: 2e81b017990f9d106c42743110cdc8f96444034b8e68d09e15dac7580d7d3c35
+    protocol: e779888c2a69d82c68dfbe01f5ebd933a6b3b3210e78474801c0ebe4e44cefcd
+    candidate_selection: a2c668c9e1ff8a23a029aeefc54e87cad7eeb5c2a465373f50e06a03194ebe6f
+    carrier: 0425da62575edbd690cf601c092b82340bfbcc87561a13316e9895c3518092ed
+    tracking: 53ee8c71c0759ac0cddfab54512b715104d8bb8836a42c874908a761b3245833
+    context_summary: 761c82d440aa38e9b0f952da575c9fdb0183d68b6ea30850d0aad2f85730a3ef
+    advantage: bebbfc6bd7b02595a5fa66b4fe7e97cc56ca2a5f5b9d5636e66511b6b10336a0
+    structure: a6b61ae0029ee64195b5f9c69e84085cd4ca66bb7b06fd6b6d0433c24ff8ba0f
+
+states:
+  # P2A selected q=1.0 to isolate biological process noise from sensor noise.
+  shared_drive_levels:
+    - label: full_shared_drive
+      shared_modulated_fraction: 1.0
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 30
+  stimulation_steps: 8
+  washout_steps: 1
+  block_ramp_ms: 0.0
+  stimulation_analysis_trim_ms: 0.0
+
+crossed_design:
+  n_structure_seeds: 6
+  n_history_seeds: 1
+  n_future_continuations: 4
+  structure_seed_offset: 420000
+  history_seed_offset: 630000
+  phase_seed_offset: 640000
+  trial_seed_offset: 650000
+  future_seed_offset: 660000
+
+observation_noise:
+  enabled: true
+  # Overridden per crossed context, but retained here as the low-noise anchor.
+  rms_fraction_of_baseline_neural_eeg: 0.25
+  ar1_coefficient: 0.95
+  seed_offset: 700000
+
+measurement_conditions:
+  - label: low_observation_noise
+    rms_fraction_of_baseline_neural_eeg: 0.25
+  - label: high_observation_noise
+    rms_fraction_of_baseline_neural_eeg: 0.50
+
+actions:
+  amplitude_v_per_m: 0.2
+  controller_modes:
+    - sham
+    - refresh_1000ms_250ms
+    - refresh_500ms_125ms
+
+response_mapping:
+  frozen_estimator: multitaper_pooled_evidence
+  safe_abstention_action: sham
+  h4_reference_profile: refresh_500ms_125ms
+  conservative_profile: refresh_1000ms_250ms
+  responsive_profile: refresh_500ms_125ms
+  practical_context_margin_log10: 0.01
+  predecision_tracker_diagnostic_tail_s: 8.0
+  predecision_common_interval_ms: 125.0
+  association_permutations: 10000
+  association_fdr_alpha: 0.10
+  association_seed_offset: 750000
+
+criteria:
+  minimum_screened_contexts: 48
+  minimum_eligible_contexts: 36
+  minimum_structure_seeds: 6
+  minimum_future_continuations: 4
+  minimum_carrier_identification_coverage_each_noise: 0.80
+  minimum_accepted_carrier_accuracy_each_noise: 0.90
+  minimum_target_corner_contexts: 8
+  minimum_contexts_per_optimal_profile: 4
+  minimum_structures_per_optimal_profile: 3
+  minimum_practical_contexts_per_profile: 3
+  minimum_practical_structures_per_profile: 2
+  minimum_fast_advantage_high_diffusion_low_noise_log10: 0.01
+  minimum_slow_advantage_low_diffusion_high_noise_log10: 0.01
+  minimum_response_crossover_log10: 0.02
+  minimum_target_direction_structure_fraction: 0.6666666666666666
+  minimum_realized_winner_agreement_fraction: 0.75
+  minimum_oracle_advantage_over_best_fixed_log10: 0.01
+  minimum_positive_structure_oracle_fraction: 0.6666666666666666
+  minimum_phase_response_spearman: 0.30
+  minimum_response_feature_abs_spearman: 0.30
+  maximum_response_feature_fdr_q: 0.10
+  minimum_response_feature_structure_sign_fraction: 0.6666666666666666
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_causal_timing_error_ms: 1.0e-9
+  maximum_field_boundary_discontinuity_v_per_m: 1.0e-10
+  maximum_frequency_correction_hz: 2.000000001
+  minimum_common_phase_estimate_actionable_fraction: 0.80
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+
+save_raw_eeg: false
+save_spikes: false
+save_representative_spectra: true

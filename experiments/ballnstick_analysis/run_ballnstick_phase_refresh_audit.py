@@ -632,7 +632,11 @@ def _one_second_rows(
     trim_samples = int(round(
         float(cfg.analysis.timeline.stimulation_analysis_trim_ms) / dt_ms
     ))
-    central = raw[trim_samples:-trim_samples]
+    # ``array[0:-0]`` is empty, so preserve the complete epoch when no trim is
+    # configured. This trajectory-only bug did not affect whole-epoch primary
+    # endpoints, but silently removed all one-second manuscript rows whenever
+    # stimulation_analysis_trim_ms was zero.
+    central = raw if trim_samples == 0 else raw[trim_samples:-trim_samples]
     samples = int(round(1000.0 / dt_ms))
     if central.size % samples:
         raise RuntimeError("D1-R endpoint does not split into one-second windows.")
