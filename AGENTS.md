@@ -141,6 +141,8 @@ Run commands from this repository root.
   `experiments/ballnstick_analysis/run_ballnstick_h5_phase_tracker_tradeoff.py`
 - H5-P2B active phase-tracker response mapping:
   `experiments/ballnstick_analysis/run_ballnstick_h5_phase_tracker_response_mapping.py`
+- H5-Dose-P0 bounded contextual dose-opportunity mapping:
+  `experiments/ballnstick_analysis/run_ballnstick_h5_dose_opportunity.py`
 - Frozen EEG phase-increment observability confirmation (D0b):
   `experiments/ballnstick_analysis/run_ballnstick_phase_increment_confirmation.py`
 - Phase-diffusion full-information action mapping (D1):
@@ -436,6 +438,26 @@ an FDR-controlled predecision EEG feature association, causality, continuity,
 safety, and field removal before policy development. H5-P2B is exploratory
 full-information system identification: it does not fit a policy, establish
 H5, or validate clinical EEG/tACS.
+
+For H5-Dose-P0, hash-lock the completed negative H5-P2B map and retain the
+positive H5-I0b carrier estimator and H4-confirmed 0.5-s-history/125-ms-update
+phase controller without retuning. Fix `D=0.5 rad^2/s`, modulation depth 0.04,
+and carrier `{9,11}` Hz; cross only the shared rhythmically modulated afferent
+fraction `q={0.5,1.0}`. Compare sham and constant `{0.1,0.2,0.4}`-V/m doses at
+the same EEG-selected carrier, pi-relative phase target, axial montage, and
+causal controller. Use three new structures and four paired continuations per
+context. Analyze the central eight seconds of a nine-second ramped stimulation
+block after 30 seconds of prestimulation ideal neural EEG. Evaluate expected
+dose crossovers, practical oracle headroom, and a prespecified two-future
+selection/two-future evaluation split; do not use an in-sample minimum alone.
+The one-feature LOSO dose threshold is an exploratory observability audit, not
+a trained or confirmed policy. Record ideal neural EEG, total dipole,
+representative soma/apical voltage and membrane currents, spike timing, rates,
+orientation, exact field removal, and physiological washout separately so an
+EEG-power effect is not automatically called desynchronization. If no
+practical cross-structure dose opportunity survives the future split, stop
+before policy development. These tissue-field amplitudes are simulator
+settings, not clinical safety prescriptions.
 
 For D0b, treat the failed D0 global-resultant endpoint as discovery only. Load
 and hash-lock the D0 conclusion, generator, and EEG table; freeze the one-step

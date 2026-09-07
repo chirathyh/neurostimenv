@@ -706,6 +706,12 @@ def _simulate_controller_episode(
             ),
             "history_noise_seed": int(history_noise_seed),
             "future_noise_seed": int(future_noise_seed),
+            # Hash the generated unit path itself. Reconstructing it later as
+            # (observed - neural) / scale can differ at the last floating-point
+            # bits when the same path is viewed at different noise scales.
+            "unit_noise_sha256": hashlib.sha256(
+                np.asarray(unit_noise, dtype="<f8").tobytes()
+            ).hexdigest(),
             "observed_baseline_sha256": hashlib.sha256(
                 observed_baseline.astype(np.float64).tobytes()
             ).hexdigest(),

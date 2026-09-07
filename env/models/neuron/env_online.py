@@ -122,6 +122,12 @@ class OnlineNeuronEnv(gym.Env):
             temperature_mode=str(
                 online_cfg.get("temperature_mode", "configured")
             ),
+            record_representative_state=bool(
+                online_cfg.get("record_representative_state", False)
+            ),
+            representative_state_interval_ms=float(
+                online_cfg.get("representative_state_interval_ms", 1.0)
+            ),
         )
 
     def _parse_action(

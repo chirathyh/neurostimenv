@@ -15,6 +15,14 @@ online:
   # "configured" sets global h.celsius explicitly. "legacy_default" exists
   # only to reproduce runs made when LFPy 2.3 left h.celsius at 6.3 C.
   temperature_mode: configured
+  # Optional fixed-step state audit for the globally lowest-GID E and I cell.
+  # Disabled by default because scientific dose-mechanism experiments are the
+  # only runs that need representative voltage/current traces.
+  record_representative_state: false
+  # 1 ms (1 kHz) resolves the 9/11-Hz mechanism, divides 125-ms controller
+  # blocks exactly, and avoids an expensive
+  # Python attribute audit at all 16,000 integration steps per second.
+  representative_state_interval_ms: 1.0
   points_per_electrode: 5
   field_model: inf
   ramp_ms: 0.0

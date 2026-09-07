@@ -2693,3 +2693,96 @@ and eleven additional action/future replays per context. Budget approximately
 H5-P2B gate is evidence that the P2A estimator crossover did not create a
 reliable active-control learning opportunity and is not permission to tune a
 policy on hidden labels or the same outcomes.
+
+## Experiment 35: H5-Dose-P0 bounded contextual dose opportunity
+
+The negative H5-P2B result showed that selecting between the conservative and
+responsive phase trackers provides too little active-response headroom for a
+useful learner. H5-Dose-P0 changes the action, not the classifier: it freezes
+the H4-confirmed responsive controller and asks whether field amplitude has a
+reproducible context-dependent dose--response. This is a bounded mechanism and
+full-information feasibility map, not a policy-training or H5 confirmation
+experiment.
+
+The biological state manipulation remains external to the actuator. Every
+background synapse retains its independent conditionally Poisson event stream,
+but either one half or all afferents participate in a shared mean-rate-matched
+rhythm (`q={0.5,1.0}`) at modulation depth 0.04. Carrier is crossed at 9 and
+11 Hz; phase diffusion is fixed at `D=0.5 rad2/s` to avoid creating an
+unnecessarily large factorial design. Thus `q` changes the aggregate coherent
+afferent component, approximately `q*m`, and is not an intrinsic neuronal
+susceptibility or clinical diagnosis.
+
+After one second of burn-in, 30 seconds of stimulation-free ideal neural EEG
+feed the frozen H5-I0b multitaper carrier estimator and the predeclared
+phenotype/phase screen. No active outcome, spike, hidden carrier, hidden `q`,
+or seed-specific B simulation may determine eligibility. An ineligible or
+abstaining context maps to sham. Every eligible context is replayed across four
+independent paired postdecision futures under exactly four actions:
+
+- sham (`0 V/m`);
+- `0.1 V/m`;
+- `0.2 V/m`; and
+- `0.4 V/m`.
+
+Every active action uses the same frozen 0.5-s phase history, 125-ms update,
+250-ms bounded correction horizon, EEG-selected carrier, pi-relative phase
+target, and axial uniform field. A single dose remains fixed for the entire
+nine-second intervention. A 0.5-s onset and offset ramp are excluded, leaving
+the central eight seconds as the endpoint matched to the frozen population-B
+target. Two seconds of zero-field washout follow.
+
+Three new circuit structures crossed with two carriers and two `q` levels give
+12 contexts. Four actions by four futures yield 192 main network episodes if
+all contexts enroll; a single transverse 0.4-V/m episode is an orientation
+audit. Futures 1--2 select the preferred dose and futures 3--4 evaluate that
+choice, then the split is reversed. This prevents an empirical oracle from
+being selected and evaluated on the same stochastic outcomes. Circuit
+structure is the inferential unit; frequencies, `q` levels, and futures are
+paired repeats.
+
+The primary opportunity gate requires consequential optimal-dose reversals
+across contexts, structures, and both shared-drive levels; mean oracle
+headroom of at least 0.01 log-distance over the strongest best fixed dose; and
+at least 0.01 held-out-future advantage with cross-structure support. A
+leave-one-structure-out threshold on one predeclared phase-invariant EEG
+feature is retained only as an exploratory observability audit. A preferred
+0.02 headroom target is advisory rather than a gate. No biological meaning is
+assigned to 0.01 without later calibration.
+
+The mechanism audit distinguishes three possibilities. Exact Fourier-vector
+decomposition separates destructive interaction with the ongoing neural EEG
+dipole from the induced coherent component. Total current dipole plus
+representative E/I soma and distal-apical voltages/currents verify field
+polarization. Spike timing and firing rates test whether spectral suppression
+also reflects network timing rather than only population-current
+cancellation. Exact zero field after the action and stochastic physiological
+washout recovery are reported separately. The 0.4-V/m arm receives the same
+causality, waveform-continuity, rate, and orientation audits as weaker doses.
+
+Run on the workstation with sixteen physical-core MPI ranks:
+
+```bash
+export OMP_NUM_THREADS=1
+export HYDRA_FULL_ERROR=1
+
+mpiexec -n 16 --bind-to core --map-by core python \
+  experiments/ballnstick_analysis/run_ballnstick_h5_dose_opportunity.py \
+  experiment.name=ballnstick_h5_dose_opportunity_full \
+  experiment.seed=1 \
+  env=ballnstick \
+  analysis=ballnstick_h5_dose_opportunity \
+  env.simulation.obs_win_len=1000 \
+  experiment.plot=true \
+  experiment.tqdm=false
+```
+
+Results are written to
+`../../results/<name>/h5_dose_opportunity/`. The runner saves prospective
+screening, future-level and expected dose maps, the independent-future split,
+the exploratory LOSO threshold audit, EEG and current-dipole decompositions,
+representative membrane traces, phase updates, orientation/safety tables,
+frozen-source hashes, and PNG/PDF figures. Continue to policy development only
+if the final contextual dose opportunity gate passes; otherwise retain the
+negative result and consider at most one separately declared biological
+sensitivity extension.

@@ -64,6 +64,8 @@ class OnlineNetworkEnv(NetworkEnv):
         self._online_probes: list[Any] = []
         self._online_transforms: list[np.ndarray] = []
         self._online_segments: list[Any] = []
+        self._online_representative_sites: list[dict[str, Any]] = []
+        self._online_representative_stride_steps = 1
         self._online_cvode = None
         self._online_integration_method = "manual_fadvance"
 
@@ -78,6 +80,8 @@ class OnlineNetworkEnv(NetworkEnv):
         comm,
         max_step_ms: float = 10.0,
         temperature_mode: str = "configured",
+        record_representative_state: bool = False,
+        representative_state_interval_ms: float | None = None,
     ) -> None:
         """Initialise the network once without running the full episode.
 
@@ -147,6 +151,23 @@ class OnlineNetworkEnv(NetworkEnv):
                     "Probe transformations disagree on local segment count."
                 )
 
+        self._online_representative_sites = []
+        if bool(record_representative_state):
+            requested_interval = (
+                float(self.dt) if representative_state_interval_ms is None
+                else float(representative_state_interval_ms)
+            )
+            stride = int(round(requested_interval / float(self.dt)))
+            if stride < 1 or not np.isclose(
+                stride * float(self.dt), requested_interval, atol=1.0e-12
+            ):
+                raise ValueError(
+                    "representative_state_interval_ms must be a positive "
+                    "integer multiple of the simulator dt."
+                )
+            self._online_representative_stride_steps = stride
+            self._prepare_representative_sites()
+
         self.pc.set_maxstep(float(max_step_ms))
         neuron.h.dt = float(self.dt)
         # LFPy 2.3 Network.simulate stores Network.celsius but, in the version
@@ -213,6 +234,12 @@ class OnlineNetworkEnv(NetworkEnv):
             "h_t_ms": self.current_time_ms,
             "local_cell_count": int(local_cells),
             "local_segment_count": int(len(self._online_segments)),
+            "local_representative_site_count": int(
+                len(self._online_representative_sites)
+            ),
+            "representative_state_interval_ms": float(
+                self._online_representative_stride_steps * self.dt
+            ),
             "i_membrane_ref_available": bool(imem_refs_available),
             "spike_vector_sizes": spike_vector_sizes,
             "fast_imem_enabled": bool(self._online_cvode.use_fast_imem()),
@@ -221,6 +248,115 @@ class OnlineNetworkEnv(NetworkEnv):
             "effective_h_celsius": float(neuron.h.celsius),
             "temperature_mode": self._online_temperature_mode,
         }
+
+    @staticmethod
+    def _section_by_label(cell: Any, label: str):
+        """Return the first cell section whose HOC name contains ``label``."""
+        sections = getattr(cell, "allseclist", None)
+        if sections is None:
+            return None
+        for section in sections:
+            if str(label).lower() in str(section.name()).lower():
+                return section
+        return None
+
+    def _prepare_representative_sites(self) -> None:
+        """Select the globally lowest-GID E and I cell for optional auditing.
+
+        The sites are sampled manually inside the fixed-step loop.  This avoids
+        attaching new ``Vector.record`` objects after ``finitialize()``, which
+        is unsafe for the persistent LFPy recorders under NEURON 8.2.3.
+        """
+        local_minima: dict[str, int | None] = {}
+        for population_name in self.population_names:
+            gids = list(getattr(self.populations[population_name], "gids", []))
+            local_minima[str(population_name)] = (
+                min(int(gid) for gid in gids) if gids else None
+            )
+        gathered = self._online_comm.allgather(local_minima)
+        global_minima = {
+            str(population_name): min(
+                int(rank_values[str(population_name)])
+                for rank_values in gathered
+                if rank_values[str(population_name)] is not None
+            )
+            for population_name in self.population_names
+        }
+
+        for population_name in self.population_names:
+            population = self.populations[population_name]
+            cells = list(getattr(population, "cells", None) or [])
+            gids = list(getattr(population, "gids", []))
+            if len(cells) != len(gids):
+                raise RuntimeError(
+                    f"Population {population_name}: cell/GID count mismatch "
+                    f"({len(cells)} vs {len(gids)})."
+                )
+            target_gid = int(global_minima[str(population_name)])
+            for cell, gid in zip(cells, gids):
+                if int(gid) != target_gid:
+                    continue
+                soma = self._section_by_label(cell, "soma")
+                apic = self._section_by_label(cell, "apic")
+                if soma is None or apic is None:
+                    raise RuntimeError(
+                        f"Representative {population_name} cell {target_gid} "
+                        "does not expose soma and apic sections."
+                    )
+                soma_segment = soma(0.5)
+                apic_segment = apic(0.9)
+                self._online_representative_sites.append({
+                    "population": str(population_name),
+                    "gid": target_gid,
+                    "soma_segment": soma_segment,
+                    "apic_segment": apic_segment,
+                    "soma_area_um2": float(soma_segment.area()),
+                    "apic_area_um2": float(apic_segment.area()),
+                })
+                break
+
+    @staticmethod
+    def _density_current_nA(segment: Any, name: str, area_um2: float) -> float:
+        """Convert an available NEURON density current to segment current."""
+        value = getattr(segment, name, None)
+        if value is None:
+            return float("nan")
+        # mA/cm2 * um2 = 1e-2 nA.
+        return float(value) * float(area_um2) * 1.0e-2
+
+    def _sample_representative_site(self, site: dict[str, Any]) -> dict[str, float]:
+        soma = site["soma_segment"]
+        apic = site["apic_segment"]
+        soma_area = float(site["soma_area_um2"])
+        apic_area = float(site["apic_area_um2"])
+        values = {
+            "soma_voltage_mV": float(soma.v),
+            "apic_distal_voltage_mV": float(apic.v),
+            "soma_total_membrane_current_nA": float(soma.i_membrane_),
+            "apic_total_membrane_current_nA": float(apic.i_membrane_),
+            "soma_capacitive_current_nA": self._density_current_nA(
+                soma, "i_cap", soma_area
+            ),
+            "apic_capacitive_current_nA": self._density_current_nA(
+                apic, "i_cap", apic_area
+            ),
+            "soma_passive_current_nA": self._density_current_nA(
+                soma, "i_pas", soma_area
+            ),
+            "apic_passive_current_nA": self._density_current_nA(
+                apic, "i_pas", apic_area
+            ),
+            "soma_sodium_current_nA": self._density_current_nA(
+                soma, "ina", soma_area
+            ),
+            "soma_potassium_current_nA": self._density_current_nA(
+                soma, "ik", soma_area
+            ),
+        }
+        # A canonical HH soma has no passive-density mechanism, whereas the
+        # apical cable does. Omit unavailable mechanism-specific currents
+        # instead of writing NaNs that could be mistaken for numerical failure.
+        return {name: value for name, value in values.items() if np.isfinite(value)}
 
     def _read_local_membrane_currents(self) -> np.ndarray:
         """Read fast membrane currents in cached LFPy dummy-cell order."""
@@ -366,6 +502,22 @@ class OnlineNetworkEnv(NetworkEnv):
             for transform in self._online_transforms
         ]
         sample_times = np.empty(expected_steps, dtype=np.float64)
+        representative_stride = int(self._online_representative_stride_steps)
+        representative_samples = expected_steps // representative_stride
+        if representative_stride > 1 and (
+            expected_steps % representative_stride != 0
+        ):
+            raise RuntimeError(
+                "Online window is not divisible by the representative-state "
+                "sampling interval."
+            )
+        representative_state = {
+            f"{site['population']}_gid_{site['gid']}": {
+                key: np.empty(representative_samples, dtype=np.float64)
+                for key in self._sample_representative_site(site)
+            }
+            for site in self._online_representative_sites
+        }
         size = int(self._online_comm.Get_size())
         dt_ms = float(self.dt)
         tolerance = max(1e-8, dt_ms * 1e-5)
@@ -399,6 +551,14 @@ class OnlineNetworkEnv(NetworkEnv):
                 local_probe_data[probe_index][:, step_index] = (
                     transform @ local_imem
                 )
+            if (step_index + 1) % representative_stride == 0:
+                representative_index = (step_index + 1) // representative_stride - 1
+                for site in self._online_representative_sites:
+                    site_id = f"{site['population']}_gid_{site['gid']}"
+                    for name, value in self._sample_representative_site(site).items():
+                        representative_state[site_id][name][
+                            representative_index
+                        ] = value
 
         self._online_comm.Barrier()
         reached_time = self.current_time_ms
@@ -436,10 +596,22 @@ class OnlineNetworkEnv(NetworkEnv):
             spikes=spikes,
             duration_ms=duration_ms,
         )
+        gathered_representative = self._online_comm.gather(
+            representative_state, root=0
+        )
         diagnostics_after = self.online_diagnostics()
 
         if self._online_rank != 0:
             return None
+
+        representative_global: dict[str, dict[str, np.ndarray]] = {}
+        for rank_values in gathered_representative:
+            for site_id, values in rank_values.items():
+                if site_id in representative_global:
+                    raise RuntimeError(
+                        f"Representative site {site_id} was recorded on multiple ranks."
+                    )
+                representative_global[site_id] = values
 
         return {
             "t_start_ms": start_ms,
@@ -450,6 +622,10 @@ class OnlineNetworkEnv(NetworkEnv):
             "probe_data": global_probe_data,
             "spikes": spikes,
             "firing_rates": firing_rates,
+            "representative_state": representative_global,
+            "representative_state_interval_ms": float(
+                representative_stride * self.dt
+            ),
             "sample_count": int(expected_steps),
             "expected_sample_count": int(expected_steps),
             "diagnostics": {
@@ -464,6 +640,8 @@ class OnlineNetworkEnv(NetworkEnv):
         self._online_probes = []
         self._online_transforms = []
         self._online_segments = []
+        self._online_representative_sites = []
+        self._online_representative_stride_steps = 1
         self._online_cvode = None
         self._online_comm = None
         self._online_rank = None

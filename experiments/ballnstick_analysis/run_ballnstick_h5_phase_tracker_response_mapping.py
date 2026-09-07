@@ -529,9 +529,7 @@ def _screen_context(
         episode, float(screening["EEG_selected_frequency_hz"]), cfg
     )
     neural = np.asarray(episode["raw_by_epoch"]["baseline"], dtype=float)
-    observed = np.asarray(episode["observed_raw_by_epoch"]["baseline"], dtype=float)
-    scale = float(episode["simulation"]["observation"]["baseline_noise_rms_v"])
-    standardized_noise = (observed - neural) / max(scale, np.finfo(float).tiny)
+    observation = episode["simulation"]["observation"]
     screening.update({
         **features,
         "observation_noise_label": str(context["observation_noise_label"]),
@@ -540,12 +538,7 @@ def _screen_context(
         "neural_baseline_sha256": hashlib.sha256(
             np.asarray(neural, dtype="<f8").tobytes()
         ).hexdigest(),
-        "standardized_noise_sha256": hashlib.sha256(
-            # Round only for the audit hash so floating-point cancellation in
-            # (neural + scale*noise) - neural cannot make paired paths appear
-            # different at the last machine bit.
-            np.asarray(np.round(standardized_noise, 10), dtype="<f8").tobytes()
-        ).hexdigest(),
+        "standardized_noise_sha256": str(observation["unit_noise_sha256"]),
         "history_noise_seed": int(
             episode["simulation"]["observation"]["history_noise_seed"]
         ),

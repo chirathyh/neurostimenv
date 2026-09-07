@@ -1,0 +1,118 @@
+defaults:
+  - ballnstick_h5_phase_tracker_response_mapping
+  - _self_
+
+# H5-Dose-P0 is a bounded ideal-EEG system-identification experiment. It asks
+# whether shared rhythmic-drive strength creates a useful, reproducible dose
+# crossover under the already confirmed H4 fast phase controller. It does not
+# fit a policy and cannot establish H5.
+smoke_test: false
+smoke_context_limit: 0
+smoke_force_eligible: false
+
+source_h5p2b:
+  result_dir: ../../results/ballnstick_h5_phase_tracker_response_mapping_full/h5_phase_tracker_response_mapping
+  expected_sha256:
+    conclusion: 34e3dd16cd56b06a302074173a804bc62afc324126baea574a0e251f9ef8b334
+    audit: 94f5caca9897ebfe5e34af1a5ac023e1ff4d2534d1addefa09322509640ac4a8
+    screening: 03696ac87033a50bfaa18736916932cbf6ace9d39dbdd6101527d68a4595a582
+    metrics: 1952a2d26cc7046a5ee4a72d19e1ef6cbbfd0ee0b969f62abad3b39f1b7615ac
+    response_map: d721d7ce0a1c895090ffc40ec731805bcf7292983694883c4ed942fea877ed0d
+    associations: d733263452ac01e3eccb9bca7259e7e58f7f4e0f2073a320b88d546f17ab5e90
+    provenance: b5360fa3c0b506bb473fdefaad252e018583f6d29d9b830ddc2ed81257fc7576
+
+states:
+  modulation_depth: 0.04
+  frequencies_hz: [9.0, 11.0]
+  # Fix the comparatively coherent H4 regime for this first dose map.
+  phase_diffusion_levels:
+    - {label: low_diffusion, diffusion_rad2_per_s: 0.5}
+  shared_drive_levels:
+    - {label: partial_shared_drive, shared_modulated_fraction: 0.5}
+    - {label: full_shared_drive, shared_modulated_fraction: 1.0}
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 30
+  # Half-second onset and offset ramps leave a central 8-s endpoint.
+  stimulation_steps: 9
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  stimulation_analysis_trim_ms: 500.0
+
+crossed_design:
+  # 3 structures x 2 carriers x 2 q levels = 12 contexts. Each eligible
+  # context receives four paired future continuations for all four actions.
+  n_structure_seeds: 3
+  n_history_seeds: 1
+  n_future_continuations: 4
+  structure_seed_offset: 425000
+  history_seed_offset: 760000
+  phase_seed_offset: 770000
+  trial_seed_offset: 780000
+  future_seed_offset: 790000
+
+observation_noise:
+  # The controller and context receive ideal neural EEG in this mechanism
+  # screen. The AR(1) generator remains instantiated at zero scale so the
+  # causal path is identical to later noisy stages.
+  enabled: true
+  rms_fraction_of_baseline_neural_eeg: 0.0
+  ar1_coefficient: 0.95
+  seed_offset: 800000
+
+actions:
+  dose_actions_v_per_m: [0.0, 0.1, 0.2, 0.4]
+  primary_controller_profile: refresh_500ms_125ms
+  # Pairwise metric helpers use these internal modes; every nonzero dose uses
+  # exactly the same responsive profile.
+  controller_modes: [sham, refresh_500ms_125ms]
+  amplitude_v_per_m: 0.2
+
+response_mapping:
+  frozen_estimator: multitaper_pooled_evidence
+  safe_abstention_action: sham
+  primary_context_feature: carrier_maximum_residual_evidence_db
+  practical_context_margin_log10: 0.01
+  future_selection_indices: [1, 2]
+  future_evaluation_indices: [3, 4]
+
+mechanism_audit:
+  record_representative_state: true
+  orientation_control_enabled: true
+  orientation_control_dose_v_per_m: 0.4
+  orientation_control_montage: transverse_x
+  representative_frequency_hz: 9.0
+  trace_resample_hz: 500.0
+
+criteria:
+  minimum_screened_contexts: 12
+  minimum_eligible_contexts: 8
+  minimum_structure_seeds: 3
+  minimum_future_continuations: 4
+  minimum_carrier_identification_coverage: 0.80
+  minimum_accepted_carrier_accuracy: 0.90
+  minimum_expected_active_dose_count: 2
+  practical_context_margin_log10: 0.01
+  minimum_practical_alternative_contexts: 2
+  minimum_practical_alternative_structures: 2
+  minimum_practical_alternative_shared_drive_levels: 2
+  minimum_expected_oracle_advantage_log10: 0.01
+  preferred_oracle_headroom_log10: 0.02
+  minimum_future_split_advantage_log10: 0.01
+  minimum_future_split_positive_structure_fraction: 0.6666666666666666
+  minimum_loso_threshold_advantage_log10: 0.0
+  minimum_loso_selected_dose_count: 2
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_causal_timing_error_ms: 1.0e-9
+  maximum_field_boundary_discontinuity_v_per_m: 1.0e-10
+  maximum_frequency_correction_hz: 2.000000001
+  minimum_common_phase_estimate_actionable_fraction: 0.80
+  minimum_physiological_washout_recovery_fraction: 0.95
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+  maximum_coherent_decomposition_error_v2: 1.0e-30
+
+save_raw_eeg: false
+save_spikes: false
+save_representative_spectra: true
