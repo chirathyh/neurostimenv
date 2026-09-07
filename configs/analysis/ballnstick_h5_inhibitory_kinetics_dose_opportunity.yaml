@@ -1,0 +1,80 @@
+defaults:
+  - ballnstick_h5_dose_opportunity
+  - _self_
+
+# H5-K0 is the single bounded biological-susceptibility extension authorized
+# after the negative H5-Dose-P0 map. It remains exploratory full-information
+# system identification and does not train or validate an ML policy.
+output_root_name: h5_inhibitory_kinetics_dose_opportunity
+
+susceptibility:
+  enabled: true
+
+source_h5dosep0:
+  # From the repository root this resolves to the workstation/laptop parent
+  # results folder used by the completed full experiment.
+  result_dir: ../../results/ballnstick_h5_dose_opportunity_full/h5_dose_opportunity
+  expected_sha256:
+    conclusion: 8dfabc49fe8b98f189840b069176c23b3e7a1ecdb904556f7293dc1e5810cba8
+    audit: 18548fd1b3698120ce39825588c7c4c5b386c76ddd7b8bedee9708eaee3ab858
+    screening: a3510faa7d6dbd67832d60e46657a10561cdfa7a1cdce3c349c3d475073c1876
+    metrics: a93f5061e8f482f50999974f1c4ff009a5325c13ffd6bf1249ba7dffc43b4cd5
+    expected_map: fe0093b215fa0bc2044892484aa932cd6f5a4f813406e8e05e142c058cb18c62
+    opportunity: c2f4f7033606e0512d5a5c9cf1e56461ca6ccf2cb167b6d870428aa438d48d41
+    future_split: 7c10b2f1524b14578bf66ae2d3e859f819e8aa0db5c7a336f12c9d2da7fca0b1
+    provenance: b7fe28a078c323512450c5076aee8096f04c5180e2c0454efa042975b8c0e2c7
+
+states:
+  # Hold the afferent phenotype at the reliably screen-positive full-drive
+  # setting. The new variable affects only recurrent I -> E temporal filtering.
+  shared_drive_levels:
+    - {label: full_shared_drive, shared_modulated_fraction: 1.0}
+  i_to_e_tau2_levels:
+    - {label: short_decay, multiplier: 0.8}
+    - {label: long_decay, multiplier: 1.2}
+
+crossed_design:
+  # New namespaces, disjoint from H1--H5-Dose-P0.
+  n_structure_seeds: 3
+  n_history_seeds: 1
+  n_future_continuations: 4
+  structure_seed_offset: 426000
+  history_seed_offset: 810000
+  phase_seed_offset: 820000
+  trial_seed_offset: 830000
+  future_seed_offset: 840000
+
+observation_noise:
+  # Ideal neural EEG is retained for this mechanism/opportunity screen.
+  enabled: true
+  rms_fraction_of_baseline_neural_eeg: 0.0
+  ar1_coefficient: 0.95
+  seed_offset: 850000
+
+response_mapping:
+  # Predeclared non-amplitude feature for the exploratory LOSO threshold audit.
+  primary_context_feature: context_spectral_rms_width_hz
+  practical_context_margin_log10: 0.01
+  future_selection_indices: [1, 2]
+  future_evaluation_indices: [3, 4]
+
+criteria:
+  minimum_screened_contexts: 12
+  minimum_eligible_contexts: 10
+  minimum_structure_seeds: 3
+  minimum_future_continuations: 4
+  maximum_conductance_time_area_error: 1.0e-12
+  maximum_paired_alpha_excess_difference_log10: 0.10
+  maximum_paired_E_rate_difference_hz: 0.75
+  maximum_paired_I_rate_difference_hz: 1.50
+  minimum_kinetics_LOSO_balanced_accuracy: 0.67
+  minimum_kinetics_by_dose_interaction_log10: 0.01
+  minimum_practical_alternative_contexts: 2
+  minimum_practical_alternative_structures: 2
+  minimum_kinetics_state_crossover_margin_log10: 0.01
+  minimum_expected_oracle_advantage_log10: 0.01
+  preferred_oracle_headroom_log10: 0.02
+  minimum_future_split_advantage_log10: 0.01
+  minimum_future_split_positive_structure_fraction: 0.6666666666666666
+  minimum_loso_selected_dose_count: 2
+  minimum_loso_threshold_advantage_log10: 0.0

@@ -154,6 +154,12 @@ network:
     ii_mean: 0.010
 
   recurrent:
+    # Optional mechanistic sensitivity perturbation. Values other than one
+    # change only the I -> E Exp2Syn decay. The peak conductance weight is
+    # rescaled by default so the exact unit-peak conductance-time area is
+    # preserved; this does not imply identical voltage-dependent charge.
+    i_to_e_tau2_multiplier: 1.0
+    i_to_e_preserve_conductance_time_area: true
     weight_cv: 0.10
     minimum_weight_uS: 0.0
     delay_mean_ms: 1.5

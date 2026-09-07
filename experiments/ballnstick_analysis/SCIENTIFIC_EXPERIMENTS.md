@@ -2786,3 +2786,85 @@ frozen-source hashes, and PNG/PDF figures. Continue to policy development only
 if the final contextual dose opportunity gate passes; otherwise retain the
 negative result and consider at most one separately declared biological
 sensitivity extension.
+
+## Experiment 36: H5-K0 inhibitory-kinetics susceptibility dose opportunity
+
+H5-Dose-P0 found a nonlinear causal dose response but essentially no
+contextual headroom: 0.2 V/m was optimal in six of seven enrolled contexts,
+the only 0.1-V/m preference was smaller than 0.01 log-distance and failed an
+independent-future replay, and five of six partial-drive contexts failed the
+prestimulation phenotype screen. H5-K0 preserves that negative experiment by
+hash and performs the one bounded biological sensitivity extension declared
+in advance. It remains exploratory full-information system identification;
+it does not train or establish a machine-learning policy.
+
+The afferent generator is held at the reliably screen-positive setting: full
+shared drive (`q=1`), modulation depth 0.04, `D=0.5 rad2/s`, and carrier 9 or
+11 Hz. The crossed circuit property is only the recurrent I-to-E inhibitory
+`Exp2Syn` decay:
+
+- short decay: `tau2=0.8*9=7.2 ms`;
+- long decay: `tau2=1.2*9=10.8 ms`.
+
+NEURON's `Exp2Syn` difference-of-exponentials kernel is normalized to unit
+peak. Its conductance-time area for time constants `tau1<tau2` is
+
+```text
+t_peak = tau1*tau2/(tau2-tau1) * log(tau2/tau1)
+A(tau1,tau2) = (tau2-tau1) /
+  (exp(-t_peak/tau2)-exp(-t_peak/tau1)).
+```
+
+Every realized I-to-E peak weight is multiplied by
+`A(0.1,9)/A(0.1,tau2_new)`. This preserves the exact conductance-time area of
+each I-to-E event while changing its temporal profile. I-to-I kinetics,
+connectivity, background synapses, afferent event paths, and all tACS settings
+remain unchanged. Area preservation is not charge preservation because
+synaptic current also depends on membrane voltage and inhibitory driving
+force. The 0.8/1.2 values are exploratory sensitivity levels rather than a
+validated biological or clinical range.
+
+The timeline and action protocol are identical to H5-Dose-P0: one-second
+burn-in, 30-second stimulation-free ideal neural EEG, nine seconds of tACS
+with 0.5-second ramps, the central eight-second endpoint, and two-second
+washout. Every eligible context receives sham and constant 0.1-, 0.2-, and
+0.4-V/m axial actions under the frozen 0.5-s-history/125-ms-update fast phase
+controller, EEG-selected carrier, and pi-relative target. Three new structures
+crossed with two carriers and two kinetics levels yield 12 contexts; four
+actions and four paired futures yield 192 outcomes if all contexts enroll.
+
+Before stimulation outcomes are interpreted, the runner requires both
+kinetics states to remain screen-positive, paired baseline alpha differences
+no larger than 0.10 log10, E/I rate differences no larger than 0.75/1.50 Hz,
+and leave-one-structure-out discrimination from a frozen small set of
+phase-invariant prestimulation EEG features. Stimulation opportunity requires
+reciprocal state-level optimal-dose margins of at least 0.01, practical
+nonfixed contexts across at least two structures, at least 0.01 mean oracle
+headroom over the strongest best fixed dose, and at least 0.01 advantage when
+the preferred dose is selected on futures 1--2 and evaluated on futures 3--4
+(and vice versa). Failure is a stopping result, not permission to tune these
+kinetics values on the same outcomes.
+
+Run on the workstation with sixteen physical-core MPI ranks:
+
+```bash
+export OMP_NUM_THREADS=1
+export HYDRA_FULL_ERROR=1
+
+mpiexec -n 16 --bind-to core --map-by core python \
+  experiments/ballnstick_analysis/run_ballnstick_h5_inhibitory_kinetics_dose_opportunity.py \
+  experiment.name=ballnstick_h5_inhibitory_kinetics_dose_opportunity_full \
+  experiment.seed=1 \
+  env=ballnstick \
+  analysis=ballnstick_h5_inhibitory_kinetics_dose_opportunity \
+  env.simulation.obs_win_len=1000 \
+  experiment.plot=true \
+  experiment.tqdm=false
+```
+
+Results are written to
+`../../results/<name>/h5_inhibitory_kinetics_dose_opportunity/`. In addition
+to the dose, future-split, current, membrane, spike, rate, phase, provenance,
+and safety outputs from H5-Dose-P0, the experiment saves paired baseline
+kinetics audits, LOSO kinetics-state predictions, analytic conductance-area
+metadata, and prestimulation PSD figures for both kinetics states.

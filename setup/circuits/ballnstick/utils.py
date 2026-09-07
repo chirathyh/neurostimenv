@@ -15,6 +15,47 @@ MAIN_PATH = config("MAIN_PATH")
 sys.path.insert(1, MAIN_PATH)
 
 
+def exp2syn_conductance_time_area(tau1_ms: float, tau2_ms: float) -> float:
+    """Return the area of a unit-peak NEURON ``Exp2Syn`` kernel in ms.
+
+    ``Exp2Syn`` normalizes its difference-of-exponentials waveform to unit
+    peak. Consequently, changing either time constant while retaining the same
+    NetCon weight also changes the conductance-time area. This helper is
+    independent of NEURON so experiment configurations can preserve that area
+    exactly before constructing a network.
+    """
+    tau1 = float(tau1_ms)
+    tau2 = float(tau2_ms)
+    if not (np.isfinite(tau1) and np.isfinite(tau2) and 0.0 < tau1 < tau2):
+        raise ValueError("Exp2Syn requires finite 0 < tau1_ms < tau2_ms.")
+    peak_time = tau1 * tau2 / (tau2 - tau1) * np.log(tau2 / tau1)
+    peak = np.exp(-peak_time / tau2) - np.exp(-peak_time / tau1)
+    return float((tau2 - tau1) / peak)
+
+
+def i_to_e_kinetics_and_weight_scale(
+    *, tau1_ms: float, tau2_ms: float, tau2_multiplier: float,
+    preserve_conductance_time_area: bool,
+) -> tuple[float, float, float]:
+    """Resolve I→E decay and peak-weight scaling for a kinetics perturbation.
+
+    Returns ``(new_tau2_ms, peak_weight_scale, normalized_area_ratio)``. The
+    ratio includes peak-weight scaling and is one, up to floating-point error,
+    when area preservation is enabled. Preserving kernel area does not claim
+    to preserve synaptic charge, which also depends on voltage and driving
+    force.
+    """
+    multiplier = float(tau2_multiplier)
+    if not np.isfinite(multiplier) or multiplier <= 0.0:
+        raise ValueError("I-to-E tau2 multiplier must be finite and positive.")
+    baseline_area = exp2syn_conductance_time_area(tau1_ms, tau2_ms)
+    new_tau2 = float(tau2_ms) * multiplier
+    new_area = exp2syn_conductance_time_area(tau1_ms, new_tau2)
+    weight_scale = baseline_area / new_area if preserve_conductance_time_area else 1.0
+    normalized_ratio = weight_scale * new_area / baseline_area
+    return new_tau2, float(weight_scale), float(normalized_ratio)
+
+
 def generate_poisson_spike_train(
     *,
     start_ms: float,
@@ -549,6 +590,23 @@ def setup_network_ballnstick(network, args, MPI_VAR) -> None:
         "tau2": float(kinetics.inhibitory.tau2_ms),
         "e": float(kinetics.inhibitory.reversal_mV),
     }
+    recurrent_cfg = args.env.network.recurrent
+    ie_tau2_multiplier = float(
+        getattr(recurrent_cfg, "i_to_e_tau2_multiplier", 1.0)
+    )
+    preserve_ie_area = bool(
+        getattr(recurrent_cfg, "i_to_e_preserve_conductance_time_area", True)
+    )
+    ie_tau2_ms, ie_weight_scale, _ = i_to_e_kinetics_and_weight_scale(
+        tau1_ms=inhibitory_kinetics["tau1"],
+        tau2_ms=inhibitory_kinetics["tau2"],
+        tau2_multiplier=ie_tau2_multiplier,
+        preserve_conductance_time_area=preserve_ie_area,
+    )
+    inhibitory_to_e_kinetics = {
+        **inhibitory_kinetics,
+        "tau2": ie_tau2_ms,
+    }
     synapse_parameters = [
         [
             # E -> E
@@ -558,14 +616,13 @@ def setup_network_ballnstick(network, args, MPI_VAR) -> None:
         ],
         [
             # I -> E
-            dict(inhibitory_kinetics),
+            dict(inhibitory_to_e_kinetics),
             # I -> I
             dict(inhibitory_kinetics),
         ],
     ]
 
     recurrent_weights = args.env.network.recurrent_weights
-    recurrent_cfg = args.env.network.recurrent
     inhibition_scale = float(args.env.network.inhibition_scale)
     weight_cv = float(recurrent_cfg.weight_cv)
 
@@ -593,11 +650,13 @@ def setup_network_ballnstick(network, args, MPI_VAR) -> None:
                 "loc": (
                     float(recurrent_weights.ie_mean)
                     * inhibition_scale
+                    * ie_weight_scale
                 ),
                 "scale": (
                     weight_cv
                     * float(recurrent_weights.ie_mean)
                     * inhibition_scale
+                    * ie_weight_scale
                 ),
             },
             {

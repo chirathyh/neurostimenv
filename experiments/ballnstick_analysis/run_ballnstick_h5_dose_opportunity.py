@@ -78,10 +78,19 @@ from experiments.ballnstick_analysis.run_ballnstick_phase_refresh_bandwidth_disc
 from experiments.ballnstick_analysis.run_ballnstick_phase_refresh_cadence_discovery import (  # noqa: E402
     _augment_common_audit,
 )
+from setup.circuits.ballnstick.utils import (  # noqa: E402
+    i_to_e_kinetics_and_weight_scale,
+)
 
 
 ROOT_NAME = "h5_dose_opportunity"
 EXPECTED_DOSES = [0.0, 0.1, 0.2, 0.4]
+
+
+def _kinetics_study(cfg: DictConfig) -> bool:
+    return bool(OmegaConf.select(
+        cfg, "analysis.susceptibility.enabled", default=False
+    ))
 
 
 def _dose_id(dose: float) -> str:
@@ -127,6 +136,50 @@ def _load_sources(cfg: DictConfig) -> dict[str, Any]:
         "source_seed_union": source_seeds,
         "H5P2B_negative_preserved": True,
     })
+    if _kinetics_study(cfg):
+        dose_root = Path(to_absolute_path(
+            str(cfg.analysis.source_h5dosep0.result_dir)
+        ))
+        dose_names = {
+            "conclusion": "experiment_conclusion.json",
+            "audit": "H5_Dose_P0_opportunity_audit.json",
+            "screening": "prospective_screening.csv",
+            "metrics": "context_dose_future_metrics.csv",
+            "expected_map": "expected_context_dose_map.csv",
+            "opportunity": "dose_response_opportunity.csv",
+            "future_split": "independent_future_split_validation.csv",
+            "provenance": "protocol_and_provenance.json",
+        }
+        dose_files, dose_hashes = _hash_locked_files(
+            dose_root, dose_names,
+            cfg.analysis.source_h5dosep0.expected_sha256,
+        )
+        dose_conclusion = json.loads(dose_files["conclusion"].read_text())
+        if (
+            dose_conclusion["conclusions"]
+            ["H5_Dose_P0_contextual_dose_opportunity"] != "NOT PASSED"
+            or bool(dose_conclusion["conclusions"]
+                    ["ready_for_H5_dose_policy_development"])
+        ):
+            raise RuntimeError(
+                "The kinetics study requires the exact negative H5-Dose-P0 result."
+            )
+        for key in ("screening", "metrics"):
+            table = pd.read_csv(dose_files[key])
+            for column in (
+                "structure_seed", "history_seed", "phase_seed", "trial_seed",
+                "future_drive_seed",
+            ):
+                if column in table:
+                    source_seeds.update(
+                        table[column].dropna().astype(int).tolist()
+                    )
+        sources.update({
+            "roots": {**sources["roots"], "h5dosep0": str(dose_root)},
+            "hashes": {**sources["hashes"], "h5dosep0": dose_hashes},
+            "source_seed_union": source_seeds,
+            "H5DoseP0_negative_preserved": True,
+        })
     return sources
 
 
@@ -155,32 +208,49 @@ def _contexts(cfg: DictConfig) -> list[dict[str, Any]]:
                     f"f{int(round(float(frequency))):02d}"
                 )
                 trial_seed = base + int(block.trial_seed_offset) + future_group
+                kinetics_levels = OmegaConf.select(
+                    cfg, "analysis.states.i_to_e_tau2_levels", default=None
+                )
+                if kinetics_levels is None:
+                    kinetics_levels = [{"label": "baseline", "multiplier": 1.0}]
                 for shared_index, shared in enumerate(
                     cfg.analysis.states.shared_drive_levels
                 ):
-                    rows.append({
-                        "context_order": len(rows),
-                        "future_group_index": future_group,
-                        "context_id": (
-                            f"{paired_id}_q{shared_index:02d}_{shared.label}"
-                        ),
-                        "paired_shared_drive_context_id": paired_id,
-                        "structure_index": structure_index,
-                        "structure_seed": structure_seed,
-                        "history_index": history_index,
-                        "history_seed": history_seed,
-                        "phase_seed": phase_seed,
-                        "trial_seed": trial_seed,
-                        "hidden_frequency_hz": float(frequency),
-                        "label": str(diffusion.label),
-                        "diffusion_rad2_per_s": float(
-                            diffusion.diffusion_rad2_per_s
-                        ),
-                        "shared_drive_label": str(shared.label),
-                        "shared_modulated_fraction": float(
-                            shared.shared_modulated_fraction
-                        ),
-                    })
+                    for kinetics_index, kinetics_level in enumerate(kinetics_levels):
+                        kinetics_label = str(kinetics_level["label"])
+                        suffix = (
+                            f"_k{kinetics_index:02d}_{kinetics_label}"
+                            if _kinetics_study(cfg) else ""
+                        )
+                        rows.append({
+                            "context_order": len(rows),
+                            "future_group_index": future_group,
+                            "context_id": (
+                                f"{paired_id}_q{shared_index:02d}_"
+                                f"{shared.label}{suffix}"
+                            ),
+                            "paired_shared_drive_context_id": paired_id,
+                            "paired_susceptibility_context_id": paired_id,
+                            "structure_index": structure_index,
+                            "structure_seed": structure_seed,
+                            "history_index": history_index,
+                            "history_seed": history_seed,
+                            "phase_seed": phase_seed,
+                            "trial_seed": trial_seed,
+                            "hidden_frequency_hz": float(frequency),
+                            "label": str(diffusion.label),
+                            "diffusion_rad2_per_s": float(
+                                diffusion.diffusion_rad2_per_s
+                            ),
+                            "shared_drive_label": str(shared.label),
+                            "shared_modulated_fraction": float(
+                                shared.shared_modulated_fraction
+                            ),
+                            "i_to_e_tau2_label": kinetics_label,
+                            "i_to_e_tau2_multiplier": float(
+                                kinetics_level["multiplier"]
+                            ),
+                        })
                 future_group += 1
     if bool(cfg.analysis.smoke_test) and int(cfg.analysis.smoke_context_limit) > 0:
         return rows[:int(cfg.analysis.smoke_context_limit)]
@@ -204,8 +274,44 @@ def _with_dose(cfg: DictConfig, dose: float, montage: str | None = None) -> Dict
     return result
 
 
+def _with_susceptibility_state(
+    cfg: DictConfig, context: dict[str, Any]
+) -> DictConfig:
+    """Apply the prespecified circuit property without changing the actuator."""
+    result = _with_context_state(cfg, context)
+    with open_dict(result):
+        result.env.network.recurrent.i_to_e_tau2_multiplier = float(
+            context["i_to_e_tau2_multiplier"]
+        )
+        result.env.network.recurrent.i_to_e_preserve_conductance_time_area = True
+    return result
+
+
+def _kinetics_metadata(
+    context: dict[str, Any], cfg: DictConfig
+) -> dict[str, Any]:
+    tau1 = float(cfg.env.network.synapse_kinetics.inhibitory.tau1_ms)
+    baseline_tau2 = float(cfg.env.network.synapse_kinetics.inhibitory.tau2_ms)
+    tau2, scale, ratio = i_to_e_kinetics_and_weight_scale(
+        tau1_ms=tau1,
+        tau2_ms=baseline_tau2,
+        tau2_multiplier=float(context["i_to_e_tau2_multiplier"]),
+        preserve_conductance_time_area=True,
+    )
+    return {
+        "i_to_e_tau2_label": str(context["i_to_e_tau2_label"]),
+        "i_to_e_tau2_multiplier": float(context["i_to_e_tau2_multiplier"]),
+        "i_to_e_tau1_ms": tau1,
+        "i_to_e_tau2_ms": tau2,
+        "i_to_e_peak_weight_scale": scale,
+        "i_to_e_normalized_conductance_time_area_ratio": ratio,
+        "i_to_i_tau2_ms": baseline_tau2,
+    }
+
+
 def _validate_design(cfg: DictConfig, sources: dict[str, Any]) -> None:
     smoke = bool(cfg.analysis.smoke_test)
+    kinetics_study = _kinetics_study(cfg)
     if str(cfg.analysis.simulator) != "online":
         raise ValueError("H5-Dose-P0 requires persistent online simulation.")
     if not np.isclose(float(cfg.analysis.inhibition_scale), 1.0):
@@ -221,8 +327,24 @@ def _validate_design(cfg: DictConfig, sources: dict[str, Any]) -> None:
         (str(x.label), float(x.shared_modulated_fraction))
         for x in cfg.analysis.states.shared_drive_levels
     ]
-    if shared != [(PARTIAL, 0.5), (FULL, 1.0)]:
-        raise ValueError("H5-Dose-P0 requires q={0.5,1.0}.")
+    expected_shared = [(FULL, 1.0)] if kinetics_study else [
+        (PARTIAL, 0.5), (FULL, 1.0)
+    ]
+    if shared != expected_shared:
+        raise ValueError(
+            "The kinetics study fixes q=1; H5-Dose-P0 requires q={0.5,1.0}."
+        )
+    if kinetics_study:
+        if not bool(sources.get("H5DoseP0_negative_preserved", False)):
+            raise ValueError("The negative H5-Dose-P0 source was not preserved.")
+        levels = [
+            (str(x.label), float(x.multiplier))
+            for x in cfg.analysis.states.i_to_e_tau2_levels
+        ]
+        if levels != [("short_decay", 0.8), ("long_decay", 1.2)]:
+            raise ValueError("The kinetics study requires I-to-E tau2={0.8,1.2}x.")
+        if not bool(cfg.env.network.recurrent.i_to_e_preserve_conductance_time_area):
+            raise ValueError("The I-to-E conductance-time area must be preserved.")
     if not np.isclose(float(cfg.analysis.states.modulation_depth), 0.04):
         raise ValueError("H5-Dose-P0 freezes modulation depth 0.04.")
     doses = [float(x) for x in cfg.analysis.actions.dose_actions_v_per_m]
@@ -253,13 +375,13 @@ def _validate_design(cfg: DictConfig, sources: dict[str, Any]) -> None:
         or int(cfg.analysis.crossed_design.n_history_seeds) != 1
         or int(cfg.analysis.crossed_design.n_future_continuations) != 4
     ):
-        raise ValueError("Full H5-Dose-P0 requires the frozen 30/9/2-s 3x1x4 design.")
+        raise ValueError("The full dose map requires the frozen 30/9/2-s 3x1x4 design.")
     if not np.isclose(float(sources["target"]["outcome_duration_s"]), 8.0):
         raise ValueError("Frozen population-B target is not the 8-s endpoint.")
     contexts = _all_contexts(cfg)
     expected = int(cfg.analysis.crossed_design.n_structure_seeds) * 2 * 2
     if len(contexts) != expected:
-        raise ValueError("Crossed structure/frequency/shared-drive grid is incomplete.")
+        raise ValueError("Crossed structure/frequency/state grid is incomplete.")
     namespaces = [
         {int(row[name]) for row in contexts}
         for name in ("structure_seed", "history_seed", "phase_seed", "trial_seed")
@@ -292,7 +414,13 @@ def _screen(
             context["paired_shared_drive_context_id"]
         ),
         "observation_is_ideal_neural_EEG": True,
+        **_kinetics_metadata(context, cfg),
     })
+    for frame in (spectrum, temporal):
+        frame["i_to_e_tau2_label"] = str(context["i_to_e_tau2_label"])
+        frame["i_to_e_tau2_multiplier"] = float(
+            context["i_to_e_tau2_multiplier"]
+        )
     if bool(cfg.analysis.smoke_test) and bool(cfg.analysis.smoke_force_eligible):
         row.update({
             "eligible_before_smoke_override": bool(row["eligible"]),
@@ -327,7 +455,11 @@ def _run_dose(
     )
     if episode is not None:
         episode["simulation"]["action"].update({
-            "role": "H5_Dose_P0_fast_controller_dose_map",
+            "role": (
+                "H5_K0_I_to_E_kinetics_fast_controller_dose_map"
+                if _kinetics_study(cfg)
+                else "H5_Dose_P0_fast_controller_dose_map"
+            ),
             "dose_v_per_m": float(dose),
             "audit_montage": montage,
         })
@@ -448,6 +580,10 @@ def _representative_state(
                 "context_id": str(context["context_id"]),
                 "structure_seed": int(context["structure_seed"]),
                 "shared_drive_label": str(context["shared_drive_label"]),
+                "i_to_e_tau2_label": str(context["i_to_e_tau2_label"]),
+                "i_to_e_tau2_multiplier": float(
+                    context["i_to_e_tau2_multiplier"]
+                ),
                 "future_index": int(future_index + 1),
                 "dose_v_per_m": float(dose),
                 "site_id": site_id,
@@ -467,6 +603,9 @@ def _representative_state(
                         "dose_v_per_m": float(dose), "site_id": site_id,
                         "signal": name, "time_ms": float(t_ms),
                         "value": float(sample),
+                        "i_to_e_tau2_label": str(
+                            context["i_to_e_tau2_label"]
+                        ),
                     })
     return summaries, traces
 
@@ -490,6 +629,8 @@ def _spectral_rows(
         "context_id": str(context["context_id"]),
         "hidden_frequency_hz": float(context["hidden_frequency_hz"]),
         "shared_drive_label": str(context["shared_drive_label"]),
+        "i_to_e_tau2_label": str(context["i_to_e_tau2_label"]),
+        "i_to_e_tau2_multiplier": float(context["i_to_e_tau2_multiplier"]),
         "dose_v_per_m": float(dose), "frequency_hz": float(frequency),
         "PSD_v2_per_hz": float(power),
     } for frequency, power in zip(frequencies, psd)]
@@ -538,6 +679,13 @@ def _dose_metric_rows(
             row["carrier_maximum_residual_evidence_db"] = float(
                 screening["carrier_maximum_residual_evidence_db"]
             )
+            row.update(_kinetics_metadata(context, cfg))
+            for name in (
+                "context_C1_abs", "context_spectral_concentration",
+                "context_spectral_rms_width_hz", "context_alpha_excess_log10",
+                "recent_resultant_to_rms",
+            ):
+                row[name] = float(screening[name])
     sham_epoch = _epoch_row(sham, "stimulation")
     active_epoch = _epoch_row(active, "stimulation")
     for row in retained_rows:
@@ -560,7 +708,13 @@ def _expected_map(metrics: pd.DataFrame) -> pd.DataFrame:
         "context_id", "paired_shared_drive_context_id", "structure_seed",
         "hidden_frequency_hz", "label", "diffusion_rad2_per_s",
         "shared_drive_label", "shared_modulated_fraction",
+        "i_to_e_tau2_label", "i_to_e_tau2_multiplier", "i_to_e_tau2_ms",
+        "i_to_e_peak_weight_scale",
+        "i_to_e_normalized_conductance_time_area_ratio", "i_to_i_tau2_ms",
         "EEG_selected_frequency_hz", "carrier_maximum_residual_evidence_db",
+        "context_C1_abs", "context_spectral_concentration",
+        "context_spectral_rms_width_hz", "context_alpha_excess_log10",
+        "recent_resultant_to_rms",
         "dose_v_per_m", "controller_mode",
     ]
     return (
@@ -616,7 +770,13 @@ def _opportunity(
     columns = [
         "context_id", "paired_shared_drive_context_id", "structure_seed",
         "hidden_frequency_hz", "shared_drive_label", "shared_modulated_fraction",
+        "i_to_e_tau2_label", "i_to_e_tau2_multiplier", "i_to_e_tau2_ms",
+        "i_to_e_peak_weight_scale",
+        "i_to_e_normalized_conductance_time_area_ratio", "i_to_i_tau2_ms",
         "carrier_maximum_residual_evidence_db", "expected_optimal_dose_v_per_m",
+        "context_C1_abs", "context_spectral_concentration",
+        "context_spectral_rms_width_hz", "context_alpha_excess_log10",
+        "recent_resultant_to_rms",
         "oracle_expected_distance_log10",
     ]
     context_map = best[columns].merge(fixed_by_context, on="context_id")
@@ -699,6 +859,37 @@ def _opportunity(
     split_structure = split.groupby(
         ["split_direction", "structure_seed"], as_index=False
     ).evaluation_advantage_log10.mean()
+    state_dose = active.groupby(
+        ["i_to_e_tau2_label", "dose_v_per_m"], as_index=False
+    ).expected_post_distance_to_B_log10.mean()
+    state_pivot = state_dose.pivot(
+        index="i_to_e_tau2_label", columns="dose_v_per_m",
+        values="expected_post_distance_to_B_log10",
+    )
+    interaction_values: list[float] = []
+    state_preferred_dose: dict[str, float] = {}
+    state_crossover_margin = 0.0
+    if len(state_pivot) >= 2:
+        for first_index, first_dose in enumerate(sorted(state_pivot.columns)):
+            for second_dose in sorted(state_pivot.columns)[first_index + 1:]:
+                relative = state_pivot[first_dose] - state_pivot[second_dose]
+                interaction_values.append(float(relative.max() - relative.min()))
+        state_preferred_dose = {
+            str(label): float(row.idxmin())
+            for label, row in state_pivot.iterrows()
+        }
+        preferred = sorted(set(state_preferred_dose.values()))
+        if len(preferred) == 2:
+            margins = []
+            for label, own_dose in state_preferred_dose.items():
+                other_dose = (
+                    preferred[0] if own_dose == preferred[1] else preferred[1]
+                )
+                margins.append(float(
+                    state_pivot.loc[label, other_dose]
+                    - state_pivot.loc[label, own_dose]
+                ))
+            state_crossover_margin = float(min(margins))
     audit = {
         "best_fixed_active_dose_v_per_m": best_fixed_dose,
         "best_fixed_expected_distance_log10": best_fixed_distance,
@@ -726,6 +917,10 @@ def _opportunity(
             context_map.loc[context_map.practical_alternative,
                             "shared_drive_label"].nunique()
         ),
+        "practical_alternative_kinetics_count": int(
+            context_map.loc[context_map.practical_alternative,
+                            "i_to_e_tau2_label"].nunique()
+        ),
         "future_split_mean_advantage_log10": float(
             split_structure.evaluation_advantage_log10.mean()
         ),
@@ -735,13 +930,28 @@ def _opportunity(
         "future_split_selected_dose_count": int(
             split.selected_dose_v_per_m.nunique()
         ),
+        "maximum_kinetics_by_dose_interaction_log10": float(
+            max(interaction_values, default=0.0)
+        ),
+        "kinetics_state_preferred_dose_v_per_m": state_preferred_dose,
+        "kinetics_state_preferred_dose_count": int(
+            len(set(state_preferred_dose.values()))
+        ),
+        "kinetics_state_crossover_minimum_margin_log10": state_crossover_margin,
+        "optimal_dose_count_by_kinetics": {
+            str(label): {
+                str(float(dose)): int(count)
+                for dose, count in group.expected_optimal_dose_v_per_m
+                .value_counts().items()
+            }
+            for label, group in context_map.groupby("i_to_e_tau2_label")
+        },
         "oracle_is_post_hoc_full_information": True,
     }
     return context_map, split, audit
 
 
-def _fit_threshold(training: pd.DataFrame) -> dict[str, Any]:
-    feature = "carrier_maximum_residual_evidence_db"
+def _fit_threshold(training: pd.DataFrame, feature: str) -> dict[str, Any]:
     doses = sorted(training.expected_optimal_dose_v_per_m.unique())
     # Retain the two doses with the greatest support. This is an exploratory
     # audit, and the retained pair must be frozen before later development.
@@ -778,8 +988,11 @@ def _fit_threshold(training: pd.DataFrame) -> dict[str, Any]:
 
 
 def _loso_threshold(
-    context_map: pd.DataFrame, expected: pd.DataFrame,
+    context_map: pd.DataFrame, expected: pd.DataFrame, cfg: DictConfig,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
+    feature = str(cfg.analysis.response_mapping.primary_context_feature)
+    if feature not in context_map:
+        raise ValueError(f"Unknown prespecified EEG context feature: {feature}")
     active = expected[expected.dose_v_per_m > 0]
     lookup = {
         (str(row.context_id), float(row.dose_v_per_m)):
@@ -790,7 +1003,7 @@ def _loso_threshold(
     for held in sorted(context_map.structure_seed.unique()):
         train = context_map[context_map.structure_seed.ne(held)].copy()
         train.attrs["dose_lookup"] = lookup
-        fitted = _fit_threshold(train)
+        fitted = _fit_threshold(train, feature)
         test = context_map[context_map.structure_seed.eq(held)]
         if not fitted["available"]:
             continue
@@ -801,14 +1014,16 @@ def _loso_threshold(
             .sort_values().index[0]
         )
         for sample in test.itertuples():
-            below = sample.carrier_maximum_residual_evidence_db <= fitted["threshold"]
+            feature_value = float(getattr(sample, feature))
+            below = feature_value <= fitted["threshold"]
             selected = retained[0] if below == fitted["low_dose_below_threshold"] else retained[1]
             selected_loss = lookup[(sample.context_id, float(selected))]
             fixed_loss = lookup[(sample.context_id, float(train_fixed))]
             rows.append({
                 "heldout_structure_seed": int(held),
                 "context_id": str(sample.context_id),
-                "feature_value": float(sample.carrier_maximum_residual_evidence_db),
+                "feature_value": feature_value,
+                "feature": feature,
                 "threshold": float(fitted["threshold"]),
                 "low_dose_below_threshold": bool(fitted["low_dose_below_threshold"]),
                 "selected_dose_v_per_m": float(selected),
@@ -828,8 +1043,144 @@ def _loso_threshold(
         "mean_advantage_log10": float(structure.advantage_log10.mean()),
         "positive_structure_fraction": float(np.mean(structure.advantage_log10 > 0)),
         "selected_dose_count": int(result.selected_dose_v_per_m.nunique()),
-        "feature": "carrier_maximum_residual_evidence_db",
+        "feature": feature,
         "exploratory_not_a_policy_confirmation": True,
+    }
+
+
+KINETICS_CONTEXT_FEATURES = [
+    "context_C1_abs",
+    "context_spectral_concentration",
+    "context_spectral_rms_width_hz",
+    "context_alpha_excess_log10",
+    "recent_resultant_to_rms",
+]
+
+
+def _kinetics_observability(
+    screening: pd.DataFrame,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    """LOSO audit of whether prestimulation EEG exposes the kinetics state."""
+    eligible = screening[screening.eligible.astype(bool)].copy()
+    rows: list[dict[str, Any]] = []
+    for structure in sorted(eligible.structure_seed.unique()):
+        train = eligible[eligible.structure_seed.ne(structure)]
+        test = eligible[eligible.structure_seed.eq(structure)]
+        if (
+            train.empty or test.empty
+            or train.i_to_e_tau2_label.nunique() < 2
+        ):
+            continue
+        center = train[KINETICS_CONTEXT_FEATURES].mean().to_numpy(float)
+        scale = train[KINETICS_CONTEXT_FEATURES].std(ddof=0).to_numpy(float)
+        scale[~np.isfinite(scale) | (scale <= np.finfo(float).tiny)] = 1.0
+        centroids = {
+            str(label): (
+                group[KINETICS_CONTEXT_FEATURES].mean().to_numpy(float) - center
+            ) / scale
+            for label, group in train.groupby("i_to_e_tau2_label")
+        }
+        for sample in test.itertuples():
+            vector = (
+                np.asarray([
+                    getattr(sample, name) for name in KINETICS_CONTEXT_FEATURES
+                ], dtype=float) - center
+            ) / scale
+            distances = {
+                label: float(np.linalg.norm(vector - centroid))
+                for label, centroid in centroids.items()
+            }
+            predicted = min(distances, key=lambda x: (distances[x], x))
+            rows.append({
+                "context_id": str(sample.context_id),
+                "structure_seed": int(structure),
+                "true_i_to_e_tau2_label": str(sample.i_to_e_tau2_label),
+                "predicted_i_to_e_tau2_label": predicted,
+                "correct": predicted == str(sample.i_to_e_tau2_label),
+                "classifier": "LOSO standardized nearest centroid",
+                "features": ";".join(KINETICS_CONTEXT_FEATURES),
+                **{
+                    f"distance_to_{label}": value
+                    for label, value in distances.items()
+                },
+            })
+    predictions = pd.DataFrame(rows)
+    labels = sorted(eligible.i_to_e_tau2_label.unique())
+    recalls = {
+        str(label): float(
+            predictions.loc[
+                predictions.true_i_to_e_tau2_label.eq(label), "correct"
+            ].mean()
+        )
+        for label in labels
+        if not predictions.empty and bool(
+            predictions.true_i_to_e_tau2_label.eq(label).any()
+        )
+    }
+    balanced = float(np.mean(list(recalls.values()))) if recalls else float("nan")
+    return predictions, {
+        "LOSO_balanced_accuracy": balanced,
+        "LOSO_recall": recalls,
+        "features": KINETICS_CONTEXT_FEATURES,
+        "uses_only_phase_invariant_predecision_EEG": True,
+        "is_observability_audit_not_policy": True,
+    }
+
+
+def _kinetics_baseline_pairs(
+    screening: pd.DataFrame,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    """Quantify gross baseline matching before inspecting stimulation outcomes."""
+    labels = ["short_decay", "long_decay"]
+    rows: list[dict[str, Any]] = []
+    for paired_id, group in screening.groupby("paired_susceptibility_context_id"):
+        if set(group.i_to_e_tau2_label) != set(labels):
+            continue
+        values = {str(row.i_to_e_tau2_label): row for row in group.itertuples()}
+        short, long = values[labels[0]], values[labels[1]]
+        rows.append({
+            "paired_susceptibility_context_id": str(paired_id),
+            "structure_seed": int(short.structure_seed),
+            "hidden_frequency_hz": float(short.hidden_frequency_hz),
+            "long_minus_short_alpha_excess_log10": float(
+                long.context_alpha_excess_log10 - short.context_alpha_excess_log10
+            ),
+            "long_minus_short_E_rate_hz": float(
+                long.baseline_E_firing_rate_hz - short.baseline_E_firing_rate_hz
+            ),
+            "long_minus_short_I_rate_hz": float(
+                long.baseline_I_firing_rate_hz - short.baseline_I_firing_rate_hz
+            ),
+            "both_alpha_phenotype_present": bool(
+                short.alpha_phenotype_present and long.alpha_phenotype_present
+            ),
+            "both_rates_safe": bool(
+                short.baseline_rates_safe and long.baseline_rates_safe
+            ),
+        })
+    pairs = pd.DataFrame(rows)
+    if pairs.empty:
+        return pairs, {
+            "complete_pair_count": 0,
+            "maximum_abs_alpha_excess_difference_log10": float("inf"),
+            "maximum_abs_E_rate_difference_hz": float("inf"),
+            "maximum_abs_I_rate_difference_hz": float("inf"),
+        }
+    return pairs, {
+        "complete_pair_count": int(len(pairs)),
+        "all_pairs_retain_alpha_phenotype": bool(
+            pairs.both_alpha_phenotype_present.all()
+        ),
+        "all_pairs_rate_safe": bool(pairs.both_rates_safe.all()),
+        "maximum_abs_alpha_excess_difference_log10": float(
+            pairs.long_minus_short_alpha_excess_log10.abs().max()
+        ),
+        "maximum_abs_E_rate_difference_hz": float(
+            pairs.long_minus_short_E_rate_hz.abs().max()
+        ),
+        "maximum_abs_I_rate_difference_hz": float(
+            pairs.long_minus_short_I_rate_hz.abs().max()
+        ),
     }
 
 
@@ -837,6 +1188,8 @@ def _checks(
     *, screening: pd.DataFrame, metrics: pd.DataFrame, expected: pd.DataFrame,
     context_map: pd.DataFrame, audit: dict[str, Any],
     loso: dict[str, Any], sources: dict[str, Any], cfg: DictConfig,
+    baseline_audit: dict[str, Any] | None = None,
+    observability: dict[str, Any] | None = None,
 ) -> tuple[dict[str, bool], dict[str, Any]]:
     criteria = cfg.analysis.criteria
     eligible = screening[screening.eligible]
@@ -936,6 +1289,76 @@ def _checks(
         ),
         "efficacy_uses_neural_EEG_and_policy_inputs_exclude_spikes": True,
     }
+    kinetics_study = _kinetics_study(cfg)
+    if kinetics_study:
+        baseline_audit = baseline_audit or {}
+        observability = observability or {}
+        checks.pop("both_frequencies_and_shared_drive_levels_enrolled")
+        checks.pop("practical_alternatives_cross_shared_drive_levels")
+        checks.pop("complete_frequency_shared_drive_screening_grid")
+        checks.pop("dose_map_seeds_disjoint_from_H1_H5P2B")
+        checks.update({
+            "source_H5DoseP0_negative_hash_locked": bool(
+                sources.get("H5DoseP0_negative_preserved", False)
+            ),
+            "susceptibility_seeds_disjoint_from_all_H1_H5_sources": True,
+            "only_I_to_E_decay_is_perturbed": True,
+            "I_to_I_kinetics_unchanged": bool(
+                np.allclose(
+                    screening.i_to_i_tau2_ms,
+                    float(cfg.env.network.synapse_kinetics.inhibitory.tau2_ms),
+                )
+            ),
+            "I_to_E_conductance_time_area_preserved": bool(
+                np.allclose(
+                    screening.i_to_e_normalized_conductance_time_area_ratio,
+                    1.0, rtol=0.0, atol=float(
+                        criteria.maximum_conductance_time_area_error
+                    ),
+                )
+            ),
+            "complete_frequency_kinetics_screening_grid": bool(
+                len(screening) == len(_contexts(cfg))
+                and screening.groupby([
+                    "structure_seed", "hidden_frequency_hz"
+                ]).i_to_e_tau2_label.nunique().min() == 2
+            ),
+            "both_frequencies_and_kinetics_levels_enrolled": bool(
+                eligible.hidden_frequency_hz.nunique() == 2
+                and eligible.i_to_e_tau2_label.nunique() == 2
+            ) or bool(cfg.analysis.smoke_test),
+            "paired_baseline_alpha_phenotype_retained": bool(
+                baseline_audit.get("all_pairs_retain_alpha_phenotype", False)
+            ) or bool(cfg.analysis.smoke_test),
+            "paired_baseline_alpha_difference_bounded": float(
+                baseline_audit.get(
+                    "maximum_abs_alpha_excess_difference_log10", np.inf
+                )
+            ) <= float(criteria.maximum_paired_alpha_excess_difference_log10)
+            or bool(cfg.analysis.smoke_test),
+            "paired_baseline_rate_differences_bounded": bool(
+                float(baseline_audit.get(
+                    "maximum_abs_E_rate_difference_hz", np.inf
+                )) <= float(criteria.maximum_paired_E_rate_difference_hz)
+                and float(baseline_audit.get(
+                    "maximum_abs_I_rate_difference_hz", np.inf
+                )) <= float(criteria.maximum_paired_I_rate_difference_hz)
+            ) or bool(cfg.analysis.smoke_test),
+            "kinetics_state_observable_from_predecision_EEG": bool(
+                np.isfinite(observability.get("LOSO_balanced_accuracy", np.nan))
+                and float(observability["LOSO_balanced_accuracy"])
+                >= float(criteria.minimum_kinetics_LOSO_balanced_accuracy)
+            ) or bool(cfg.analysis.smoke_test),
+            "kinetics_changes_relative_dose_response": float(
+                audit.get("maximum_kinetics_by_dose_interaction_log10", 0.0)
+            ) >= float(criteria.minimum_kinetics_by_dose_interaction_log10),
+            "kinetics_state_level_dose_crossover_is_practical": bool(
+                int(audit.get("kinetics_state_preferred_dose_count", 0)) >= 2
+                and float(audit.get(
+                    "kinetics_state_crossover_minimum_margin_log10", 0.0
+                )) >= float(criteria.minimum_kinetics_state_crossover_margin_log10)
+            ),
+        })
     mandatory = [
         "expected_oracle_uses_multiple_active_doses",
         "practical_alternative_contexts_present",
@@ -947,9 +1370,19 @@ def _checks(
         "exploratory_EEG_threshold_uses_multiple_doses",
         "exploratory_EEG_threshold_beats_fixed_directionally",
     ]
+    if kinetics_study:
+        mandatory.remove("practical_alternatives_cross_shared_drive_levels")
+        mandatory.extend([
+            "kinetics_changes_relative_dose_response",
+            "kinetics_state_level_dose_crossover_is_practical",
+        ])
     passed = all(checks[name] for name in checks if name != "preferred_oracle_headroom_reached")
+    conclusion_key = (
+        "H5_K0_inhibitory_kinetics_dose_opportunity"
+        if kinetics_study else "H5_Dose_P0_contextual_dose_opportunity"
+    )
     conclusions = {
-        "H5_Dose_P0_contextual_dose_opportunity": "PASSED" if passed else "NOT PASSED",
+        conclusion_key: "PASSED" if passed else "NOT PASSED",
         "ready_for_H5_dose_policy_development": bool(passed),
         "machine_learning_policy_status": "NOT TRAINED OR TESTED",
         "failed_opportunity_checks": [name for name in mandatory if not checks[name]],
@@ -969,11 +1402,41 @@ def _plots(
     *, root: Path, spectra: pd.DataFrame, expected: pd.DataFrame,
     context_map: pd.DataFrame, split: pd.DataFrame, metrics: pd.DataFrame,
     decomposition: pd.DataFrame, states: pd.DataFrame,
+    predecision_spectra: pd.DataFrame | None = None,
+    context_feature: str = "carrier_maximum_residual_evidence_db",
 ) -> None:
     tiny = np.finfo(float).tiny
+    group_column = (
+        "i_to_e_tau2_label"
+        if "i_to_e_tau2_label" in expected
+        and expected.i_to_e_tau2_label.nunique() > 1
+        else "shared_drive_label"
+    )
+    if predecision_spectra is not None and not predecision_spectra.empty:
+        groups = list(predecision_spectra.groupby(group_column))
+        figure, axes = plt.subplots(
+            1, len(groups), figsize=(5 * len(groups), 3.6), sharey=True,
+            squeeze=False,
+        )
+        for axis, (label, group) in zip(axes[0], groups):
+            for frequency, arm in group.groupby("hidden_frequency_hz"):
+                summary = arm.groupby("frequency_hz")[
+                    "observed_EEG_multitaper_log10_psd"
+                ].mean()
+                keep = (summary.index >= 5) & (summary.index <= 15)
+                axis.plot(summary.index[keep], 10.0 * summary[keep],
+                          label=f"{frequency:g} Hz carrier")
+            axis.set(title=str(label), xlabel="Frequency (Hz)",
+                     ylabel="Prestimulation PSD (dB V²/Hz)")
+            axis.legend(frameon=False, fontsize=8)
+        _save_figure(figure, root, "figure_00_predecision_PSD_by_kinetics")
     if not spectra.empty:
-        figure, axes = plt.subplots(1, 2, figsize=(10, 3.6), sharey=True)
-        for axis, (label, group) in zip(axes, spectra.groupby("shared_drive_label")):
+        groups = list(spectra.groupby(group_column))
+        figure, axes = plt.subplots(
+            1, len(groups), figsize=(5 * len(groups), 3.6), sharey=True,
+            squeeze=False,
+        )
+        for axis, (label, group) in zip(axes[0], groups):
             for dose, arm in group.groupby("dose_v_per_m"):
                 summary = arm.groupby("frequency_hz").PSD_v2_per_hz.mean()
                 keep = (summary.index >= 5) & (summary.index <= 15)
@@ -983,8 +1446,12 @@ def _plots(
             axis.legend(frameon=False, fontsize=8)
         _save_figure(figure, root, "figure_01_representative_stimulation_PSD")
 
-    figure, axes = plt.subplots(1, 2, figsize=(10, 3.8), sharey=True)
-    for axis, (label, group) in zip(axes, expected.groupby("shared_drive_label")):
+    groups = list(expected.groupby(group_column))
+    figure, axes = plt.subplots(
+        1, len(groups), figsize=(5 * len(groups), 3.8), sharey=True,
+        squeeze=False,
+    )
+    for axis, (label, group) in zip(axes[0], groups):
         active = group[group.dose_v_per_m > 0]
         for structure, values in active.groupby("structure_seed"):
             summary = values.groupby("dose_v_per_m").expected_post_distance_to_B_log10.mean()
@@ -994,9 +1461,9 @@ def _plots(
 
     figure, axis = plt.subplots(figsize=(7, 4))
     for structure, group in context_map.groupby("structure_seed"):
-        axis.scatter(group.carrier_maximum_residual_evidence_db,
+        axis.scatter(group[context_feature],
                      group.expected_optimal_dose_v_per_m, label=str(structure))
-    axis.set(xlabel="Prestimulation carrier residual evidence (dB)",
+    axis.set(xlabel=f"Prestimulation EEG feature: {context_feature}",
              ylabel="Expected optimal dose (V/m)",
              title="EEG context and full-information dose preference")
     axis.legend(title="Structure", frameon=False, fontsize=8)
@@ -1058,6 +1525,15 @@ def _plots(
 def main(cfg: DictConfig) -> None:
     sources = _load_sources(cfg)
     _validate_design(cfg, sources)
+    kinetics_study = _kinetics_study(cfg)
+    study_label = (
+        "H5-K0 inhibitory-kinetics susceptibility dose opportunity"
+        if kinetics_study else "H5-Dose-P0 bounded contextual dose opportunity"
+    )
+    conclusion_key = (
+        "H5_K0_inhibitory_kinetics_dose_opportunity"
+        if kinetics_study else "H5_Dose_P0_contextual_dose_opportunity"
+    )
     representative_state_requested = bool(
         cfg.analysis.mechanism_audit.record_representative_state
     )
@@ -1068,13 +1544,16 @@ def main(cfg: DictConfig) -> None:
         cfg.env.online.record_representative_state = False
     comm = MPI.COMM_WORLD
     rank, size = comm.Get_rank(), comm.Get_size()
-    root = Path(to_absolute_path(str(cfg.experiment.dir))) / ROOT_NAME
+    root_name = str(OmegaConf.select(
+        cfg, "analysis.output_root_name", default=ROOT_NAME
+    ))
+    root = Path(to_absolute_path(str(cfg.experiment.dir))) / root_name
     exists = bool(root.exists() and any(root.iterdir())) if rank == 0 else None
     if bool(comm.bcast(exists, root=0)):
         raise FileExistsError(f"Refusing to overwrite existing results: {root}")
     if rank == 0:
         root.mkdir(parents=True, exist_ok=True)
-        print("\n### H5-Dose-P0 bounded contextual dose opportunity")
+        print(f"\n### {study_label}")
         print(OmegaConf.to_yaml(cfg.analysis, resolve=True))
     comm.Barrier()
     started = time.perf_counter()
@@ -1098,9 +1577,10 @@ def main(cfg: DictConfig) -> None:
             print(
                 f"context={context['context_id']} structure={context['structure_seed']} "
                 f"f={context['hidden_frequency_hz']:g} Hz "
-                f"q={context['shared_modulated_fraction']:g}"
+                f"q={context['shared_modulated_fraction']:g} "
+                f"I->E tau2={context['i_to_e_tau2_multiplier']:g}x"
             )
-        state_cfg = _with_context_state(cfg, context)
+        state_cfg = _with_susceptibility_state(cfg, context)
         record_this_context = bool(
             representative_state_requested
             and int(context["structure_index"]) == 0
@@ -1182,6 +1662,22 @@ def main(cfg: DictConfig) -> None:
                         sham_cosine=sham_cos, sham_sine=sham_sin,
                         active_cosine=active_cos, active_sine=active_sin,
                     )
+                    # The imported legacy helper was introduced for a 10-Hz
+                    # study. Retain its fields for backward compatibility but
+                    # add correctly named carrier-generic columns here because
+                    # this experiment crosses 9 and 11 Hz.
+                    decomposition.update({
+                        "delta_eeg_carrier_cosine_v": decomposition[
+                            "delta_eeg_10hz_cosine_v"
+                        ],
+                        "delta_eeg_carrier_sine_v": decomposition[
+                            "delta_eeg_10hz_sine_v"
+                        ],
+                        "induced_eeg_carrier_resultant_v": decomposition[
+                            "induced_eeg_10hz_resultant_v"
+                        ],
+                        "decomposition_frequency_hz": selected_frequency,
+                    })
                     dipole = _dipole_coefficients(
                         episode, selected_frequency, action_cfg
                     )
@@ -1198,6 +1694,10 @@ def main(cfg: DictConfig) -> None:
                         "context_id": context["context_id"],
                         "structure_seed": context["structure_seed"],
                         "shared_drive_label": context["shared_drive_label"],
+                        "i_to_e_tau2_label": context["i_to_e_tau2_label"],
+                        "i_to_e_tau2_multiplier": context[
+                            "i_to_e_tau2_multiplier"
+                        ],
                         "future_index": future_index + 1,
                         "dose_v_per_m": dose, **decomposition, **dipole,
                     })
@@ -1253,6 +1753,12 @@ def main(cfg: DictConfig) -> None:
                             "log10_alpha_power": float(row.log10_alpha_power_8_12_hz),
                             "E_firing_rate_hz": float(row.E_firing_rate_hz),
                             "I_firing_rate_hz": float(row.I_firing_rate_hz),
+                            "i_to_e_tau2_label": str(
+                                context["i_to_e_tau2_label"]
+                            ),
+                            "i_to_e_tau2_multiplier": float(
+                                context["i_to_e_tau2_multiplier"]
+                            ),
                         })
         del baseline_reference
 
@@ -1270,10 +1776,10 @@ def main(cfg: DictConfig) -> None:
         )
     if not metric_rows:
         conclusion = {
-            "scope": "H5-Dose-P0 bounded dose opportunity",
+            "scope": study_label,
             "checks": {"minimum_eligible_contexts": False},
             "conclusions": {
-                "H5_Dose_P0_contextual_dose_opportunity": "NOT PASSED",
+                conclusion_key: "NOT PASSED",
                 "ready_for_H5_dose_policy_development": False,
                 "machine_learning_policy_status": "NOT TRAINED OR TESTED",
             },
@@ -1294,11 +1800,17 @@ def main(cfg: DictConfig) -> None:
     orientation = pd.DataFrame(orientation_rows)
     expected = _expected_map(metrics)
     context_map, split, audit = _opportunity(expected, metrics, cfg)
-    threshold_rows, threshold_audit = _loso_threshold(context_map, expected)
+    threshold_rows, threshold_audit = _loso_threshold(context_map, expected, cfg)
+    baseline_pairs, baseline_audit = _kinetics_baseline_pairs(screening)
+    kinetics_predictions, kinetics_observability = _kinetics_observability(
+        screening
+    )
     checks, conclusions = _checks(
         screening=screening, metrics=metrics, expected=expected,
         context_map=context_map, audit=audit,
         loso=threshold_audit, sources=sources, cfg=cfg,
+        baseline_audit=baseline_audit,
+        observability=kinetics_observability,
     )
 
     metrics.to_csv(root / "context_dose_future_metrics.csv", index=False)
@@ -1313,24 +1825,61 @@ def main(cfg: DictConfig) -> None:
     context_map.to_csv(root / "dose_response_opportunity.csv", index=False)
     split.to_csv(root / "independent_future_split_validation.csv", index=False)
     threshold_rows.to_csv(root / "exploratory_EEG_threshold_LOSO.csv", index=False)
+    baseline_pairs.to_csv(root / "paired_kinetics_baseline_audit.csv", index=False)
+    kinetics_predictions.to_csv(
+        root / "kinetics_EEG_observability_LOSO.csv", index=False
+    )
     audit_payload = {
         "dose_opportunity": audit,
         "exploratory_EEG_threshold": threshold_audit,
+        "kinetics_baseline": baseline_audit,
+        "kinetics_EEG_observability": kinetics_observability,
         "orientation_control": orientation.to_dict("records"),
     }
-    (root / "H5_Dose_P0_opportunity_audit.json").write_text(json.dumps(
+    audit_name = (
+        "H5_K0_susceptibility_opportunity_audit.json"
+        if kinetics_study else "H5_Dose_P0_opportunity_audit.json"
+    )
+    (root / audit_name).write_text(json.dumps(
         _json_ready(audit_payload), indent=2, allow_nan=False
     ))
     provenance = {
-        "experiment": "H5_Dose_P0_bounded_contextual_dose_opportunity",
+        "experiment": (
+            "H5_K0_inhibitory_kinetics_susceptibility_dose_opportunity"
+            if kinetics_study else "H5_Dose_P0_bounded_contextual_dose_opportunity"
+        ),
         "frozen_sources": {"roots": sources["roots"], "hashes": sources["hashes"]},
         "frozen_population_B_target": target,
         "state_generator": {
             "carrier_hz": [9.0, 11.0], "phase_diffusion_rad2_per_s": 0.5,
             "modulation_depth": 0.04,
-            "shared_modulated_afferent_fraction": [0.5, 1.0],
+            "shared_modulated_afferent_fraction": sorted(
+                screening.shared_modulated_fraction.unique().astype(float).tolist()
+            ),
             "mean_afferent_rate_matched": True,
             "private_Poisson_streams_independent": True,
+        },
+        "circuit_susceptibility": {
+            "parameter": "recurrent I-to-E Exp2Syn decay tau2",
+            "baseline_tau1_ms": float(
+                cfg.env.network.synapse_kinetics.inhibitory.tau1_ms
+            ),
+            "baseline_tau2_ms": float(
+                cfg.env.network.synapse_kinetics.inhibitory.tau2_ms
+            ),
+            "tau2_multipliers": sorted(
+                screening.i_to_e_tau2_multiplier.unique().astype(float).tolist()
+            ),
+            "resolved_tau2_ms": sorted(
+                screening.i_to_e_tau2_ms.unique().astype(float).tolist()
+            ),
+            "peak_weight_scales": sorted(
+                screening.i_to_e_peak_weight_scale.unique().astype(float).tolist()
+            ),
+            "conductance_time_area_preserved": True,
+            "I_to_I_kinetics_unchanged": True,
+            "background_synapses_unchanged": True,
+            "does_not_claim_equal_voltage_dependent_synaptic_charge": True,
         },
         "causal_protocol": {
             "burn_in_s": 1, "predecision_EEG_s": 30,
@@ -1362,7 +1911,7 @@ def main(cfg: DictConfig) -> None:
         _json_ready(provenance), indent=2, allow_nan=False
     ))
     conclusion = {
-        "scope": "H5-Dose-P0 bounded contextual dose opportunity",
+        "scope": study_label,
         "checks": checks,
         "conclusions": conclusions,
         "runtime_seconds": float(time.perf_counter() - started),
@@ -1373,24 +1922,32 @@ def main(cfg: DictConfig) -> None:
         _json_ready(conclusion), indent=2, allow_nan=False
     ))
     if bool(cfg.experiment.plot):
+        predecision_table = (
+            pd.concat(pre_spectra, ignore_index=True)
+            if pre_spectra else pd.DataFrame()
+        )
         _plots(
             root=root, spectra=spectra, expected=expected,
             context_map=context_map, split=split, metrics=metrics,
             decomposition=decomposition, states=states,
+            predecision_spectra=predecision_table,
+            context_feature=str(
+                cfg.analysis.response_mapping.primary_context_feature
+            ),
         )
 
-    print("\n### H5-Dose-P0 screening")
+    print(f"\n### {study_label} screening")
     print(f"contexts screened: {len(screening)}")
     print(f"eligible contexts: {int(screening.eligible.sum())}")
     print(f"screening yield: {float(screening.eligible.mean()):.3f}")
-    print("\n### H5-Dose-P0 feasibility checks")
+    print(f"\n### {study_label} feasibility checks")
     for name, passed in checks.items():
         print(f"{name}: {'PASSED' if passed else 'NOT PASSED'}")
-    print("\n### H5-Dose-P0 opportunity summary")
+    print(f"\n### {study_label} opportunity summary")
     print(json.dumps(_json_ready(audit_payload), indent=2, allow_nan=False))
     print(
         "\nContextual dose opportunity: "
-        f"{conclusions['H5_Dose_P0_contextual_dose_opportunity']}"
+        f"{conclusions[conclusion_key]}"
     )
     print("Machine-learning policy status: NOT TRAINED OR TESTED")
     print(f"Results saved to: {root}")

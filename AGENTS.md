@@ -143,6 +143,8 @@ Run commands from this repository root.
   `experiments/ballnstick_analysis/run_ballnstick_h5_phase_tracker_response_mapping.py`
 - H5-Dose-P0 bounded contextual dose-opportunity mapping:
   `experiments/ballnstick_analysis/run_ballnstick_h5_dose_opportunity.py`
+- H5-K0 area-normalized I-to-E kinetics susceptibility dose mapping:
+  `experiments/ballnstick_analysis/run_ballnstick_h5_inhibitory_kinetics_dose_opportunity.py`
 - Frozen EEG phase-increment observability confirmation (D0b):
   `experiments/ballnstick_analysis/run_ballnstick_phase_increment_confirmation.py`
 - Phase-diffusion full-information action mapping (D1):
@@ -458,6 +460,25 @@ EEG-power effect is not automatically called desynchronization. If no
 practical cross-structure dose opportunity survives the future split, stop
 before policy development. These tissue-field amplitudes are simulator
 settings, not clinical safety prescriptions.
+
+For H5-K0, hash-lock the exact negative H5-Dose-P0 result and retain its H4
+fast phase controller, H5-I0b carrier estimator, frozen population-B target,
+ideal-EEG observation, `D=0.5 rad^2/s`, `m=0.04`, full shared drive, 9/11-Hz
+grid, and sham/`{0.1,0.2,0.4}`-V/m action set. Change only recurrent I-to-E
+`Exp2Syn` decay to `{0.8,1.2}` times the 9-ms baseline. Rescale the complete
+I-to-E peak-weight distribution by the analytic unit-peak kernel-area ratio so
+conductance-time area is exactly preserved; leave I-to-I kinetics, recurrence,
+background Poisson processes, and the actuator unchanged. Preserving this area
+does not preserve voltage-dependent charge. Prospectively require both states
+to retain the elevated-alpha phenotype, bounded paired baseline alpha/rate
+differences, and LOSO phase-invariant EEG observability. Use three new circuit
+structures and four paired futures, with futures 1--2 and 3--4 exchanged for
+selection/evaluation. Do not train a policy unless different state-level doses
+have at least 0.01 log-distance reciprocal margins, practical alternatives
+replicate across structures, the full-information oracle beats the best fixed
+dose by at least 0.01, and the independent-future gate passes. H5-K0 is a
+single bounded biological-susceptibility sensitivity study, not a calibrated
+physiological range, disease model, ML result, or clinical prescription.
 
 For D0b, treat the failed D0 global-resultant endpoint as discovery only. Load
 and hash-lock the D0 conclusion, generator, and EEG table; freeze the one-step
