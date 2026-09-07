@@ -11,6 +11,7 @@ from hydra import compose, initialize_config_dir
 from hydra.core.global_hydra import GlobalHydra
 
 from experiments.ballnstick_analysis.run_ballnstick_h5_dose_opportunity import (
+    _action_role,
     _contexts,
     _kinetics_baseline_pairs,
     _kinetics_metadata,
@@ -91,6 +92,10 @@ class H5InhibitoryKineticsDoseOpportunityTests(unittest.TestCase):
         self.assertAlmostEqual(
             float(state.env.network.background.I.rhythm.shared_modulated_fraction),
             1.0,
+        )
+        self.assertEqual(
+            _action_role(state),
+            "H5_K0_I_to_E_kinetics_fast_controller_dose_map",
         )
 
     def test_resolved_kinetics_preserve_area_and_i_to_i_decay(self) -> None:

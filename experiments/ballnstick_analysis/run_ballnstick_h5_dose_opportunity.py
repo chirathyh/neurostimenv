@@ -99,6 +99,13 @@ def _dose_id(dose: float) -> str:
     return f"dose_{dose:.1f}".replace(".", "p")
 
 
+def _action_role(cfg: DictConfig) -> str:
+    """Return the provenance label for the configured dose study."""
+    if _kinetics_study(cfg):
+        return "H5_K0_I_to_E_kinetics_fast_controller_dose_map"
+    return "H5_Dose_P0_fast_controller_dose_map"
+
+
 def _load_sources(cfg: DictConfig) -> dict[str, Any]:
     """Hash-lock the negative P2B result and all of its frozen ancestry."""
     sources = _load_p2b_upstream(cfg)
@@ -455,11 +462,7 @@ def _run_dose(
     )
     if episode is not None:
         episode["simulation"]["action"].update({
-            "role": (
-                "H5_K0_I_to_E_kinetics_fast_controller_dose_map"
-                if _kinetics_study(cfg)
-                else "H5_Dose_P0_fast_controller_dose_map"
-            ),
+            "role": _action_role(condition_cfg),
             "dose_v_per_m": float(dose),
             "audit_montage": montage,
         })
