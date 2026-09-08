@@ -145,6 +145,8 @@ Run commands from this repository root.
   `experiments/ballnstick_analysis/run_ballnstick_h5_dose_opportunity.py`
 - H5-K0 area-normalized I-to-E kinetics susceptibility dose mapping:
   `experiments/ballnstick_analysis/run_ballnstick_h5_inhibitory_kinetics_dose_opportunity.py`
+- H5-O0 EEG-observable cortical-orientation/montage-profile opportunity map:
+  `experiments/ballnstick_analysis/run_ballnstick_h5_montage_orientation_opportunity.py`
 - Frozen EEG phase-increment observability confirmation (D0b):
   `experiments/ballnstick_analysis/run_ballnstick_phase_increment_confirmation.py`
 - Phase-diffusion full-information action mapping (D1):
@@ -630,3 +632,36 @@ seeds and exact paired sign-flip inference. Audit baseline phase estimability
 by extrapolating independent first-half and second-half estimates to the same
 action boundary. A positive fixed-action result does not establish a
 contextual policy: require a held-out context-by-action interaction before RL.
+
+For H5-O0, preserve the negative H5-K0 result by hash and use new, disjoint
+seed namespaces. This is one bounded positive-control test of whether a
+biophysically direct response variable creates useful context--action
+interaction: population somatodendritic orientation is crossed at 0 and 60
+degrees, and the available actions are two equal-norm head-frame field
+profiles oriented at the same angles. These profiles represent precomputed
+montage/current solutions at the tissue, not scalp electrode optimization.
+
+Keep morphology and all synapse locations in one canonical local-column
+coordinate system. Represent orientation using reciprocal rigid transforms:
+map the recorded current dipole local-to-head for EEG and map each head-frame
+field head-to-local before applying it. Do not physically rotate the LFPy
+cells, because this BallAndStick setup's synapse-location rules depend on
+local z and would otherwise change the circuit. The optional online EEG
+dipole transform must remain absent by default so H1--H4 retain their exact
+EEG path. Verify paired orientations have identical connectivity, event
+streams, spikes, rates, and local dipole norm before interpreting an effect.
+
+Freeze `q=1`, modulation depth 0.04, `D=0.5 rad2/s`, the 9/11-Hz carrier grid,
+0.2 V/m amplitude, pi-relative target, and the H4-confirmed
+0.5-s-history/125-ms-update controller. Calibrate homogeneous,
+mean-rate-matched B targets separately for both head orientations before any
+active outcomes. Screening and phase tracking may use only stimulation-free
+multichannel ideal neural EEG; hidden orientation and generator frequency are
+scoring labels. Require phase-invariant EEG-topography observability, exact
+configured field-projection crossover, representative cellular-polarization
+ordering, matched-versus-mismatched endpoint crossover in both orientations,
+practical oracle headroom over the best fixed profile, independent-future
+replication, cross-structure support, causality, continuity, safety, and field
+removal. H5-O0 is full-information exploratory system identification: it does
+not train a policy, establish H5, solve a realistic head-model montage, or
+show clinical efficacy. A failed gate is a stopping result.

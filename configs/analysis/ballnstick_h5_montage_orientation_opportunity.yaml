@@ -1,0 +1,143 @@
+defaults:
+  - ballnstick_h5_dose_opportunity
+  - _self_
+
+# H5-O0 is an exploratory positive-control system-identification study.  It
+# asks whether multichannel prestimulation EEG exposes population orientation
+# and whether that orientation changes which of two equal-amplitude local
+# field profiles is preferable.  The local field profiles stand in for two
+# precomputed electrode-current/montage solutions; this experiment neither
+# solves a scalp-current optimization nor trains an ML policy.
+output_root_name: h5_montage_orientation_opportunity
+smoke_test: false
+smoke_context_limit: 0
+smoke_force_eligible: false
+
+# Preserve the exact negative endpoint of the bounded dose/kinetics branch.
+# Its locked provenance contains the complete H1--H4/H5 ancestry.
+source_h5k0:
+  result_dir: ../../results/ballnstick_h5_inhibitory_kinetics_dose_opportunity_full_v2/h5_inhibitory_kinetics_dose_opportunity
+  expected_sha256:
+    conclusion: 7852dfa2f868e7564b9371e02c928d0bdf884938f10248b97dfff21ae3af649a
+    audit: 85e5f408000a06b3c97cc00c9574dab857f38fd990fd5e3ea5cae212eb905456
+    screening: a6e65c2ef2406fb388ad1c829b217d51ef69a19a7c45559c14826381c812081c
+    metrics: 382c637f31e91ede1f58dcc0c101e7c745fbc8ce2d536fc3876d973b88e5d087
+    expected_map: 259a1bef1e40a969a576cfb54a9a2ff2bacee1bc9a98f3f657977cf7d1703abe
+    opportunity: 9b96a561ec1d07f56b305988ae68e23b98a9b2ba7c0c5274a01f4418827b2c04
+    future_split: c646f622ea511b586f637817ec552a042061d6ad67b76f6cd0ce8277528af3a2
+    provenance: ce50105a8324dedc84e73bbe3cbe5cc61c350527b80fd29c17c9b052ce949ddf
+
+states:
+  modulation_depth: 0.04
+  frequencies_hz: [9.0, 11.0]
+  phase_diffusion_levels:
+    - {label: low_diffusion, diffusion_rad2_per_s: 0.5}
+  shared_drive_levels:
+    - {label: full_shared_drive, shared_modulated_fraction: 1.0}
+  # These head-frame rotations are anatomical context, not A/B disease-state
+  # labels.  The canonical local network is not physically rotated because its
+  # recurrent synapse-location rule uses local z.  Instead, dipoles are mapped
+  # local->head and montage fields head->local with the same rotation matrix.
+  orientations:
+    - {label: orientation_0deg, rotation_y_rad: 0.0, axis: [0.0, 0.0, 1.0], matched_profile: montage_profile_z}
+    - {label: orientation_60deg, rotation_y_rad: 1.0471975511965976, axis: [0.8660254037844386, 0.0, 0.5], matched_profile: montage_profile_60deg}
+
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 30
+  stimulation_steps: 9
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  stimulation_analysis_trim_ms: 500.0
+
+reference_calibration:
+  # Homogeneous, mean-rate-matched B is simulated before any active outcome.
+  n_structure_seeds: 3
+  structure_seed_offset: 428000
+  history_seed_offset: 900000
+  phase_seed_offset: 910000
+  trial_seed_offset: 920000
+  future_seed_offset: 930000
+
+crossed_design:
+  # 3 structures x 2 carriers x 2 orientations = 12 A contexts.  Each
+  # eligible context receives sham and two field profiles over four paired
+  # futures: 12 x 3 x 4 = 144 action--future outcomes.
+  n_structure_seeds: 3
+  n_history_seeds: 1
+  n_future_continuations: 4
+  structure_seed_offset: 427000
+  history_seed_offset: 860000
+  phase_seed_offset: 870000
+  trial_seed_offset: 880000
+  future_seed_offset: 890000
+
+observation_noise:
+  # Establish the biophysical opportunity first in ideal neural EEG.  A later
+  # policy-development stage must restore the frozen moderate noise model.
+  enabled: true
+  rms_fraction_of_baseline_neural_eeg: 0.0
+  ar1_coefficient: 0.95
+  seed_offset: 940000
+
+eeg_array:
+  # Three idealized scalp locations on the 90-mm outer sphere.  The simulator
+  # still uses one prospectively selected channel for causal phase tracking;
+  # these channels are reconstructed from the simultaneously recorded dipole.
+  labels: [vertex, right_xz, left_xz]
+  locations_um:
+    - [0.0, 0.0, 90000.0]
+    - [45000.0, 0.0, 77942.28634059948]
+    - [-45000.0, 0.0, 77942.28634059948]
+  phase_sensor_selection: maximum_predecision_alpha_power
+  topography_normalization: carrier_band_power_fraction
+
+actions:
+  amplitude_v_per_m: 0.2
+  controller_modes: [sham, refresh_500ms_125ms]
+  montage_profiles:
+    - {id: montage_profile_z, field_direction: [0.0, 0.0, 1.0]}
+    - {id: montage_profile_60deg, field_direction: [0.8660254037844386, 0.0, 0.5]}
+
+response_mapping:
+  frozen_estimator: multitaper_pooled_evidence
+  safe_abstention_action: sham
+  practical_context_margin_log10: 0.01
+  future_selection_indices: [1, 2]
+  future_evaluation_indices: [3, 4]
+
+mechanism_audit:
+  record_representative_state: true
+  representative_frequency_hz: 9.0
+  trace_resample_hz: 500.0
+
+criteria:
+  minimum_reference_structures: 3
+  minimum_screened_contexts: 12
+  minimum_eligible_contexts: 8
+  minimum_structure_seeds: 3
+  minimum_future_continuations: 4
+  minimum_A_minus_B_alpha_log10: 0.05
+  minimum_carrier_identification_coverage: 0.80
+  minimum_accepted_carrier_accuracy: 0.90
+  minimum_recent_resultant_to_rms: 0.03
+  minimum_orientation_LOSO_balanced_accuracy: 0.80
+  maximum_paired_rate_difference_hz: 1.0e-10
+  maximum_paired_dipole_norm_relative_error: 1.0e-10
+  practical_context_margin_log10: 0.01
+  minimum_matched_advantage_each_orientation_log10: 0.01
+  minimum_expected_oracle_advantage_log10: 0.01
+  minimum_future_split_advantage_log10: 0.01
+  minimum_future_split_positive_structure_fraction: 0.6666666666666666
+  minimum_realized_winner_agreement_fraction: 0.75
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_field_boundary_discontinuity_v_per_m: 1.0e-10
+  maximum_frequency_correction_hz: 2.000000001
+  minimum_common_phase_estimate_actionable_fraction: 0.80
+  minimum_physiological_washout_recovery_fraction: 0.95
+  maximum_washout_residual_fraction: 0.50
+  maximum_washout_absolute_log10: 1.0e-6
+
+save_raw_eeg: false
+save_spikes: false
+save_representative_spectra: true

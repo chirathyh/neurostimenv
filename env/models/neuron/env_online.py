@@ -27,6 +27,33 @@ from env.models.neuron.stimulation import (
 from setup.circuits.ballnstick.utils import setup_network_ballnstick
 
 
+def _parse_optional_dipole_rotation(eeg_cfg: Mapping[str, Any]) -> np.ndarray | None:
+    """Validate an optional proper rotation from model to head coordinates.
+
+    Existing configurations omit this value and therefore retain the exact
+    historical EEG path.  It is opt-in for experiments that hold the local
+    circuit fixed while changing its anatomical orientation in head space.
+    """
+    raw = eeg_cfg.get("dipole_rotation_matrix")
+    if raw is None:
+        return None
+    rotation = np.asarray(raw, dtype=np.float64)
+    if rotation.shape != (3, 3) or not np.all(np.isfinite(rotation)):
+        raise ValueError(
+            "env.eeg.dipole_rotation_matrix must be a finite 3x3 matrix."
+        )
+    if not np.allclose(rotation.T @ rotation, np.eye(3), atol=1.0e-10):
+        raise ValueError(
+            "env.eeg.dipole_rotation_matrix must be orthonormal."
+        )
+    if not np.isclose(np.linalg.det(rotation), 1.0, atol=1.0e-10):
+        raise ValueError(
+            "env.eeg.dipole_rotation_matrix must be a proper rotation "
+            "with determinant +1."
+        )
+    return rotation
+
+
 class OnlineNeuronEnv(gym.Env):
     """A decision-window-level closed-loop environment backed by one NEURON run."""
 
@@ -48,6 +75,7 @@ class OnlineNeuronEnv(gym.Env):
         self.extracellular = None
         self.extracellular_models = None
         self.stimulation_controller = None
+        self.eeg_dipole_rotation = None
 
         self.reset_online()
 
@@ -67,6 +95,9 @@ class OnlineNeuronEnv(gym.Env):
             np.asarray(self.args.env.eeg.locations, dtype=np.float64),
             self.args.env.eeg.foursphereheadmodel["radii"],
             self.args.env.eeg.foursphereheadmodel["sigmas"],
+        )
+        self.eeg_dipole_rotation = _parse_optional_dipole_rotation(
+            self.args.env.eeg
         )
         self.extracellular = ExtracellularModels(self.args)
         self.extracellular_models = self.extracellular.get_probes()
@@ -410,6 +441,8 @@ class OnlineNeuronEnv(gym.Env):
         # ExtracellularModels.get_probes().  Its units are nA*um, and the
         # four-sphere helper returns mV, matching the legacy path.
         dipole_moment = result["probe_data"][1]
+        if self.eeg_dipole_rotation is not None:
+            dipole_moment = self.eeg_dipole_rotation @ dipole_moment
         eeg_mV = self.four_sphere_top.get_dipole_potential(
             dipole_moment,
             np.asarray(self.args.env.network.position, dtype=np.float64),

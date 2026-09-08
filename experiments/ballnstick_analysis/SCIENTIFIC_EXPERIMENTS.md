@@ -2868,3 +2868,127 @@ to the dose, future-split, current, membrane, spike, rate, phase, provenance,
 and safety outputs from H5-Dose-P0, the experiment saves paired baseline
 kinetics audits, LOSO kinetics-state predictions, analytic conductance-area
 metadata, and prestimulation PSD figures for both kinetics states.
+
+## Experiment 37: H5-O0 EEG-observable orientation--montage opportunity
+
+### Question
+
+The dose and inhibitory-kinetics branches did not produce enough repeatable
+contextual headroom to justify learning a policy. H5-O0 therefore asks a more
+fundamental, bounded question: does a variable that enters the weak-field
+coupling directly create a useful context--action interaction?
+
+The crossed context is the common somatodendritic orientation of the toy
+population in head coordinates, either 0 or 60 degrees. The two active actions
+are equal-magnitude (0.2 V/m) head-frame field profiles at 0 or 60 degrees.
+They stand in for two precomputed electrode-montage/current solutions. H5-O0
+does not optimize scalp currents and its field values remain tissue-level
+simulator settings rather than clinical dose prescriptions.
+
+For a unit somatodendritic axis `n(theta)` and a unit montage-field direction
+`e(phi)`, the first-order polarization scale is
+
+```text
+E_axial = 0.2 V/m * |n(theta) dot e(phi)|.
+```
+
+The prespecified projection matrix is
+
+```text
+                       field 0 deg   field 60 deg
+orientation 0 deg          1.0            0.5
+orientation 60 deg         0.5            1.0
+```
+
+This is a positive-control source of response heterogeneity, not an A/B
+disease manipulation. A remains the full-shared-drive rhythmic state with
+modulation depth 0.04, `D=0.5 rad2/s`, and carrier 9 or 11 Hz. B remains the
+homogeneous, mean-rate-matched afferent reference. Recurrent circuitry,
+synaptic kinetics, cells, phase controller, frequency estimator, amplitude,
+and relative phase are frozen.
+
+### Coordinate and EEG model
+
+Morphology and synapse locations remain in one canonical local-column frame.
+This is important because the BallAndStick synapse-placement rule depends on
+local z; physically rotating LFPy cells would otherwise change which segments
+receive recurrent and background synapses. With the proper rotation
+`R_y(theta)` from local column to head coordinates, the implementation uses
+
+```text
+p_head(t) = R_y(theta) p_local(t)
+E_local(t) = R_y(theta)^T E_head(t).
+```
+
+The first expression is used by both the causal online phase tracker and the
+offline three-channel FourSphere EEG. The second is the reciprocal field
+transform used by NEURON. Existing configurations omit the optional dipole
+rotation, preserving the H1--H4 EEG path exactly. The code verifies that a
+matched pair of coordinate-frame orientations retains identical spike trains,
+rates, connectivity/event realizations, and local dipole norm.
+
+The ideal three-sensor array contains a vertex sensor and symmetric right/left
+x--z sensors on the 90-mm outer sphere. The causal controller uses the sensor
+with the largest prestimulation alpha power. Phase-invariant carrier-band
+power fractions across all three sensors form the deployable context audit;
+hidden orientation is used only as an evaluation label.
+
+### Protocol and comparisons
+
+Each episode uses a one-second burn-in, 30-second stimulation-free baseline,
+nine-second intervention with 0.5-second onset/offset ramps, the central eight
+seconds as the endpoint, and a two-second washout. Three new circuit structures
+are crossed with two carriers and two orientations, yielding 12 A contexts.
+Three new reference structures are simulated at both orientations before any
+active outcome to calibrate orientation-specific homogeneous-B targets.
+
+Every eligible A context receives exactly three paired arms over four
+independent postdecision futures:
+
+- sham (0 V/m);
+- the 0-degree field profile at 0.2 V/m;
+- the 60-degree field profile at 0.2 V/m.
+
+Both active arms use the frozen H4-confirmed 0.5-second-history/125-ms-update
+phase-maintenance controller, the EEG-selected 9/11-Hz carrier, and a
+pi-relative target. This gives 144 action--future outcomes, in addition to the
+12 prospective screening episodes and six B-reference calibration episodes.
+Futures are paired across all three arms. The preferred montage is selected on
+futures 1--2 and evaluated on futures 3--4, and vice versa.
+
+The full gate requires carrier and recent-phase actionability; LOSO orientation
+discrimination from prestimulation phase-invariant EEG topography; complete
+paired action/future data; matched-profile benefit in both orientations; use
+of both profiles by the expected-outcome oracle; at least 0.01 log10 distance
+headroom over the best fixed profile; at least 0.01 log10 independent-future
+benefit with cross-structure support; projection-ordered representative
+cellular polarization; rate safety; causal phase updates; continuous fields;
+and exact field removal. The oracle is post hoc and not a deployable policy.
+Passing H5-O0 would justify a disjoint policy-development study, not establish
+H5.
+
+### Full workstation command
+
+```bash
+export OMP_NUM_THREADS=1
+export HYDRA_FULL_ERROR=1
+
+mpiexec -n 16 --bind-to core --map-by core python \
+  experiments/ballnstick_analysis/run_ballnstick_h5_montage_orientation_opportunity.py \
+  experiment.name=ballnstick_h5_montage_orientation_opportunity_full \
+  experiment.seed=1 \
+  env=ballnstick \
+  analysis=ballnstick_h5_montage_orientation_opportunity \
+  analysis.source_h5k0.result_dir=../../results/ballnstick_h5_inhibitory_kinetics_dose_opportunity_full_v2/h5_inhibitory_kinetics_dose_opportunity \
+  env.simulation.obs_win_len=1000 \
+  experiment.plot=true \
+  experiment.tqdm=false
+```
+
+Results are written to
+`../../results/ballnstick_h5_montage_orientation_opportunity_full/h5_montage_orientation_opportunity/`.
+The runner saves prospective screening, paired orientation-invariance audits,
+multichannel A/B and active PSDs, topographies, the complete action--future
+map, matched/mismatched crossovers, future-split validation, representative
+cellular polarization, safety/phase audits, provenance, and seven figures in
+both PNG and PDF.
