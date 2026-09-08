@@ -147,6 +147,8 @@ Run commands from this repository root.
   `experiments/ballnstick_analysis/run_ballnstick_h5_inhibitory_kinetics_dose_opportunity.py`
 - H5-O0 EEG-observable cortical-orientation/montage-profile opportunity map:
   `experiments/ballnstick_analysis/run_ballnstick_h5_montage_orientation_opportunity.py`
+- H5-O1D noisy-EEG montage-profile policy development:
+  `experiments/ballnstick_analysis/run_ballnstick_h5_montage_policy_development.py`
 - Frozen EEG phase-increment observability confirmation (D0b):
   `experiments/ballnstick_analysis/run_ballnstick_phase_increment_confirmation.py`
 - Phase-diffusion full-information action mapping (D1):
@@ -665,3 +667,32 @@ replication, cross-structure support, causality, continuity, safety, and field
 removal. H5-O0 is full-information exploratory system identification: it does
 not train a policy, establish H5, solve a realistic head-model montage, or
 show clinical efficacy. A failed gate is a stopping result.
+
+For H5-O1D, hash-lock the positive H5-O0 conclusion and its complete
+screening, response-map, future-split, target, and provenance artifacts. Keep
+the H5-O0 generator, homogeneous-B reference definition, 0.2-V/m amplitude,
+9/11-Hz multitaper carrier selection, pi-relative phase target, and frozen
+0.5-s-history/125-ms-update controller unchanged. Add only two intermediate
+population orientations (20 and 40 degrees) and the inherited moderate AR(1)
+sensor noise. Use reciprocal coordinate transforms exactly as in H5-O0; the
+orientation state must not alter local morphology, synapses, private Poisson
+events, recurrent dynamics, or the unstimulated local dipole.
+
+The deployable context is the noisy, stimulation-free three-sensor EEG. Fit
+one predeclared ridge model to the paired expected loss difference between the
+two equal-norm montage profiles using only carrier-band vertex topography and
+right-minus-left topography. Cross-validate by leaving out whole structures
+and by separating postdecision futures: fit response labels on futures 1--2
+and evaluate the selected action on futures 3--4. Hidden orientation,
+generator frequency, spikes, rates, ideal EEG, and action outcomes from the
+held-out structure must never enter the policy. Compare against sham, uniform
+random profile selection, the fold-trained best fixed profile, the frozen
+H5-O0 analytical EEG rule, and the post-hoc full-information oracle. Use a
+structure-preserving context shuffle as the primary specificity audit.
+
+H5-O1D is exploratory policy development, not confirmation. A pass may freeze
+the complete model for a new disjoint confirmatory study; it does not establish
+H5, clinical montage optimization, real stimulation-artifact robustness, or
+human anatomical generalization. Treat circuit structure as the inferential
+unit and do not relax the practical-effect, regret, cross-structure, carrier,
+causality, continuity, safety, or field-removal gates after seeing outcomes.

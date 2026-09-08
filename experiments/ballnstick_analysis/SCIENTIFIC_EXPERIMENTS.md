@@ -2992,3 +2992,146 @@ multichannel A/B and active PSDs, topographies, the complete action--future
 map, matched/mismatched crossovers, future-split validation, representative
 cellular polarization, safety/phase audits, provenance, and seven figures in
 both PNG and PDF.
+
+## Experiment 38: H5-O1D noisy-EEG montage-policy development
+
+### Question and scientific scope
+
+H5-O0 established a large, independently replicated full-information
+opportunity: at fixed amplitude, carrier, phase controller, and network state,
+the tissue-field profile aligned more closely with the modeled population axis
+than the mismatched profile and improved the ideal neural-EEG endpoint. H5-O1D
+asks the next distinct question: can a small model infer which of those two
+precomputed profiles to use from causal, noisy, stimulation-free EEG on an
+unseen circuit structure?
+
+This is an intentionally bounded policy-development experiment. Population
+orientation is a toy source of subject-level electric-field susceptibility;
+the actions represent two fixed candidate montage/current solutions at the
+modeled tissue. The study does not infer a realistic cortical normal, solve a
+head-model current-optimization problem, include tACS recording artifacts, or
+claim a clinical benefit.
+
+### Frozen mechanism and new context grid
+
+The positive H5-O0 outputs are hash-locked before any new simulation. The A
+generator remains a full-shared-drive, mean-rate-matched Poisson state with
+modulation depth 0.04, phase diffusion `D=0.5 rad2/s`, and a 9- or 11-Hz
+carrier. B remains the homogeneous afferent reference. The two active actions
+remain 0- and 60-degree head-frame field profiles, both with amplitude
+0.2 V/m, the EEG-selected carrier, pi-relative phase, and the H4-confirmed
+0.5-second-history/125-ms-update controller.
+
+H5-O1D adds only intermediate axes at 20 and 40 degrees to the frozen H5-O0
+endpoints at 0 and 60 degrees. The mechanistic projection is therefore graded:
+
+```text
+E_axial(theta, phi) = 0.2 V/m * |cos(theta - phi)|,
+theta in {0, 20, 40, 60} deg, phi in {0, 60} deg.
+```
+
+Four new structures are crossed with two carriers and four orientations,
+giving 32 contexts. Three additional structures calibrate homogeneous-B
+targets at the four orientations before active outcomes. Each eligible A
+context receives sham and both active profiles over four paired postdecision
+futures. If all contexts enroll, this is 32 screening episodes, 12 reference
+episodes, and
+
+```text
+32 contexts * 3 arms * 4 futures = 384 action--future outcomes.
+```
+
+Each episode has a one-second burn-in, a 30-second stimulation-free baseline,
+nine seconds of intervention with 0.5-second onset/offset ramps, the central
+eight seconds as the efficacy endpoint, and two seconds of washout. Within a
+context and future, all arms have the same predecision neural trajectory,
+standardized observation-noise realization, private Poisson continuation, and
+latent-phase continuation. Only the stimulation profile differs.
+
+### Observation and learned rule
+
+The three-sensor ideal neural EEG from H5-O0 is augmented with frozen moderate
+AR(1) sensor noise at 0.25 of baseline neural RMS and coefficient 0.95. The
+vertex and two side-sensor noise paths are independent, but use a common
+absolute scale estimated from the vertex prestimulation signal. Scaling is
+fixed at the decision boundary. Ideal EEG remains available only for the
+efficacy endpoint and attribution audits.
+
+The carrier is selected by the frozen H5-I0b multitaper estimator. The only
+learned inputs are two phase-invariant, noisy-predecision-EEG features at that
+carrier:
+
+```text
+x1 = carrier-band power fraction at the vertex,
+x2 = right carrier-band power fraction - left carrier-band power fraction.
+```
+
+For the active profiles `z` and `60`, define the paired response label
+
+```text
+d(x) = E[L(z) - L(60) | x],
+```
+
+where `L` is ideal neural-EEG log10 distance to the frozen orientation-specific
+B target. A positive prediction selects the 60-degree profile and a nonpositive
+prediction selects the z profile. One ridge-linear model with fixed penalty
+1.0 estimates this contrast. This is supervised offline policy development
+from full paired action outcomes; it is not an online contextual-bandit trial.
+
+### Leakage-resistant evaluation and comparators
+
+The primary analysis leaves out one complete circuit structure. Within each
+fold, response labels are learned from futures 1--2 of the other structures;
+the selected profile is scored only on futures 3--4 of the held-out structure.
+The reverse split is a prespecified robustness audit. A final candidate is fit
+only after evaluation, using futures 1--2 across all development structures,
+and is saved for possible disjoint confirmation without claiming performance
+from that fitted object.
+
+The learned policy is compared with:
+
+- sham;
+- uniform random selection over the two active profiles;
+- the best fixed active profile learned inside each training fold;
+- the frozen H5-O0 analytical topography-threshold rule; and
+- a post-hoc full-information oracle, used only as an upper-bound audit.
+
+A structure-preserving permutation shuffles EEG context rows only within each
+structure while retaining the paired response map. This tests whether policy
+benefit depends on the correct context--response association rather than
+structure identity or global action imbalance.
+
+The gate requires noisy-EEG carrier coverage and accuracy, profile
+observability, complete pairing, use of both actions, at least 0.01 log10 mean
+advantage over the best fixed profile, positive benefit in at least 75% of
+structures, small oracle regret, benefit over uniform random selection,
+context-shuffle specificity, noninferiority to the frozen analytical rule,
+reverse-split robustness, rates, causality, waveform continuity, and field
+removal. A pass freezes a candidate for new-seed confirmation; a failure stops
+that branch without post-hoc feature or threshold changes.
+
+### Full workstation command
+
+```bash
+export OMP_NUM_THREADS=1
+export HYDRA_FULL_ERROR=1
+
+mpiexec -n 16 --bind-to core --map-by core python \
+  experiments/ballnstick_analysis/run_ballnstick_h5_montage_policy_development.py \
+  experiment.name=ballnstick_h5_montage_policy_development_full \
+  experiment.seed=1 \
+  env=ballnstick \
+  analysis=ballnstick_h5_montage_policy_development \
+  analysis.source_h5o0.result_dir=../../results/ballnstick_h5_montage_orientation_opportunity_full/h5_montage_orientation_opportunity \
+  env.simulation.obs_win_len=1000 \
+  experiment.plot=true \
+  experiment.tqdm=false
+```
+
+Results are written to
+`../../results/ballnstick_h5_montage_policy_development_full/h5_montage_policy_development/`.
+The runner saves the source hashes, B targets, screening table, noisy and
+neural multichannel PSDs, orientation invariance, LOSO observability, complete
+action--future map, expected response map, held-out policy evaluation,
+structure-preserving shuffle, fold models, frozen candidate, checks,
+provenance, and seven PNG/PDF manuscript-oriented figures.

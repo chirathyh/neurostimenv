@@ -1,0 +1,127 @@
+defaults:
+  - ballnstick_h5_montage_orientation_opportunity
+  - _self_
+
+# H5-O1D is policy development, not confirmation. It preserves the positive
+# H5-O0 opportunity map, adds moderate sensor noise and intermediate source
+# orientations, and evaluates one small EEG-only paired-effect model by whole
+# held-out structure and independent postdecision futures.
+output_root_name: h5_montage_policy_development
+smoke_test: false
+smoke_context_limit: 0
+smoke_force_eligible: false
+
+source_h5o0:
+  result_dir: ../../results/ballnstick_h5_montage_orientation_opportunity_full/h5_montage_orientation_opportunity
+  expected_sha256:
+    conclusion: 7780eb503177592c81a8e9189bdeb7a3ee48e8ed3eecc5d20899a4ba4756b485
+    audit: de567bcb20987990cc9cd1e87a0e5417987317ea705ef7088979aa79ef2b604e
+    screening: 8690ac9cda51a8cc8d63e3e1f888f02eca831d6677832b48821aebb5c7f21271
+    metrics: 7c86144b361e5a420ee41f300881cc48f81e5bea8374424840135ae6b9f57adb
+    expected_map: 557012df296db0660dfbc0264dbe4eb3942ddfd70359de8dfe41239ac2a1528c
+    opportunity: e86ec98a620c7a11663003826a48d63a706e4eeff95a0c385d809d843552814e
+    future_split: b7cc3545160c34b362231be87e2fd1e8b96e5f42e0f10c2e6c9d11a979c260ce
+    target: 4f58df364002f10478b2e785933aae6df2c47291677a25b21fb1b6c1c875d2bb
+    provenance: 5b1cd793ae0eef331f5f719a242485c8c1d8d14bcd95056f4c9106657e8002ae
+
+states:
+  modulation_depth: 0.04
+  frequencies_hz: [9.0, 11.0]
+  phase_diffusion_levels:
+    - {label: low_diffusion, diffusion_rad2_per_s: 0.5}
+  shared_drive_levels:
+    - {label: full_shared_drive, shared_modulated_fraction: 1.0}
+  # Intermediate orientations make the EEG/action relationship graded. The
+  # closest of the two frozen field profiles is the mechanistic audit label.
+  orientations:
+    - {label: orientation_0deg, rotation_y_rad: 0.0, axis: [0.0, 0.0, 1.0], matched_profile: montage_profile_z}
+    - {label: orientation_20deg, rotation_y_rad: 0.3490658503988659, axis: [0.3420201433256687, 0.0, 0.9396926207859084], matched_profile: montage_profile_z}
+    - {label: orientation_40deg, rotation_y_rad: 0.6981317007977318, axis: [0.6427876096865394, 0.0, 0.766044443118978], matched_profile: montage_profile_60deg}
+    - {label: orientation_60deg, rotation_y_rad: 1.0471975511965976, axis: [0.8660254037844386, 0.0, 0.5], matched_profile: montage_profile_60deg}
+
+reference_calibration:
+  n_structure_seeds: 3
+  structure_seed_offset: 429100
+  history_seed_offset: 1010000
+  phase_seed_offset: 1020000
+  trial_seed_offset: 1030000
+  future_seed_offset: 1040000
+
+crossed_design:
+  # 4 structures x 2 carriers x 4 orientations = 32 contexts. Each eligible
+  # context receives sham and two profiles across four paired futures.
+  n_structure_seeds: 4
+  n_history_seeds: 1
+  n_future_continuations: 4
+  structure_seed_offset: 429000
+  history_seed_offset: 950000
+  phase_seed_offset: 960000
+  trial_seed_offset: 970000
+  future_seed_offset: 980000
+
+observation_noise:
+  enabled: true
+  rms_fraction_of_baseline_neural_eeg: 0.25
+  ar1_coefficient: 0.95
+  seed_offset: 990000
+  # The online controller uses the established paired single-sensor noise.
+  # Side-sensor paths are independent but use the same absolute scale as the
+  # vertex noise and are normalized only before the decision boundary.
+  multichannel_side_seed_offset: 1060000
+  scale_reference_sensor: vertex
+
+eeg_array:
+  phase_sensor_selection: frozen_vertex_from_H5O0
+
+policy_development:
+  policy_name: ridge_paired_effect_topography
+  features:
+    - topography_vertex
+    - topography_right_minus_left
+  ridge_penalty: 1.0
+  primary_training_futures: [1, 2]
+  primary_evaluation_futures: [3, 4]
+  reverse_split_audit: true
+  shuffle_repetitions: 1000
+  shuffle_seed: 1070001
+  # Frozen from the midpoint of H5-O0's two ideal right-minus-left
+  # topographies. This comparator is never refitted in H5-O1D.
+  analytical_topography_threshold: 0.0583785
+  analytical_low_action: montage_profile_z
+  analytical_high_action: montage_profile_60deg
+  safe_fallback_action: sham
+  final_model_training_futures: [1, 2]
+
+criteria:
+  minimum_reference_structures: 3
+  minimum_screened_contexts: 32
+  minimum_eligible_contexts: 24
+  minimum_structure_seeds: 4
+  minimum_future_continuations: 4
+  minimum_orientation_levels: 4
+  minimum_carrier_identification_coverage: 0.80
+  minimum_accepted_carrier_accuracy: 0.90
+  minimum_recent_resultant_to_rms: 0.03
+  minimum_common_phase_estimate_actionable_fraction: 0.80
+  minimum_profile_LOSO_balanced_accuracy: 0.80
+  minimum_learned_policy_advantage_log10: 0.01
+  minimum_positive_structure_fraction: 0.75
+  maximum_policy_regret_log10: 0.01
+  maximum_context_shuffle_p_value: 0.05
+  analytical_noninferiority_margin_log10: 0.01
+  minimum_reverse_split_advantage_log10: 0.0
+  maximum_baseline_relative_rms_error: 1.0e-8
+  maximum_paired_rate_difference_hz: 1.0e-10
+  maximum_paired_dipole_norm_relative_error: 1.0e-10
+  maximum_field_boundary_discontinuity_v_per_m: 1.0e-10
+  maximum_frequency_correction_hz: 2.000000001
+  minimum_physiological_washout_recovery_fraction: 0.95
+
+mechanism_audit:
+  # Cellular polarization was established and hash-locked in H5-O0. Avoid
+  # recording large representative traces again during policy development.
+  record_representative_state: false
+
+save_raw_eeg: false
+save_spikes: false
+save_representative_spectra: true
