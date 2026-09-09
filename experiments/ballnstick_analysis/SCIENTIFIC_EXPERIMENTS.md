@@ -3135,3 +3135,217 @@ neural multichannel PSDs, orientation invariance, LOSO observability, complete
 action--future map, expected response map, held-out policy evaluation,
 structure-preserving shuffle, fold models, frozen candidate, checks,
 provenance, and seven PNG/PDF manuscript-oriented figures.
+
+## Experiment 39: H5-O1M spatial measurement and paired-reference audit
+
+### Why this experiment, rather than another policy fit?
+
+The completed H5-O1D result is negative and is preserved by seven file hashes.
+Its primary learned advantage was approximately 0.00177 log-distance units,
+below the declared 0.01 engineering margin. Ideal-EEG orientation decoding was
+much stronger than noisy decoding, but even its in-sample full-information
+oracle had only approximately 0.00623 headroom. Better measurements therefore
+cannot be assumed to establish useful treatment personalization.
+
+This small, stimulation-free study addresses two measurement weaknesses:
+independent sensor noise biases normalized auto-power topography, and the
+previous screen indexed B targets by the simulated (hidden) orientation.
+It also removes stochastic differences between B reference trajectories
+previously run independently at different orientations. No existing result,
+H1--H4 runner, network mechanism, treatment dose, or success criterion is
+rewritten. H5-O1M is a new measurement study, not a rescue of H5-O1D.
+
+### Design and timing
+
+The 40-cell canonical local circuit, synapses, mean afferent rates and
+6.3-degree canonical HH kinetics are unchanged. Rhythmic A has q=1,
+modulation depth 0.04, D=0.5 rad²/s, and a 9- or 11-Hz carrier. Homogeneous B
+has zero rhythmic modulation at the same expected mean afferent rate. These
+are toy spectral states, not validated disease and health labels.
+
+| Stage | Independent structures | Neural conditions per structure | Neural episodes |
+| --- | ---: | --- | ---: |
+| Population-B calibration | 3 | B | 3 |
+| Disjoint measurement evaluation | 4 | B, A9, A11 | 12 |
+| Total | 7 | | 15 |
+
+Every persistent episode is **1 s burn-in + 30 s baseline + 9 s later sham +
+2 s final sham**. The inherited internal epoch key `stimulation` contains
+zero-field sham only. The central eight seconds of that nine-second block
+are retained solely for duration-matched B calibration audits. All deployable
+features and screens use the preceding 30 seconds, never those later samples.
+One B trajectory is needed per structure because a homogeneous generator has
+no 9/11-Hz carrier. Matched A/B contexts share structure, private-drive,
+phase-path and future seeds; their afferent rate functions differ as intended.
+
+Each canonical dipole trajectory is projected offline to 0, 20, 40 and
+60 degrees. This is exact for the zero-field coordinate-transform model: the
+local neural dynamics do not depend on orientation. Three independent
+three-sensor observation-noise paths are shared across these rotations. This
+gives 96 A evaluation views and 48 B evaluation views, plus 36 calibration
+views. Neural-only and noisy attribution views are analyzed with both fixed
+estimators, giving 720 measurement rows. These rows are **not 720 independent
+circuits**; the inferential unit is the four evaluation structures.
+
+The three sensors have independent AR(1) noise with coefficient 0.95 and
+equal absolute scale, fixed to 0.25 of the prestimulation vertex neural RMS.
+As in H5-O1D this does not mean identical relative noise at the weaker side
+sensors. The unit paths are normalized before the decision boundary and the
+scale remains fixed afterwards. Original unit-noise vectors, seeds and hashes
+are saved, and the same paths are reused for orientation comparisons.
+
+### Fixed estimators and the source of additional information
+
+With the known three-sensor FourSphere leadfield H, an oriented single local
+column gives
+
+```text
+y(t) = g(theta) u(t) + n(t),
+g(theta) = H [sin(theta), 0, cos(theta)]^T.
+```
+
+Integrate the real cross-spectral matrix over 8--12 Hz. Spectra use 4-second
+Hann windows with 50% overlap on the 30-second baseline (0.25-Hz bin spacing;
+the taper still determines effective resolution). Under independent sensor
+noise of equal spectrum,
+
+```text
+E[S_alpha] = P_u g(theta) g(theta)^T + N_alpha I.
+```
+
+Noise adds to each auto-spectrum. In expectation it does not add to
+off-diagonal cross-spectra. The common neural-current source produces
+cross-channel covariance, including the polarity information that is lost by
+using only squared amplitudes. This is a volume-conducted source pattern,
+**not evidence for connectivity between three neural populations**.
+
+The primary estimator `equal_noise_csd_rank1` fits the leading eigenvector to
+known normalized leadfield patterns on a frozen 0--60-degree grid in 0.25-degree
+steps. It estimates global neural alpha energy as
+
+```text
+P_hat = max(lambda_max - mean(lambda_2, lambda_3), 0).
+```
+
+It receives no true orientation, condition, hidden carrier, ideal EEG, or
+actual noise vector. It estimates the noise floor from the lower eigenvalues.
+An estimated signal fraction below 0.10 or a leadfield-pattern residual above
+0.25 causes abstention. These are predeclared engineering tolerances, not
+physiologically calibrated diagnostic cutoffs.
+
+The comparator `auto_power_template` fits the same known forward-model
+templates using only normalized diagonal powers. It uses the same 8--12-Hz
+matrix and is **not an exact rerun** of H5-O1D's carrier-band ridge policy.
+Neither estimator is selected or fitted on new neural outcomes. The nearest
+field-profile label, separated at 30 degrees, is a geometry audit only; the
+best physiological intervention need not be the geometrically nearest field.
+
+### EEG-only screening and B calibration
+
+Let G(theta)=sum_s g_s(theta)^2. Remove the estimated geometry gain using
+
+```text
+z = log10(P_hat) - log10(G(theta_hat)/G(0)).
+```
+
+For the auto-power comparator, total alpha power replaces P_hat. Three
+calibration B structures determine a single population mean z_B for each
+estimator and attribution view, averaging repeats within each structure first.
+Freeze these targets before simulating the evaluation structures. The
+phenotype screen is `z - z_B >= 0.05`; it never indexes a threshold by the
+hidden orientation, and never uses the matched evaluation B as a target.
+
+Carrier identification retains the frozen H5-I0b multitaper pooled-evidence
+9/11-Hz method on the vertex. Recent phase actionability is assessed from the
+last second only. Treatment eligibility would require the phenotype screen,
+spatial confidence, carrier acceptance, and phase confidence together. Failed
+confidence means a sham fallback. Since this is a measurement study all
+episodes actually remain sham, including the eligible ones. Accepted incorrect
+carriers remain errors, not retrospective exclusions. B specificity is scored
+on the phenotype decision separately, so carrier abstention cannot inflate it.
+
+### Gates, figures, and next decision
+
+Predeclared descriptive gates require observed-EEG geometry balanced accuracy
+at least 0.80, mean angle error at most 10 degrees, acceptance coverage at least
+0.80, accepted balanced accuracy at least 0.80, and improvement over the
+auto-power comparator. Also require carrier coverage 0.80, accepted carrier
+accuracy 0.90, phase actionability 0.80, A sensitivity 0.60, B specificity 0.80,
+phenotype balanced accuracy 0.75, stable decisions across noise repeats,
+paired reference invariance, finite EEG, rate bounds and zero field.
+
+Report metrics per structure and per observed/neural attribution view. A
+structure bootstrap and exact paired sign-flip test describe uncertainty in
+the spatial-accuracy difference. Four structures imply a minimum one-sided
+exact p-value of 1/16=0.0625: this is deliberately not a powered confirmatory
+study, and statistical significance is not a gate. No electrode, orientation,
+window, cutoff or estimator search follows inspection of the outcomes.
+
+Saved PNG/PDF figures show separate A9/A11/B PSDs; estimated versus true
+orientation; structure-level spatial error and accuracy; EEG-only phenotype
+screening; paired B calibration; sensitivity/specificity; and vertex/side-sensor
+PSD noise attribution. CSV/JSON tables include every view, structure summaries,
+inference, full configuration and source provenance. Compressed artifacts retain
+canonical dipoles, processed neural/noisy EEG and original noise vectors
+(allow roughly 1 GB disk space for the full study). `run_complete.json` is
+written last, after all figures, tables and the conclusion; it records runtime
+and hashes the top-level artifacts.
+
+A pass permits only a **small new paired-response reassessment** with the
+corrected measurement/target. It does not establish extra oracle headroom or
+H5. That later study must retain the strongest fixed montage and the analytical
+geometry-based comparator, use independent-future selection/evaluation, and
+still show a practically useful context-by-action interaction. A failure
+should stop the current noisy-montage branch, not trigger a large ML run.
+Even a pass relies on a known source location/head model, one oriented source,
+and independent equal-spectrum sensor noise. Multiple sources, correlated
+noise, unknown anatomy, and tACS recording artifacts remain outside scope.
+
+### Workstation full command
+
+Only the completed H5-O1D result folder is read at runtime. Its embedded
+upstream provenance is retained; no older result-directory overrides are
+needed. Run from the repository root after activating its parent environment:
+
+```bash
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+export HYDRA_FULL_ERROR=1
+
+time mpiexec -n 16 --bind-to core --map-by core python \
+  experiments/ballnstick_analysis/run_ballnstick_h5_spatial_measurement_audit.py \
+  experiment.name=ballnstick_h5_spatial_measurement_audit_full \
+  experiment.seed=1 env=ballnstick \
+  analysis=ballnstick_h5_spatial_measurement_audit \
+  analysis.source_h5o1d.result_dir=../../results/ballnstick_h5_montage_policy_development_full/h5_montage_policy_development \
+  env.simulation.obs_win_len=1000 experiment.plot=true experiment.tqdm=false
+```
+
+Output: `../../results/ballnstick_h5_spatial_measurement_audit_full/h5_spatial_measurement_audit/`.
+The full command runs 15 episodes; it is not a smoke. Additional MPI ranks
+parallelize cells within a trajectory, not the offline noise views. With only
+40 cells, 16 is a reasonable starting point; 32 is not guaranteed faster.
+Reuse neither an occupied experiment name nor a smoke output as a scientific
+source. The runner refuses to overwrite an existing populated result folder.
+
+### Local engineering smoke
+
+```bash
+python -m unittest -v tests.test_h5_spatial_measurement_audit
+
+mpiexec -n 2 python \
+  experiments/ballnstick_analysis/run_ballnstick_h5_spatial_measurement_audit.py \
+  experiment.name=ballnstick_h5_spatial_measurement_audit_smoke \
+  experiment.seed=1 env=ballnstick \
+  analysis=ballnstick_h5_spatial_measurement_audit \
+  analysis.smoke_test=true \
+  analysis.timeline.baseline_steps=4 \
+  analysis.timeline.stimulation_steps=2 \
+  analysis.timeline.washout_steps=1 \
+  analysis.measurement_design.noise_repeats=1 \
+  env.simulation.obs_win_len=1000 experiment.plot=true experiment.tqdm=false
+```
+
+This executes four shortened zero-field episodes and exercises the complete
+artifact pipeline. Its conclusion is always `SMOKE COMPLETED`, never a
+positive measurement gate or permission for policy confirmation. Scientific
+criteria are not relaxed to make the short smoke pass.

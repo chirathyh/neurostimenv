@@ -149,6 +149,8 @@ Run commands from this repository root.
   `experiments/ballnstick_analysis/run_ballnstick_h5_montage_orientation_opportunity.py`
 - H5-O1D noisy-EEG montage-profile policy development:
   `experiments/ballnstick_analysis/run_ballnstick_h5_montage_policy_development.py`
+- H5-O1M zero-field spatial EEG and paired-B measurement audit:
+  `experiments/ballnstick_analysis/run_ballnstick_h5_spatial_measurement_audit.py`
 - Frozen EEG phase-increment observability confirmation (D0b):
   `experiments/ballnstick_analysis/run_ballnstick_phase_increment_confirmation.py`
 - Phase-diffusion full-information action mapping (D1):
@@ -696,3 +698,26 @@ H5, clinical montage optimization, real stimulation-artifact robustness, or
 human anatomical generalization. Treat circuit structure as the inferential
 unit and do not relax the practical-effect, regret, cross-structure, carrier,
 causality, continuity, safety, or field-removal gates after seeing outcomes.
+
+For H5-O1M, hash-lock the completed negative H5-O1D result. Apply no
+stimulation and fit no treatment policy. Keep the same 9/11-Hz generator,
+modulation depth 0.04, q=1, D=0.5, three sensors, moderate equal-absolute AR(1)
+noise, and four orientations. Simulate one canonical local dipole per neural
+context and rotate it offline; do not independently simulate the B reference
+at each orientation. Use three new B calibration structures and four disjoint
+evaluation structures, each with homogeneous B plus rhythmic A9/A11. Retain
+1/30/9/2-second timing with zero field throughout. Noise views and rotations
+are repeats, not independent structures. Save original noise paths and hashes;
+normalize and scale from predecision samples only.
+
+Compare a fixed auto-power template with a fixed equal-noise rank-one
+cross-spectral estimator. The latter assumes one population source, a known
+leadfield/source location, and independent equal-spectrum sensor noise; it is
+not a general EEG inverse solution or a connectivity estimator. Infer source
+orientation and gain-normalized alpha from observed EEG only. Calibrate one
+population B threshold per estimator/view, without any true-orientation
+lookup. Assess phenotype sensitivity/specificity separately from carrier and
+spatial abstention. Geometry-matched profile classification is not proof of
+optimal treatment selection. A positive audit only permits a small new paired
+response reassessment, not H5 confirmation; four evaluation structures cannot
+give a one-sided exact sign-flip p below 0.0625.

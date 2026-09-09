@@ -1,0 +1,88 @@
+defaults:
+  - ballnstick_h5_montage_policy_development
+  - _self_
+
+# H5-O1M: a fixed-estimator measurement/calibration audit, not another policy
+# fit or action map. No electric field is applied in any episode.
+output_root_name: h5_spatial_measurement_audit
+smoke_test: false
+smoke_force_eligible: false
+
+source_h5o1d:
+  result_dir: ../../results/ballnstick_h5_montage_policy_development_full/h5_montage_policy_development
+  expected_sha256:
+    conclusion: 71e6beebef05e2c33df3eb96aabcd42cf676504b00149ce3ba52d394d281db81
+    audit: 9cd0a0d64ec4dbd67c8404578c561c788f5f672fc50d1e42452a8f469a446c32
+    screening: 44abb4a9db02e2482c539b2f493995aac36a35224c2ac279feddb3d3794e17e5
+    metrics: 4864a5f7b7ed9c931a144a4cae2af94439f0ad7e2d7fb871306db1b804ee77a6
+    evaluation: 70aa8a63c56983e460f7fd107279ceffb63e86f0fe45ade75fdada7a2de8a7df
+    target: 88445fe535b75fc5acf1facabad30820602e41c77bb85925f40aee1f19670519
+    provenance: b4f68c28ddd1add37b2be8debfeb2cf7878d800d11d011818bc24fc6b19318c5
+
+measurement_design:
+  calibration_structures: 3
+  evaluation_structures: 4
+  calibration_structure_seed_offset: 429300
+  evaluation_structure_seed_offset: 429200
+  history_seed_offset: 1100000
+  phase_seed_offset: 1110000
+  future_seed_offset: 1120000
+  trial_seed_offset: 1130000
+  sensor_noise_seed_offset: 2000000
+  noise_repeats: 3
+
+spatial_measurement:
+  # Fixed before new neural data: no estimator/hyperparameter selection.
+  primary_estimator: equal_noise_csd_rank1
+  comparator: auto_power_template
+  segment_seconds: 4.0
+  overlap_fraction: 0.5
+  orientation_grid_min_deg: 0.0
+  orientation_grid_max_deg: 60.0
+  orientation_grid_step_deg: 0.25
+  action_boundary_deg: 30.0
+  alpha_low_hz: 8.0
+  alpha_high_hz: 12.0
+  minimum_signal_fraction: 0.10
+  maximum_pattern_residual: 0.25
+  phenotype_minimum_excess_log10: 0.05
+  # The original RMS convention and AR coefficient are retained. Each noise
+  # path is shared across rotations, and normalized only before the boundary.
+  noise_rms_fraction: 0.25
+  ar1_coefficient: 0.95
+  bootstrap_repetitions: 2000
+  inference_seed: 2100001
+  save_processed_views: true
+  save_canonical_dipole: true
+  save_unit_noise: true
+
+measurement_criteria:
+  minimum_spatial_balanced_accuracy: 0.80
+  maximum_mean_absolute_angle_error_deg: 10.0
+  minimum_spatial_accepted_fraction: 0.80
+  minimum_accepted_spatial_balanced_accuracy: 0.80
+  minimum_accuracy_advantage_over_auto: 0.0
+  minimum_carrier_coverage: 0.80
+  minimum_accepted_carrier_accuracy: 0.90
+  minimum_recent_phase_actionable_fraction: 0.80
+  minimum_A_screen_sensitivity: 0.60
+  minimum_B_screen_specificity: 0.80
+  minimum_screen_balanced_accuracy: 0.75
+  maximum_noise_repeat_class_disagreement: 0.25
+  maximum_normalized_reference_spread_log10: 1.0e-8
+  maximum_rate_E_hz: 20.0
+  maximum_rate_I_hz: 40.0
+  maximum_paired_rate_difference_hz: 1.5
+
+# Full 42-s zero-field episodes preserve the old baseline/outcome durations.
+# 'stimulation' is only the inherited epoch key: it is nine seconds of sham.
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 30
+  stimulation_steps: 9
+  washout_steps: 2
+  block_ramp_ms: 500.0
+  stimulation_analysis_trim_ms: 500.0
+
+save_raw_eeg: false
+save_spikes: false
