@@ -149,6 +149,8 @@ Run commands from this repository root.
   `experiments/ballnstick_analysis/run_ballnstick_h5_montage_orientation_opportunity.py`
 - H5-O1D noisy-EEG montage-profile policy development:
   `experiments/ballnstick_analysis/run_ballnstick_h5_montage_policy_development.py`
+- H5-O1S B-only rhythm-presence calibration and held-out screening validation:
+  `experiments/ballnstick_analysis/run_ballnstick_h5_rhythm_screening_validation.py`
 - H5-O1M zero-field spatial EEG and paired-B measurement audit:
   `experiments/ballnstick_analysis/run_ballnstick_h5_spatial_measurement_audit.py`
 - Frozen EEG phase-increment observability confirmation (D0b):
@@ -721,3 +723,33 @@ spatial abstention. Geometry-matched profile classification is not proof of
 optimal treatment selection. A positive audit only permits a small new paired
 response reassessment, not H5 confirmation; four evaluation structures cannot
 give a one-sided exact sign-flip p below 0.0625.
+
+For H5-O1S, preserve the exact H5-O1M specificity failure and source artifacts
+by hash. Keep its physical model, cross-spectral estimator, carrier estimator,
+noise, orientations, 30-second baseline, and population-B alpha target fixed.
+No stimulation or policy training is permitted in this measurement study.
+Calibrate only a rhythm-presence cutoff, using the existing multitaper maximum
+residual-evidence score from observed baseline vertex EEG on 19 new B-only
+structures. For each calibration structure take the maximum over the frozen
+orientation/noise views, then the ceil((n+1)*0.95)-th order statistic. Use strict
+exceedance; insufficient calibration implies abstention, not a relaxed cutoff.
+Freeze and hash this rule before any of 30 new evaluation structures, each
+with matched B/A9/A11 episodes, is simulated. Never choose the cutoff from
+the old A/B separation or from held-out A sensitivity.
+
+Require both rhythm presence and the unchanged alpha-excess prerequisite.
+Report phenotype specificity before spatial/carrier/phase confidence rejection;
+confidence failure maps to sham but cannot hide a phenotype false positive.
+The primary exact one-sided binomial test counts one clean/not-clean B outcome
+per independent structure: clean means every prespecified noise/orientation
+view is phenotype-negative. Test a clean-structure probability above 0.80;
+30 structures require at least 28 clean, with about 81% power if the true
+probability is 0.95. This power assumption is not guaranteed. Retain separate
+A sensitivity, treatment coverage, spatial/carrier, finite-output, and safety
+gates so an abstain-all screen cannot pass. Bootstrap structures, never views.
+The grouped rank cutoff has a marginal null bound under exchangeability, not
+a conditional guarantee for the realized cutoff, a clinical diagnostic claim,
+or evidence for optimal montage selection. A pass permits only a small new
+paired response reassessment, not H5 confirmation. Keep all earlier runners
+unchanged; save PSD, noise, calibration, classification, inference, runtime,
+and provenance artifacts. No post-hoc threshold rescue follows a failure.

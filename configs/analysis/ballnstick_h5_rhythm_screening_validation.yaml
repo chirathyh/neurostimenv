@@ -1,0 +1,64 @@
+defaults:
+  - ballnstick_h5_spatial_measurement_audit
+  - _self_
+
+# H5-O1S: B-only calibration of rhythm presence followed by disjoint
+# screening validation. No stimulation, policy fitting, or target refitting.
+output_root_name: h5_rhythm_screening_validation
+smoke_test: false
+
+source_h5o1m:
+  result_dir: ../../results/ballnstick_h5_spatial_measurement_audit_full/h5_spatial_measurement_audit
+  expected_sha256:
+    conclusion: 4454c738fa1b2c85c6e9296b4940d5a565fbdfc10b3f8fad4898678c8e8245a6
+    completion: e42aa95128b51e8515ca9ced3efe22fce4346798ff1f9c10db10d855f9f4d4f5
+    protocol: 73b14c95f37bc55f5699c051be4b777f366e3d4f04fe4dae5a59e298132e0d9d
+    target: afaba9de9c4bacededdc0c976201fb2811a6baa0f352575ad8839947cdb0c346
+    config: dd3259f291091b44f1d62915459dd56c60904afe6d258baac1291f8b88bb577a
+    trajectories: eb3bfd1ce293185b64b1decdc82a3e7423bd7b79d83bed13a672b2d2ed4d94eb
+    measurements: 0f18cbf9f3fb03de4a4bab53c63191bdbb2029038d82128a68ea1cc459276e4f
+    provenance: 5f57998634643eb84a78be6d71ef5a3e6d2e250e69bd5e95809d7368bc942b85
+
+measurement_design:
+  # 19 B calibration + 30 held-out structures x (B, A9, A11) = 109 episodes.
+  # One new afferent history per structure, three paired sensor-noise views.
+  calibration_structures: 19
+  evaluation_structures: 30
+  calibration_structure_seed_offset: 429350
+  evaluation_structure_seed_offset: 429400
+  history_seed_offset: 2140000
+  phase_seed_offset: 2150000
+  future_seed_offset: 2160000
+  trial_seed_offset: 2170000
+  sensor_noise_seed_offset: 3000000
+  noise_repeats: 3
+
+rhythm_screen:
+  score_name: maximum_residual_evidence_db
+  # A structure's calibration score is its maximum across the frozen
+  # orientations and noise views. Calibration never receives A observations.
+  null_cluster_false_positive_target: 0.05
+  quantile_rule: ceil_n_plus_one_times_one_minus_alpha
+  strict_greater_than_cutoff: true
+  retain_frozen_alpha_excess_threshold: true
+  preserve_population_B_target: true
+  primary_specificity_null: 0.80
+  anticipated_clean_B_structure_probability: 0.95
+  alpha_one_sided: 0.05
+  target_power: 0.80
+  bootstrap_repetitions: 4000
+  bootstrap_seed: 3200001
+
+screening_criteria:
+  minimum_A_phenotype_sensitivity: 0.60
+  minimum_A_treatment_coverage: 0.60
+  minimum_B_view_specificity: 0.80
+  minimum_screen_balanced_accuracy: 0.75
+  minimum_spatial_balanced_accuracy: 0.80
+  maximum_mean_angle_error_deg: 10.0
+  minimum_carrier_coverage: 0.80
+  minimum_accepted_carrier_accuracy: 0.90
+  minimum_recent_phase_actionable_fraction: 0.80
+
+# All other physical, spectral, noise, spatial-estimator and timeline settings
+# are inherited unchanged and checked against the hash-locked H5-O1M config.

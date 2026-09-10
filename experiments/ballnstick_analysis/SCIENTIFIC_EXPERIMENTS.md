@@ -3349,3 +3349,184 @@ This executes four shortened zero-field episodes and exercises the complete
 artifact pipeline. Its conclusion is always `SMOKE COMPLETED`, never a
 positive measurement gate or permission for policy confirmation. Scientific
 criteria are not relaxed to make the short smoke pass.
+
+## Experiment 40: H5-O1S — null-calibrated rhythm-presence screening
+
+### Motivation and the one change being tested
+
+H5-O1M completed correctly but failed its phenotype-specificity gate. The
+equal-noise cross-spectral estimator substantially improved spatial decoding;
+the noisy B specificity was only 35/48 = 0.729. The inherited criterion,
+alpha power at least 0.05 log10 above a small calibration population's mean,
+is a target-excess criterion, not a test that a rhythmic component is present.
+Choosing between 9 and 11 Hz also does not test whether either oscillation
+exists. Some homogeneous B trajectories have elevated stochastic alpha power.
+
+This follow-up preserves that negative result. It adds a **B-only calibrated
+rhythm-presence prerequisite**, using the already implemented multitaper
+aperiodic-adjusted evidence. It does not choose a cutoff from the apparent
+gap in the old A/B scores, lower the old specificity requirement, replace the
+population-B efficacy target, fit a montage policy, or apply any tACS.
+
+Everything else remains frozen: the 40-cell canonical-HH model at 6.3 C,
+9/11-Hz A generator, modulation depth 0.04, full rhythmic-afferent fraction,
+phase diffusion 0.5 rad2/s, homogeneous mean-rate-matched B, four orientations
+(0/20/40/60 degrees), known-head three-sensor forward model, equal-absolute
+independent AR(1) noise (coefficient 0.95, vertex baseline RMS fraction 0.25),
+and the fixed cross-spectral and multitaper estimators. Ideal EEG remains an
+attribution audit; deployable measurements use observed noisy EEG only.
+
+### Prospective protocol and calibration
+
+Run 19 new homogeneous-B calibration structures. Each produces one persistent
+42-second zero-field episode: 1-second burn-in, 30-second baseline, 9-second
+continued sham, and 2-second final sham. The central eight seconds of the
+nine-second interval remain a duration-matched measurement audit, not an input
+to screening. Project the same canonical dipole offline to all four angles
+and apply three paired noise realizations. Normalize noise from baseline only
+and retain the original unit-noise vectors and their hashes.
+
+For each observed baseline, the frozen multitaper method produces pooled
+residual evidence around each candidate carrier. Define
+
+$$s(X)=\max_{f\in\{9,11\}} E_f(X),\qquad
+  M_i=\max_{\text{prespecified angle/noise views}} s(X_i).$$
+
+Here $E_f$ is the existing aperiodic-adjusted spectral evidence in dB, not
+raw alpha power or a hidden-frequency label. Across the $n=19$ calibration
+structures, freeze the ordered cutoff
+
+$$r=\lceil(n+1)(1-0.05)\rceil=19,\qquad c=M_{(r)}.$$
+
+Rhythm presence requires $s(X)>c$, with ties negative. No A episode or active
+outcome participates in this fit. The grouped rank construction bounds the
+marginal probability that a new exchangeable B structure has any score above
+the cutoff by 1/20. This averages over the random calibration set and new
+structure: it does **not** guarantee 95% conditional specificity for whichever
+cutoff happens to be fitted. This is why a separate validation set is needed.
+The bound applies to this finite view grid and toy B population, not arbitrary
+subjects, sessions, correlated real-world noise, or new recording geometries.
+
+The full screen is
+
+$$\mathrm{phenotype}(X)=
+ [s(X)>c]\ \land\ [\widehat{\log_{10}P_\alpha}(X)-\mu_B\ge0.05].$$
+
+The cross-spectral alpha estimate and the H5-O1M population mean $\mu_B$ are
+unchanged. Treatment eligibility additionally requires spatial confidence,
+accepted carrier identification, and recent causal phase actionability.
+Rejection implies a future sham fallback. Specificity is scored **before**
+these confidence exclusions: an estimator abstention cannot conceal a
+phenotype false positive.
+
+The runner writes and hashes `frozen_rhythm_presence_rule.json` before
+simulating any validation trajectory. It then evaluates 30 disjoint structures,
+each with matched B, A9 and A11 episodes. One afferent history per structure
+is paired across those conditions; noise realizations are repeated measurement
+views, not new independent circuit structures. The exact workload is
+
+$$19+30\times3=109\text{ full zero-field episodes}.$$
+
+Validation provides 360 B views and 720 A views, but only 30 independent
+structure units. All 49 structures and their seed namespaces are new relative
+to H5-O1M. The source result folder alone is needed at runtime; its embedded
+older provenance is retained without reopening earlier result folders.
+
+### Prespecified inference and pass/fail interpretation
+
+The primary outcome for each held-out B structure is whether **all** its
+12 angle/noise views are phenotype-negative. Let $K$ count clean structures.
+Test $H_0:p_{\rm clean}\le0.80$ against $p_{\rm clean}>0.80$, with an exact
+one-sided binomial test at 0.05. For 30 structures, the rejection region is
+$K\ge28$: exact test size is 0.04418 and anticipated power is 0.81218 if
+$p_{\rm clean}=0.95$. Thirty is a prospective choice, not a sample-size
+adjustment after the results. Power depends on the unverified 0.95 assumption.
+The runner saves exact Clopper–Pearson intervals and a structure-bootstrap
+description of sensitivity, specificity, balanced accuracy and coverage.
+
+Mandatory additional guards retain A phenotype sensitivity and treatment
+coverage of at least 0.60 **for each carrier**, mean B-view specificity 0.80,
+screen balanced accuracy 0.75, spatial balanced accuracy 0.80, angle error at
+most 10 degrees, carrier coverage 0.80, accepted carrier accuracy 0.90, recent
+phase actionability 0.80, finite measurements, unchanged noise scaling,
+geometry-invariant B audit, paired firing-rate bounds and exact zero field.
+These are separate predeclared guards, not alternative significant endpoints.
+Rejecting every circuit can therefore pass specificity but cannot pass the
+experiment. No diagnostic cutoff is selected using evaluation sensitivity.
+
+The primary test is about a stronger endpoint than mean view specificity:
+repeatability of a negative screen across all prespecified views of a B
+structure. There is only one neural history per structure, so the study does
+not validate within-person longitudinal screening. It also retains favorable
+single-source, known-anatomy and equal-spectrum independent-noise assumptions.
+
+A pass permits a **small disjoint active-response reassessment**, keeping the
+strongest fixed montage and analytical EEG geometry rule as comparators.
+It does not establish treatment crossovers, ML superiority, clinical screening,
+or H5. A failure is retained: do not move the cutoff or remove difficult A/B
+structures after inspection. In particular, better anatomy decoding need not
+increase the small action-selection headroom previously observed in H5-O1D.
+
+### Saved artifacts
+
+The output includes per-view and per-structure CSVs, the B calibration maxima,
+frozen rule and original B target, exact primary inference and power plan,
+source/configuration hashes, runtime and a final completion manifest. Ten
+PNG/PDF figure pairs show A9/A11/B PSDs, neural/noisy side-sensor PSDs, spatial
+accuracy, alpha-only diagnostics, the joint alpha/rhythm screen, B specificity
+by structure, and calibration versus held-out evidence distributions.
+Figures 01–07 preserve the inherited alpha-only/measurement diagnostics;
+Figures 08–10 explicitly show the new screening test. Canonical dipoles,
+processed EEG and original unit-noise arrays are saved for reproducibility.
+Allow approximately 8 GB of free disk space.
+
+### Workstation full command
+
+Run from the repository root, with the parent virtual environment activated:
+
+```bash
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+export HYDRA_FULL_ERROR=1
+
+time mpiexec -n 16 --bind-to core --map-by core python \
+  experiments/ballnstick_analysis/run_ballnstick_h5_rhythm_screening_validation.py \
+  experiment.name=ballnstick_h5_rhythm_screening_validation_full \
+  experiment.seed=1 env=ballnstick \
+  analysis=ballnstick_h5_rhythm_screening_validation \
+  analysis.source_h5o1m.result_dir=../../results/ballnstick_h5_spatial_measurement_audit_full/h5_spatial_measurement_audit \
+  env.simulation.obs_win_len=1000 experiment.plot=true experiment.tqdm=false
+```
+
+Output: `../../results/ballnstick_h5_rhythm_screening_validation_full/h5_rhythm_screening_validation/`.
+This is the full 109-episode study, not a smoke. Scaling the previous 15-episode
+workstation measurement audit (974 seconds) suggests about two hours before
+additional processing/I/O variation; budget roughly 2–3 hours at 16 ranks.
+This is an estimate, not a benchmark of the new full run. Offline spectral
+analysis is done on rank zero, so increasing MPI ranks does not accelerate
+every part of the workload. The runner refuses to overwrite populated outputs.
+
+### Local engineering tests and smoke
+
+```bash
+python -m unittest -v tests.test_h5_rhythm_screening_validation
+
+mpiexec -n 2 python \
+  experiments/ballnstick_analysis/run_ballnstick_h5_rhythm_screening_validation.py \
+  experiment.name=ballnstick_h5_rhythm_screening_validation_smoke \
+  experiment.seed=1 env=ballnstick \
+  analysis=ballnstick_h5_rhythm_screening_validation \
+  analysis.smoke_test=true \
+  analysis.timeline.baseline_steps=4 \
+  analysis.timeline.stimulation_steps=2 \
+  analysis.timeline.washout_steps=1 \
+  analysis.measurement_design.noise_repeats=1 \
+  env.simulation.obs_win_len=1000 experiment.plot=true experiment.tqdm=false
+```
+
+The smoke runs four shortened zero-field episodes and generates all artifacts.
+One calibration structure cannot supply a finite 95% grouped-rank cutoff:
+the correct smoke behavior is an explicit abstain-all rule, not a loosened
+scientific threshold. Its conclusion is always `SMOKE COMPLETED`. Unit tests
+separately exercise finite 19-structure calibration, strict ties, B-only/noisy-
+only fitting, hidden-label exclusion, confidence versus phenotype rejection,
+the exact power calculation, all-reject failure, and full-design validation.
