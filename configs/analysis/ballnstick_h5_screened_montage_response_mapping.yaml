@@ -1,0 +1,58 @@
+defaults:
+  - ballnstick_h5_rhythm_screening_validation
+  - _self_
+
+# H5-O2: bounded active reassessment after O1S. No policy fitting.
+output_root_name: h5_screened_montage_response_mapping
+smoke_test: false
+smoke_force_eligible: false
+smoke_context_limit: 0
+
+source_h5o1s:
+  # This is the ONLY results directory needed on the workstation.
+  result_dir: ../../results/ballnstick_h5_rhythm_screening_validation_full/h5_rhythm_screening_validation
+  expected_sha256:
+    conclusion: 218bcaeaab1f835189b06e6f3ef298ed5d7a8d2dd9c122cce4a0019cd83b69b1
+    completion: 4f45b8a6dc20886fe0b72d1befbd2bb61f7b23f35ed4eda471511c701a99bb68
+    target: afaba9de9c4bacededdc0c976201fb2811a6baa0f352575ad8839947cdb0c346
+    rule: b80f44034655d735405f41a4a495bbdc91d2639a150f6d843ad74061ec4a4397
+    protocol: 9812e15e3c35f99b28c898891e1437926762f7468f2f909f775d25eac97c0ab1
+    provenance: 998bb753d0e0354644e767b8be9dcaea92beca0291f26a36cd193d83611fce48
+    config: 164ed111e05770b383e3614a63466826107fd60b6c1108c389ea4ddb6fd26ac2
+    trajectories: 1ddde5588835ea48496d0da377f88016e8b4e3dc1e50e1cb0da5a05f74ccf9aa
+    spectra: afa299fb92e8016fb153dd20e6e228b9f05f20f2eacd86482a4c74efd9b57f58
+
+crossed_design:
+  # 3 x 2 carriers x 4 orientations x 3 actions x 4 futures = at most 288.
+  n_structure_seeds: 3
+  n_history_seeds: 1
+  n_future_continuations: 4
+  structure_seed_offset: 429450
+  history_seed_offset: 3300000
+  phase_seed_offset: 3400000
+  trial_seed_offset: 3500000
+  future_seed_offset: 3600000
+
+observation_noise:
+  seed_offset: 3700000
+  multichannel_side_seed_offset: 3800000
+
+mapping_criteria:
+  minimum_eligible_contexts: 16
+  minimum_structures: 3
+  minimum_contexts_per_orientation: 3
+  minimum_carrier_accuracy: 0.90
+  minimum_geometry_accuracy: 0.80
+  practical_advantage_log10: 0.01
+  minimum_positive_structure_fraction: 0.6666666666666666
+  minimum_practical_contexts_per_profile: 2
+  minimum_practical_structures_per_profile: 2
+  bootstrap_repetitions: 4000
+  inference_seed: 3900001
+
+mapping_storage:
+  save_processed_eeg: true
+  save_original_unit_noise: true
+  # Full online dipole/field traces for the first future of every context/arm.
+  # All other outcomes retain processed EEG, spectra, spikes' summary and audits.
+  representative_future_index: 1

@@ -753,3 +753,25 @@ or evidence for optimal montage selection. A pass permits only a small new
 paired response reassessment, not H5 confirmation. Keep all earlier runners
 unchanged; save PSD, noise, calibration, classification, inference, runtime,
 and provenance artifacts. No post-hoc threshold rescue follows a failure.
+
+For H5-O2 (`run_ballnstick_h5_screened_montage_response_mapping.py`), hash-lock
+the positive H5-O1S screen, CSD estimator, multitaper carrier, observation noise
+and separate observed-baseline/neural-outcome B targets. Run only the bounded
+three-new-structure, two-carrier, four-orientation, sham/two-profile map over
+four paired futures. Keep 0.2 V/m and the H4 0.5-s/125-ms tracker fixed; do not
+change H1--H4 or earlier runners. Screen only predecision observed EEG; score
+efficacy on geometry-normalized ideal neural EEG against the frozen neural B
+target, not its noisy counterpart. Preserve every confidence abstention and
+the accepted incorrect carriers. Record unit noise using the actual episode
+trial seed and verify exact online observation hashes/reconstruction.
+
+Distinguish analytical EEG-geometry control from residual H5 opportunity. The
+strong analytical comparator selects the nearer field profile using the
+observed CSD angle, not the obsolete auto-power threshold. Require independent
+two-future selection/two-future evaluation in both directions and practical
+headroom over both the strongest fixed profile and the analytical rule before
+policy development. The empirical oracle is optimistic, not deployable. Three
+structures cannot yield a one-sided exact p below 0.125; report discovery and
+do not claim H5, clinical montage feasibility, artifact-robust sensing or
+desynchronization from EEG power alone. See `H5_O2_PROTOCOL.md` for equations,
+claim boundaries, output artifacts and workstation commands.

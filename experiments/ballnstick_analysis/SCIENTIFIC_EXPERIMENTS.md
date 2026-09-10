@@ -3530,3 +3530,43 @@ scientific threshold. Its conclusion is always `SMOKE COMPLETED`. Unit tests
 separately exercise finite 19-structure calibration, strict ties, B-only/noisy-
 only fitting, hidden-label exclusion, confidence versus phenotype rejection,
 the exact power calculation, all-reject failure, and full-design validation.
+
+## H5-O2: frozen-screen active montage reassessment
+
+Entry point: `run_ballnstick_h5_screened_montage_response_mapping.py`.
+Configuration: `analysis=ballnstick_h5_screened_montage_response_mapping`.
+Detailed rationale, equations, limitations and workstation command are in
+[H5_O2_PROTOCOL.md](H5_O2_PROTOCOL.md).
+
+The completed H5-O1S screen is frozen by hash; only its result directory is
+required. Use three new structures, 9/11 Hz, orientations 0/20/40/60 degrees,
+and four paired futures, comparing sham and the two frozen 0.2-V/m field
+profiles with the same H4 fast phase controller. At most 288 episodes are run.
+The screen and controller use noisy EEG; efficacy uses the frozen neural-only
+B target. There is no new reference calibration, learned model or generator
+change. First establish analytical EEG-geometry control, then ask whether any
+residual benefit survives independent-future evaluation beyond that strong
+rule and the best fixed profile. Three structures are discovery only.
+
+Local integration smoke (12 shortened episodes if both contexts enroll):
+
+```bash
+source /home/chirath/Documents/depression-simulator/bin/activate
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1 MPLBACKEND=Agg HYDRA_FULL_ERROR=1
+mpiexec -n 2 python experiments/ballnstick_analysis/run_ballnstick_h5_screened_montage_response_mapping.py \
+  experiment.name=ballnstick_h5_screened_montage_response_mapping_smoke \
+  experiment.seed=1 env=ballnstick \
+  analysis=ballnstick_h5_screened_montage_response_mapping \
+  analysis.smoke_test=true analysis.smoke_force_eligible=true \
+  analysis.smoke_context_limit=2 analysis.crossed_design.n_future_continuations=2 \
+  analysis.timeline.baseline_steps=4 analysis.timeline.stimulation_steps=2 \
+  analysis.timeline.washout_steps=1 env.simulation.obs_win_len=1000 \
+  experiment.plot=true experiment.tqdm=false
+```
+
+The integration smoke exercises artifacts and both profiles; forcing can
+never count as scientific enrollment and never permits a full-run pass.
+Keep source thresholds unchanged. The independent-future synthetic tests
+also exercise response replication, a misleading in-sample oracle, geometry
+success without residual H5 opportunity, and equal structure weighting.
