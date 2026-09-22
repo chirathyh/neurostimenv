@@ -1,0 +1,34 @@
+# Standalone measurement qualification: no stimulation and no H1--H4 changes.
+defaults:
+  - ballnstick_tes_entrainment
+  - _self_
+smoke: false
+timeline:
+  burn_in_steps: 1
+  baseline_steps: 30
+  stimulation_steps: 7  # name inherited by helper; ALWAYS zero field
+  washout_steps: 1      # together these form 8 s stimulation-free evaluation
+design:
+  structures_per_stage: 3
+  discovery_structure_start: 365101
+  replication_structure_start: 365201
+  frequency_seed: 917351
+  diffusion_levels: [0.5, 2.0]
+  modulation_depth: 0.04
+observation:
+  rms_fraction: 0.25
+  ar1_rho: 0.95
+estimator:
+  candidates:
+    - {name: narrow, nw: 2.0, k: 3, evidence_sigma_hz: 0.20, window_s: 6.0, competitor_separation_hz: 0.75, minimum_evidence_db: 0.5, minimum_margin_db: 0.2, maximum_temporal_sd_hz: 0.6}
+    - {name: smooth, nw: 3.0, k: 5, evidence_sigma_hz: 0.35, window_s: 6.0, competitor_separation_hz: 0.75, minimum_evidence_db: 0.5, minimum_margin_db: 0.2, maximum_temporal_sd_hz: 0.6}
+  error_tolerance_hz: 0.25
+  minimum_coverage: 0.8
+  minimum_accepted_accuracy: 0.9
+  minimum_all_context_accuracy: 0.8
+  minimum_phase_actionable_fraction: 0.8
+  phase_history_s: 0.5
+  phase_update_s: 0.125
+  phase_minimum_amplitude_to_rms: 0.1
+# Three B examples per stage are an audit, not a calibrated clinical screen.
+# Smoke overrides can shorten the protocol, but cannot produce qualification.

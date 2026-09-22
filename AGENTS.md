@@ -775,3 +775,16 @@ structures cannot yield a one-sided exact p below 0.125; report discovery and
 do not claim H5, clinical montage feasibility, artifact-robust sensing or
 desynchronization from EEG power alone. See `H5_O2_PROTOCOL.md` for equations,
 claim boundaries, output artifacts and workstation commands.
+
+For CF0/FS0, use the separate qualification runners/configs described in
+`experiments/ballnstick_analysis/CF0_FS0_PROTOCOL.md`. Never change H1--H4
+defaults or the validated binary carrier estimator. CF0 is stimulation-free
+continuous-carrier discovery followed by disjoint qualification, not powered
+clinical IAF confirmation. Freeze estimator/abstention parameters before
+replication; failed discovery stops a full run. A smoke cannot pass. FS0
+inserts a reduced apical tonic I--V only into new isolated cells; preserve
+the source tonic-to-leak slope ratio and canonical HH temperature. Do not run
+L23Net. Compile mechanisms only into the new FS0 result directory. Report
+field/synaptic transfer, operating-point changes, convergence, disabled-path
+equivalence, and negatives. Do not tune density using field outcomes or infer
+an optimal-dose/ML opportunity from changed polarization alone.

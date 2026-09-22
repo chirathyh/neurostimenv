@@ -3570,3 +3570,12 @@ never count as scientific enrollment and never permits a full-run pass.
 Keep source thresholds unchanged. The independent-future synthetic tests
 also exercise response replication, a misleading in-sample oracle, geometry
 success without residual H5 opportunity, and equal structure weighting.
+
+## CF0 and FS0: independent measurement and cellular qualification
+
+See [CF0_FS0_PROTOCOL.md](CF0_FS0_PROTOCOL.md) for equations, gates, counts,
+artifacts, and workstation/local commands. CF0 tests continuous-alpha carrier
+measurement on 15 discovery and (only after a pass) 15 disjoint qualification
+episodes. FS0 tests an opt-in tonic conductance in 35 isolated-cell cases.
+Neither changes H1--H4 or runs L23Net. Neither establishes H5 or authorizes a
+network/ML experiment after a failed qualification.

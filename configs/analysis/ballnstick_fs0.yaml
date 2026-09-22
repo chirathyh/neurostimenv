@@ -1,0 +1,24 @@
+# Isolated cells only. No existing circuit template or network defaults change.
+smoke: false
+baseline_ms: 2000.0
+stimulation_ms: 3000.0
+washout_ms: 1000.0
+ramp_ms: 500.0
+record_fs_hz: 500.0
+frequencies_hz: [8.0, 10.0, 12.0]
+amplitudes_v_per_m: [0.1, 0.4]
+diagnostics: true
+synaptic_probe_mean_uS: 0.00005
+resistance_probe_nA: 0.001
+tonic:
+  low_fraction: 0.6
+  reference_voltage_mV: -65.0
+  reversal_mV: -75.0
+  l23_apical_gbar_S_per_cm2: 0.000938
+  l23_gpas_S_per_cm2: 0.0000954
+  toy_gpas_S_per_cm2: 0.0002
+criteria:
+  maximum_numerical_relative_complex_error: 0.05
+  maximum_washout_difference_mV: 0.01
+  minimum_relative_gain_difference: 0.05  # engineering sensitivity, not biology
+  maximum_transverse_gain_fraction: 0.001
