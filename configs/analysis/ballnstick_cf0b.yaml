@@ -1,0 +1,40 @@
+# Separate measurement follow-up. No field, cell, or historical controller edits.
+defaults:
+  - ballnstick_cf0
+  - _self_
+source_cf0:
+  result_dir: ../../results/ballnstick_cf0_full/cf0
+  conclusion_sha256: a86b84ef23215b243ea51213b928b054cad962850aef7d0634cf2aad80e73f38
+execution: full  # replay: existing EEG only; full: gated calibration/validation
+design:
+  calibration_structures: 19
+  validation_structures: 6
+  calibration_structure_start: 368101
+  validation_structure_start: 368201
+phase_audit:
+  history_s: 0.5
+  initialization_s: 1.0
+  update_s: 0.125
+  reference_history_s: 1.0
+  prediction_s: 0.125
+  # Neither candidate is retuned. Crossed cutoffs are diagnostic only.
+  candidates:
+    - {name: cf0_raw, pipeline: raw_ols, cutoff: 0.1}
+    - {name: h4_original, pipeline: h4_tail, cutoff: 0.03}
+  diagnostic_cutoffs: [0.03, 0.1]
+  minimum_coverage: 0.8
+  minimum_diffusion_coverage: 0.7
+  minimum_structure_coverage: 0.6
+  maximum_noise_error_deg: 20.0
+  maximum_reference_error_deg: 45.0
+  maximum_large_error_fraction: 0.1  # accepted estimates >90 degrees
+  maximum_prediction_error_deg: 60.0
+rhythm_screen:
+  null_alpha: 0.05
+  minimum_sensitivity: 0.8
+  minimum_specificity: 0.8
+  # 19 calibration B structures give a finite 95% rank threshold. Six held-out
+  # B structures are a small qualification audit, NOT a powered specificity test.
+statistics:
+  bootstrap_repeats: 2000
+  bootstrap_seed: 918367

@@ -788,3 +788,19 @@ L23Net. Compile mechanisms only into the new FS0 result directory. Report
 field/synaptic transfer, operating-point changes, convergence, disabled-path
 equivalence, and negatives. Do not tune density using field outcomes or infer
 an optimal-dose/ML opportunity from changed polarization alone.
+
+For CF0b, see `experiments/ballnstick_analysis/CF0B_PROTOCOL.md`. Hash-lock the
+negative CF0 result and reuse its raw neural EEG and original noise. Compare
+only the frozen CF0 raw and historical H4 phase pipelines; report matched-cutoff
+diagnostics and error as well as coverage. The centered neural scoring reference
+is an offline smoothed convention, not latent/instantaneous ground truth; it
+must never enter a deployable estimator. Freeze a passing profile before 19
+new B-only calibration structures and six disjoint five-context qualification
+structures. Calibrate maximum continuous-frequency spectral evidence with a
+strict 95% rank cutoff; insufficient calibration abstains. Preserve all
+incorrect accepted carriers and score B phenotype false positives before
+confidence rejection. No stimulation, controller/cell edits, FS0 changes or
+policy training are permitted. Full runs retain CF0's eight MPI ranks; replay
+failure stops new simulations. Report structure-level exploratory uncertainty,
+exact small-sample B specificity limits, and negatives. A smoke cannot qualify;
+a full pass is measurement qualification, not H5 or clinical phase validation.

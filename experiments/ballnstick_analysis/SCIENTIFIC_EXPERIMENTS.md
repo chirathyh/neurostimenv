@@ -3579,3 +3579,16 @@ measurement on 15 discovery and (only after a pass) 15 disjoint qualification
 episodes. FS0 tests an opt-in tonic conductance in 35 isolated-cell cases.
 Neither changes H1--H4 or runs L23Net. Neither establishes H5 or authorizes a
 network/ML experiment after a failed qualification.
+
+## CF0b: phase-pipeline replay and B-calibrated rhythm screening
+
+See [CF0B_PROTOCOL.md](CF0B_PROTOCOL.md). Hash-lock the negative CF0 result,
+replay its 15 recordings with the frozen CF0/H4 phase pipelines, and report
+coverage/error trade-offs plus matched-cutoff diagnostics. Only after replay
+passes, run 19 new B calibration episodes and 30 episodes on six disjoint
+qualification structures. All fields remain zero. The full run retains eight
+MPI ranks, original carrier/noise/generator settings, and H1–H4 implementations.
+Save PSD, phase, screening and structure-level uncertainty artifacts. The
+centered neural scoring reference is not instantaneous phase ground truth, and
+six held-out B structures cannot establish high-specificity clinical screening.
+This is exploratory measurement qualification, not tACS efficacy or H5.
