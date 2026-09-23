@@ -1,8 +1,8 @@
 """True step-wise closed-loop NeuroStimEnv environment.
 
 This module is additive and does not replace
-``env.models.neuron.env.NeuronEnv``.  It is intentionally limited to the small
-``ballnstick`` model.
+``env.models.neuron.env.NeuronEnv``.  It supports the mechanistic
+``ballnstick`` circuit and the morphologically detailed ``hl23net`` circuit.
 """
 
 from __future__ import annotations
@@ -24,6 +24,7 @@ from env.models.neuron.stimulation import (
     make_sinusoidal_electric_field,
     make_sinusoidal_stimulation,
 )
+from setup.circuits.L23Net.utils import setup_network as setup_network_l23net
 from setup.circuits.ballnstick.utils import setup_network_ballnstick
 
 
@@ -80,16 +81,21 @@ class OnlineNeuronEnv(gym.Env):
         self.reset_online()
 
     def _build(self) -> None:
-        if self.args.env.name != "ballnstick":
+        circuit_name = str(self.args.env.name)
+        supported_circuits = {"ballnstick", "hl23net"}
+        if circuit_name not in supported_circuits:
             raise ValueError(
-                "OnlineNeuronEnv is intentionally limited to env=ballnstick; "
-                f"received env={self.args.env.name!r}."
+                "OnlineNeuronEnv supports env=ballnstick or env=hl23net; "
+                f"received env={circuit_name!r}."
             )
         if not bool(self.args.env.eeg.measure):
             raise ValueError("OnlineNeuronEnv currently requires env.eeg.measure=true.")
 
         self.network = OnlineNetworkEnv(**self.args.env.networkParameters)
-        setup_network_ballnstick(self.network, self.args, self.MPI_VAR)
+        if circuit_name == "ballnstick":
+            setup_network_ballnstick(self.network, self.args, self.MPI_VAR)
+        else:
+            setup_network_l23net(self.network, self.args, self.MPI_VAR)
 
         self.four_sphere_top = FourSphereVolumeConductor(
             np.asarray(self.args.env.eeg.locations, dtype=np.float64),
@@ -103,6 +109,12 @@ class OnlineNeuronEnv(gym.Env):
         self.extracellular_models = self.extracellular.get_probes()
 
         online_cfg = self.args.env.get("online", {})
+        waveform_name = str(online_cfg.get("waveform", "sinusoidal"))
+        if waveform_name != "sinusoidal":
+            raise ValueError(
+                "OnlineNeuronEnv currently supports online.waveform="
+                "'sinusoidal' only."
+            )
         stimulation_cfg = online_cfg.get("stimulation", {})
         self.stimulation_parameterization = str(
             stimulation_cfg.get(

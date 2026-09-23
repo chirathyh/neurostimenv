@@ -6,6 +6,30 @@ simulation:
   MDD: True  # healthy OR MDD
   DRUG: False  # add drugs
 
+# Causal online tACS path used by the L23Net field-validation runner.  The
+# legacy NeuronEnv path remains available for reproducing historical
+# point-source/pulsed runs, but must not be interpreted as this field model.
+online:
+  waveform: sinusoidal
+  max_step_ms: 10.0
+  temperature_mode: configured
+  record_representative_state: false
+  representative_state_interval_ms: 1.0
+  points_per_electrode: 5
+  field_model: inf
+  ramp_ms: 0.0
+  stimulation:
+    # Field amplitude is specified at the modeled tissue in V/m.  This is not
+    # a scalp-current amplitude and is not inferred from the old point source.
+    parameterization: uniform_field
+    field_direction: [0.0, 0.0, 1.0]
+    default_montage: cortical_depth
+    montages:
+      cortical_depth: [0.0, 0.0, 1.0]
+      cortical_depth_reversed: [0.0, 0.0, -1.0]
+      transverse_x: [1.0, 0.0, 0.0]
+      transverse_y: [0.0, 1.0, 0.0]
+
 state_dim: 14
 action_dim: 2
 
@@ -118,4 +142,3 @@ networkParameters:
   celsius: ${env.network.celsius}
   OUTPUTPATH: ${experiment.dir}
   verbose: ${env.network.verbose}
-

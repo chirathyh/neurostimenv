@@ -76,6 +76,37 @@ class OnlineStimulationTests(unittest.TestCase):
         )
         np.testing.assert_array_equal(transverse, np.zeros_like(transverse))
 
+    def test_uniform_field_factorization_matches_dense_potential(self):
+        midpoints_um = np.asarray(
+            [
+                [-2.0, 1.0, 5.0],
+                [0.0, -3.0, 7.0],
+                [4.0, 2.0, 11.0],
+            ]
+        )
+        field_v_per_m = np.asarray([-0.4, 0.0, 0.25])
+        direction = [0.5, 0.0, np.sqrt(3.0) / 2.0]
+
+        controller = OnlineExtracellularController
+        coupling = controller.uniform_field_coupling_mV_per_v_per_m(
+            midpoints_um=midpoints_um,
+            field_direction=direction,
+        )
+        dense = OnlineExtracellularController.uniform_field_potential_mV(
+            midpoints_um=midpoints_um,
+            field_v_per_m=field_v_per_m,
+            field_direction=direction,
+        )
+
+        self.assertEqual(coupling.shape, (3,))
+        np.testing.assert_allclose(
+            dense,
+            coupling[:, np.newaxis] * field_v_per_m[np.newaxis, :],
+            rtol=0.0,
+            atol=1e-15,
+        )
+        self.assertAlmostEqual(float(np.mean(coupling)), 0.0)
+
     def test_absolute_block_envelope_does_not_restart_between_windows(self):
         full_time = np.arange(0.0, 3000.0 + DT_MS, DT_MS)
         full = apply_raised_cosine_block_envelope(

@@ -50,6 +50,8 @@ class OnlineExtracellularController:
 
         self._active_time_ms = np.empty(0, dtype=np.float64)
         self._active_cell_fields: list[tuple[list, np.ndarray]] = []
+        self._active_uniform_field_v_per_m = np.empty(0, dtype=np.float64)
+        self._active_uniform_couplings: list[tuple[list, np.ndarray]] = []
         self._active_index = 0
 
     @staticmethod
@@ -87,14 +89,37 @@ class OnlineExtracellularController:
             np.isfinite(field_v_per_m)
         ):
             raise ValueError("Uniform-field geometry and waveform must be finite.")
+        coupling = cls.uniform_field_coupling_mV_per_v_per_m(
+            midpoints_um=midpoints_um,
+            field_direction=field_direction,
+        )
+        return coupling[:, np.newaxis] * field_v_per_m[np.newaxis, :]
+
+    @classmethod
+    def uniform_field_coupling_mV_per_v_per_m(
+        cls,
+        *,
+        midpoints_um: np.ndarray,
+        field_direction,
+    ) -> np.ndarray:
+        """Return the time-independent segment coupling to a uniform field.
+
+        For ``phi(r, t) = -E(t) d dot (r - r_ref)``, this vector contains
+        ``-d dot (r - r_ref)`` with the conversion from micrometres and V/m
+        to NEURON's extracellular millivolts.  The per-cell centroid is a
+        gauge reference: cells are coupled only by chemical synapses in the
+        supported circuits, so changing this additive constant cannot affect
+        transmembrane polarization or synaptic transmission.
+        """
+        midpoints_um = np.asarray(midpoints_um, dtype=np.float64)
+        if midpoints_um.ndim != 2 or midpoints_um.shape[1] != 3:
+            raise ValueError("midpoints_um must have shape (n_segments, 3).")
+        if not np.all(np.isfinite(midpoints_um)):
+            raise ValueError("Uniform-field geometry must be finite.")
         direction = cls.normalize_field_direction(field_direction)
         centered_um = midpoints_um - np.mean(midpoints_um, axis=0)
         projected_um = centered_um @ direction
-        return (
-            -projected_um[:, np.newaxis]
-            * field_v_per_m[np.newaxis, :]
-            * 1e-3
-        )
+        return -projected_um * 1e-3
 
     @staticmethod
     def _iter_cells(network) -> Iterator:
@@ -166,6 +191,8 @@ class OnlineExtracellularController:
         """Detach active stimulation vectors and set external voltage to zero."""
         self._active_time_ms = np.empty(0, dtype=np.float64)
         self._active_cell_fields = []
+        self._active_uniform_field_v_per_m = np.empty(0, dtype=np.float64)
+        self._active_uniform_couplings = []
         self._active_index = 0
         for cell in self._iter_cells(network):
             self._clear_cell_playback(cell, set_zero=True)
@@ -227,6 +254,8 @@ class OnlineExtracellularController:
         zero_waveform = bool(np.allclose(current_nA, 0.0, rtol=0.0, atol=0.0))
         self._active_time_ms = time_ms.copy()
         self._active_cell_fields = []
+        self._active_uniform_field_v_per_m = np.empty(0, dtype=np.float64)
+        self._active_uniform_couplings = []
         self._active_index = 0
         for cell in self._iter_cells(network):
             self._clear_cell_playback(cell, set_zero=True)
@@ -322,6 +351,8 @@ class OnlineExtracellularController:
         )
         self._active_time_ms = time_ms.copy()
         self._active_cell_fields = []
+        self._active_uniform_field_v_per_m = field_v_per_m.copy()
+        self._active_uniform_couplings = []
         self._active_index = 0
 
         for cell in self._iter_cells(network):
@@ -336,10 +367,11 @@ class OnlineExtracellularController:
                     np.asarray(cell.z).mean(axis=-1),
                 )
             )
-            v_ext_mV = self.uniform_field_potential_mV(
-                midpoints_um=midpoints_um,
-                field_v_per_m=field_v_per_m,
-                field_direction=direction,
+            coupling_mV_per_v_per_m = (
+                self.uniform_field_coupling_mV_per_v_per_m(
+                    midpoints_um=midpoints_um,
+                    field_direction=direction,
+                )
             )
 
             segments = [
@@ -352,7 +384,18 @@ class OnlineExtracellularController:
                     f"Prepared stimulation on {len(segments)} segments; "
                     f"cell reports {cell.totnsegs}."
                 )
-            self._active_cell_fields.append((segments, v_ext_mV))
+            if coupling_mV_per_v_per_m.shape != (int(cell.totnsegs),):
+                raise RuntimeError(
+                    "Unexpected uniform-field coupling shape: "
+                    f"got {coupling_mV_per_v_per_m.shape}, expected "
+                    f"({int(cell.totnsegs)},)."
+                )
+            # Keep the separable field as one time vector plus one geometric
+            # vector per cell.  Materialising (segments x time) is prohibitive
+            # for the detailed 1,000-cell L23Net circuit.
+            self._active_uniform_couplings.append(
+                (segments, coupling_mV_per_v_per_m)
+            )
 
         self.set_time(float(time_ms[0]))
         neuron.h.fcurrent()
@@ -393,7 +436,9 @@ class OnlineExtracellularController:
 
     def set_time(self, time_ms: float) -> None:
         """Set the extracellular value for one fixed-step left boundary."""
-        if self._active_time_ms.size == 0 or not self._active_cell_fields:
+        if self._active_time_ms.size == 0 or not (
+            self._active_cell_fields or self._active_uniform_couplings
+        ):
             return
 
         time_ms = float(time_ms)
@@ -423,3 +468,14 @@ class OnlineExtracellularController:
             values = field_mV[:, self._active_index]
             for segment, value in zip(segments, values):
                 segment.e_extracellular = float(value)
+
+        if self._active_uniform_couplings:
+            field_value_v_per_m = float(
+                self._active_uniform_field_v_per_m[self._active_index]
+            )
+            for segments, coupling_mV_per_v_per_m in (
+                self._active_uniform_couplings
+            ):
+                values = coupling_mV_per_v_per_m * field_value_v_per_m
+                for segment, value in zip(segments, values):
+                    segment.e_extracellular = float(value)

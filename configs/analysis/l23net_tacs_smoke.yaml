@@ -1,0 +1,11 @@
+# Technical smoke test only. These short windows cannot establish entrainment,
+# steady state, efficacy, or equivalence to a clinical tACS protocol.
+require_debug: true
+amplitude_v_per_m: 0.5
+frequency_hz: 10.0
+phase_rad: 1.5707963267948966
+montage: cortical_depth
+baseline_ms: 100.0
+stimulation_ms: 100.0
+washout_ms: 100.0
+ramp_ms: 0.0
