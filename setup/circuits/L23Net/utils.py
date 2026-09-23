@@ -241,9 +241,18 @@ def setup_network(network, args, MPI_VAR):
     local_state = np.random.RandomState(SEED + RANK)
 
     tic_0 = time.perf_counter()  # script runtime calculation value
-    print('Mechanisms found: ', MAIN_PATH+'/setup/circuits/L23Net/mod/x86_64/special') if RANK==0 else None
+    mechanism_path = config(
+        'L23NET_MECHANISM_PATH',
+        default=MAIN_PATH+'/setup/circuits/L23Net/mod/',
+    )
+    print('Loading mechanisms from: ', mechanism_path) if RANK==0 else None
     neuron.h('forall delete_section()')
-    neuron.load_mechanisms(MAIN_PATH+'/setup/circuits/L23Net/mod/')
+    if not neuron.load_mechanisms(mechanism_path):
+        raise RuntimeError(
+            'L23Net mechanisms were not found under '
+            f'{mechanism_path!r}. Run nrnivmodl in that directory or set '
+            'L23NET_MECHANISM_PATH to a compatible build directory.'
+        )
     h.load_file(MAIN_PATH+'/setup/circuits/L23Net/net_functions.hoc')
 
     no_connectivity = False
