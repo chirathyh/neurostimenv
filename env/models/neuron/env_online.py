@@ -75,6 +75,7 @@ class OnlineNeuronEnv(gym.Env):
         self.four_sphere_top = None
         self.extracellular = None
         self.extracellular_models = None
+        self.online_recording_probes = None
         self.stimulation_controller = None
         self.eeg_dipole_rotation = None
 
@@ -107,6 +108,7 @@ class OnlineNeuronEnv(gym.Env):
         )
         self.extracellular = ExtracellularModels(self.args)
         self.extracellular_models = self.extracellular.get_probes()
+        self.online_recording_probes = self.extracellular.get_online_probes()
 
         online_cfg = self.args.env.get("online", {})
         waveform_name = str(online_cfg.get("waveform", "sinusoidal"))
@@ -159,7 +161,7 @@ class OnlineNeuronEnv(gym.Env):
             )
         self.stimulation_controller.prepare_network(self.network)
         self.network.initialize_online(
-            probes=self.extracellular_models,
+            probes=self.online_recording_probes,
             comm=self.comm,
             max_step_ms=float(online_cfg.get("max_step_ms", 10.0)),
             temperature_mode=str(
@@ -425,7 +427,7 @@ class OnlineNeuronEnv(gym.Env):
             else:
                 applied = self.stimulation_controller.apply_waveform(
                     network=self.network,
-                    electrode=self.extracellular_models[0],
+                    electrode=self.extracellular.electrode,
                     current_nA=waveform.current_nA,
                     time_ms=waveform.time_ms,
                 )
@@ -449,10 +451,13 @@ class OnlineNeuronEnv(gym.Env):
         if result is None:
             raise RuntimeError("Rank 0 did not receive an online simulation result.")
 
-        # Probe 1 is CurrentDipoleMoment according to
-        # ExtracellularModels.get_probes().  Its units are nA*um, and the
-        # four-sphere helper returns mV, matching the legacy path.
-        dipole_moment = result["probe_data"][1]
+        # Only CurrentDipoleMoment is evaluated by the online recording path.
+        # Its units are nA*um, and the four-sphere helper returns mV, matching
+        # the legacy path.
+        raw_dipole_moment = result["probe_data_by_name"][
+            "current_dipole_moment"
+        ]
+        dipole_moment = raw_dipole_moment
         if self.eeg_dipole_rotation is not None:
             dipole_moment = self.eeg_dipole_rotation @ dipole_moment
         eeg_mV = self.four_sphere_top.get_dipole_potential(
@@ -488,6 +493,8 @@ class OnlineNeuronEnv(gym.Env):
 
         result.update(
             {
+                "dipole_nA_um": raw_dipole_moment,
+                "eeg_frame_dipole_nA_um": dipole_moment,
                 "eeg_v": eeg_v,
                 "observation": observation,
                 "observation_features": feature_dict,
@@ -541,6 +548,10 @@ class OnlineNeuronEnv(gym.Env):
                 >= episode_stop_ms - 1e-9,
             }
         )
+        # Retain the historical probe slot for older analysis scripts without
+        # computing the unused RecExtElectrode transform. Both references point
+        # to the same dipole array and therefore add no trace-data copy.
+        result["probe_data"] = [None, raw_dipole_moment]
         return result
 
     def analysis_rollout_online(
@@ -608,6 +619,7 @@ class OnlineNeuronEnv(gym.Env):
         self.network = None
         self.stimulation_controller = None
         self.extracellular_models = None
+        self.online_recording_probes = None
         self.extracellular = None
         self.four_sphere_top = None
 

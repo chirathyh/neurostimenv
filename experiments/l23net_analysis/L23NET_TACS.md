@@ -14,6 +14,17 @@ New L23Net field work should use `OnlineNeuronEnv`. The smoke test below is a
 technical verification only; its 300-ms trajectory cannot test steady state,
 entrainment, efficacy, plasticity, or a clinical protocol.
 
+## Online field updates
+
+`OnlineNeuronEnv.step_online()` accepts a new action after each completed
+observation window without rebuilding the network or calling `finitialize()`.
+Amplitude, frequency, phase, signed DC offset, montage, and field direction can
+therefore be changed while membrane, channel, synaptic, recurrent, and event-
+queue state persist. Within each window the extracellular potential is updated
+at every fixed integration step. This is simulation-time closed-loop control;
+it does not yet expose a wall-clock command channel into an already running PBS
+job. The feedback cadence is the chosen observation-window duration.
+
 ## Model equations
 
 The scalar field waveform is
@@ -109,8 +120,10 @@ one persistent 15-s episode:
 The run advances in one-second windows. This bounds temporary probe arrays and
 writes `l23net_tacs_full_scale_profile.json` after every window, so a walltime
 or memory failure still leaves the last completed timing and memory snapshot.
-The companion compressed NPZ retains ideal EEG, total dipole, field samples,
-and phase labels. The JSON records construction time, per-window time, local
+The companion chunked HDF5 trace appends and flushes ideal EEG, total dipole,
+field samples, and phase labels after every completed window. Its committed
+sample/window attributes identify the durable prefix after an interrupted job.
+The JSON records construction time, per-window time, local
 cell/segment balance, process RSS by node, waveform checks, temperature,
 firing-rate guardrails, non-zero active polarization, and exact washout.
 The legacy full-circuit `STIM_PARAM` table also schedules one-off events to
@@ -119,20 +132,37 @@ reference follows the historical transient boundary but is not a perfectly
 stationary spontaneous baseline. This must be held fixed in later paired runs
 or redesigned as an explicit protocol choice.
 
-The first NCI profile intentionally requests the historical large allocation
-of 624 CPUs and 2470 GB while running 512 MPI ranks spread across all allocated
-nodes. This preserves the old `run_bandit.sh` rank count for the first
-comparison and leaves memory/core headroom; it is an upper-resource baseline,
-not an efficiency claim. Rank count must remain fixed for matched scientific
-comparisons because the current circuit RNG is rank-local. After this profile,
-CPU efficiency can be studied separately with short 256/384/512/624-rank jobs,
-accepting that those timing runs construct different circuit realizations.
+The first attempted full NCI profile (job `179714811.gadi-pbs`) was not a valid
+performance run. Mechanisms were compiled under node-local `$PBS_JOBFS` on the
+launch node, so ranks on the other nodes could not load them and exited while
+the remaining ranks waited in MPI collectives. Its elapsed time, CPU use, and
+memory peak therefore cannot be extrapolated to a healthy full-network run.
+
+The replacement technical gate uses the complete 1,000-cell circuit at the
+production `dt=0.025 ms`, but advances only 500 ms: 100-ms burn-in, 100-ms
+baseline, 200-ms stimulation (two 10-Hz cycles), and 100-ms washout. It compiles
+the unchanged mechanisms into a job-specific directory on shared `/g/data`,
+then starts one preflight rank on every allocated node and requires every rank
+to load and instantiate representative mechanisms before network construction.
+The conservative first gate requests 624 CPUs and 2470 GB but launches 256 MPI
+ranks across all 13 nodes. This is a correctness and memory-safety allocation,
+not an efficiency claim or a scientific stimulation experiment. A longer
+resource profile and short rank-count benchmark should follow only after this
+gate passes.
+
+Rank count must remain fixed for matched scientific comparisons because the
+current circuit RNG is rank-local. CPU efficiency can be studied separately
+with short 128/256/384/512-rank jobs, accepting that those timing runs construct
+different circuit realizations. The chosen production rank count must then be
+frozen before paired scientific simulations are generated.
 
 The old point-source implementation materialized segment-by-time extracellular
 arrays. Uniform-field storage now scales as `O(N_segments + N_time)` instead
-of `O(N_segments * N_time)`. Remaining duration-dependent memory includes
-NEURON/LFPy recorders and spike histories; remaining runtime includes a Python
-assignment to each local segment at every fixed step. The PBS epilogue's
+of `O(N_segments * N_time)`. The online path detaches LFPy's unused full-rate
+soma-voltage recorders, drains spike vectors after every window, evaluates only
+the current-dipole forward transform, and streams the retained trace to disk.
+Remaining runtime includes Python reads and assignments for each local segment
+at every fixed step. The PBS epilogue's
 job-level `Memory Used` value is authoritative. Summed process RSS in the JSON
 can double-count shared pages and its linear duration projection is only a
 planning estimate, not a safe maximum.

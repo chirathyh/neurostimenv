@@ -83,6 +83,7 @@ def _root_report(
     *,
     cfg: DictConfig,
     mpi_diagnostics: list[dict],
+    final_mpi_diagnostics: list[dict],
     projection_rows: list[dict],
     baseline: dict,
     active: dict,
@@ -120,6 +121,48 @@ def _root_report(
             errors.append(
                 f"{name}: configured/effective temperatures differ "
                 f"({configured} vs {effective} C)."
+            )
+        after = episode["diagnostics"]["after"]
+        if any(
+            size != 0
+            for sizes in after["spike_vector_sizes"].values()
+            for size in sizes
+        ):
+            errors.append(f"{name}: rank-0 spike vectors were not drained.")
+        if any(
+            size != 0
+            for sizes in after["soma_voltage_vector_sizes"].values()
+            for size in sizes
+        ):
+            errors.append(f"{name}: unused soma-voltage vectors accumulated data.")
+
+    for rank_index, (initial, final) in enumerate(
+        zip(mpi_diagnostics, final_mpi_diagnostics)
+    ):
+        if initial["online_probe_names"] != ["current_dipole_moment"]:
+            errors.append(
+                f"rank {rank_index}: online path evaluated unexpected probes "
+                f"{initial['online_probe_names']}."
+            )
+        if int(initial["disabled_soma_voltage_recorders"]) != int(
+            initial["local_cell_count"]
+        ):
+            errors.append(
+                f"rank {rank_index}: not every automatic soma recorder was disabled."
+            )
+        if any(
+            size != 0
+            for sizes in final["spike_vector_sizes"].values()
+            for size in sizes
+        ):
+            errors.append(f"rank {rank_index}: final spike vectors were not drained.")
+        if any(
+            size != 0
+            for sizes in final["soma_voltage_vector_sizes"].values()
+            for size in sizes
+        ):
+            errors.append(
+                f"rank {rank_index}: final soma-voltage vectors accumulated data."
             )
 
     all_sample_times = np.concatenate(
@@ -244,6 +287,22 @@ def _root_report(
             }
             for name, episode in episodes.items()
         },
+        "bounded_memory_recording": {
+            "online_probe_names_by_rank": [
+                values["online_probe_names"] for values in final_mpi_diagnostics
+            ],
+            "disabled_soma_voltage_recorders_by_rank": [
+                int(values["disabled_soma_voltage_recorders"])
+                for values in final_mpi_diagnostics
+            ],
+            "final_spike_vector_sizes_by_rank": [
+                values["spike_vector_sizes"] for values in final_mpi_diagnostics
+            ],
+            "final_soma_voltage_vector_sizes_by_rank": [
+                values["soma_voltage_vector_sizes"]
+                for values in final_mpi_diagnostics
+            ],
+        },
     }
     return report
 
@@ -323,6 +382,9 @@ def main(cfg: DictConfig) -> None:
             )
         )
         final_times_ms = comm.allgather(environment.network.current_time_ms)
+        final_mpi_diagnostics = comm.allgather(
+            environment.network.online_diagnostics()
+        )
 
         if rank == 0:
             projection_rows = [
@@ -331,6 +393,7 @@ def main(cfg: DictConfig) -> None:
             report = _root_report(
                 cfg=cfg,
                 mpi_diagnostics=mpi_diagnostics,
+                final_mpi_diagnostics=final_mpi_diagnostics,
                 projection_rows=projection_rows,
                 baseline=baseline,
                 active=active,

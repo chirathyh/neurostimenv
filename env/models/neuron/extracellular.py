@@ -36,6 +36,15 @@ class ExtracellularModels:
     def get_probes(self):
         return [self.electrode, self.current_dipole_moment]
 
+    def get_online_probes(self):
+        """Return only probes consumed by the persistent online EEG path.
+
+        ``RecExtElectrode`` remains available as ``self.electrode`` for the
+        legacy point-source actuator, but its forward-model output is not used
+        to construct online EEG and should not be evaluated every time step.
+        """
+        return {"current_dipole_moment": self.current_dipole_moment}
+
     def set_pulse(self, network, _step, action):
         # AMPLITUTDE [0, 4] mA, FREQ = 1 - 20 Hz
         amplitude = action[0] * 1e6  # LFPy accepts units nA, convert mA -> nA

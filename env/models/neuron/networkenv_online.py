@@ -7,6 +7,7 @@ then advances the same model state with a small fixed-step recording loop.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import neuron
@@ -62,12 +63,14 @@ class OnlineNetworkEnv(NetworkEnv):
         self._online_comm = None
         self._online_rank: int | None = None
         self._online_probes: list[Any] = []
+        self._online_probe_names: list[str] = []
         self._online_transforms: list[np.ndarray] = []
         self._online_segments: list[Any] = []
         self._online_representative_sites: list[dict[str, Any]] = []
         self._online_representative_stride_steps = 1
         self._online_cvode = None
         self._online_integration_method = "manual_fadvance"
+        self._online_disabled_soma_voltage_recorders = 0
 
     @property
     def current_time_ms(self) -> float:
@@ -76,7 +79,7 @@ class OnlineNetworkEnv(NetworkEnv):
     def initialize_online(
         self,
         *,
-        probes: list[Any],
+        probes,
         comm,
         max_step_ms: float = 10.0,
         temperature_mode: str = "configured",
@@ -101,7 +104,16 @@ class OnlineNetworkEnv(NetworkEnv):
 
         self._online_comm = comm
         self._online_rank = int(comm.Get_rank())
-        self._online_probes = list(probes)
+        if isinstance(probes, Mapping):
+            probe_items = [(str(name), probe) for name, probe in probes.items()]
+        else:
+            probe_items = [
+                (f"probe_{index}", probe) for index, probe in enumerate(probes)
+            ]
+        if len({name for name, _ in probe_items}) != len(probe_items):
+            raise ValueError("Online probe names must be unique.")
+        self._online_probe_names = [name for name, _ in probe_items]
+        self._online_probes = [probe for _, probe in probe_items]
 
         # Build the same local 'super-cell' geometry that LFPy uses internally
         # for network probe transformations.  This is a private LFPy API, so the
@@ -187,6 +199,16 @@ class OnlineNetworkEnv(NetworkEnv):
         self._online_cvode.use_fast_imem(1)
         self._online_cvode.active(0)  # this implementation assumes fixed dt
 
+        # LFPy.NetworkCell attaches a full-rate soma-voltage recorder to every
+        # cell during construction.  The online path samples only explicitly
+        # requested representative sites, so retaining these vectors causes
+        # unused O(cells * duration / dt) memory growth.  Replacing each vector
+        # destroys its recording relationship before frecord_init while
+        # preserving the public ``cell.somav`` attribute expected by LFPy.
+        self._online_disabled_soma_voltage_recorders = (
+            self._disable_unused_soma_voltage_recorders()
+        )
+
         # Cell soma/spike recorders are constructed by LFPy while the network is
         # built, so this single frecord_init initialises them.  Do not attach
         # temporary Vector.record instances later: in NEURON 8.2.3 those
@@ -206,6 +228,17 @@ class OnlineNetworkEnv(NetworkEnv):
                 cell._load_spikes()
 
         self._online_initialized = True
+
+    def _disable_unused_soma_voltage_recorders(self) -> int:
+        disabled = 0
+        for population_name in self.population_names:
+            population = self.populations[population_name]
+            for cell in (getattr(population, "cells", None) or []):
+                if getattr(cell, "somav", None) is None:
+                    continue
+                cell.somav = neuron.h.Vector()
+                disabled += 1
+        return disabled
 
     def online_diagnostics(self) -> dict[str, Any]:
         """Return inexpensive state useful when diagnosing continuation."""
@@ -229,6 +262,16 @@ class OnlineNetworkEnv(NetworkEnv):
             ]
             for population_name in self.population_names
         }
+        soma_voltage_vector_sizes = {
+            population_name: [
+                int(cell.somav.size())
+                for cell in (
+                    getattr(self.populations[population_name], "cells", None) or []
+                )
+                if getattr(cell, "somav", None) is not None
+            ]
+            for population_name in self.population_names
+        }
         return {
             "integration_method": self._online_integration_method,
             "h_t_ms": self.current_time_ms,
@@ -242,6 +285,12 @@ class OnlineNetworkEnv(NetworkEnv):
             ),
             "i_membrane_ref_available": bool(imem_refs_available),
             "spike_vector_sizes": spike_vector_sizes,
+            "soma_voltage_vector_sizes": soma_voltage_vector_sizes,
+            "disabled_soma_voltage_recorders": int(
+                self._online_disabled_soma_voltage_recorders
+            ),
+            "online_probe_names": list(self._online_probe_names),
+            "online_probe_count": int(len(self._online_probe_names)),
             "fast_imem_enabled": bool(self._online_cvode.use_fast_imem()),
             "fixed_dt_ms": float(self.dt),
             "configured_celsius": float(self.celsius),
@@ -390,7 +439,11 @@ class OnlineNetworkEnv(NetworkEnv):
                 )
 
             for index, vector in enumerate(spike_vectors):
+                # NetCon.record continues appending after Vector.resize(0).
+                # Drain after every online window so memory and scan time are
+                # bounded by spikes in one window rather than episode length.
                 all_times = hoc_vector_to_numpy(vector)
+                vector.resize(0)
                 selected = all_times[
                     (all_times > start_ms + tolerance)
                     & (all_times <= stop_ms + tolerance)
@@ -604,6 +657,10 @@ class OnlineNetworkEnv(NetworkEnv):
         if self._online_rank != 0:
             return None
 
+        global_probe_data_by_name = dict(
+            zip(self._online_probe_names, global_probe_data)
+        )
+
         representative_global: dict[str, dict[str, np.ndarray]] = {}
         for rank_values in gathered_representative:
             for site_id, values in rank_values.items():
@@ -620,6 +677,8 @@ class OnlineNetworkEnv(NetworkEnv):
             "sample_times_ms": sample_times,
             "sample_boundary_convention": "(t_start_ms, t_stop_ms]",
             "probe_data": global_probe_data,
+            "probe_data_by_name": global_probe_data_by_name,
+            "probe_names": list(self._online_probe_names),
             "spikes": spikes,
             "firing_rates": firing_rates,
             "representative_state": representative_global,
@@ -638,10 +697,12 @@ class OnlineNetworkEnv(NetworkEnv):
         """Release references owned only by the online runner."""
         self._online_initialized = False
         self._online_probes = []
+        self._online_probe_names = []
         self._online_transforms = []
         self._online_segments = []
         self._online_representative_sites = []
         self._online_representative_stride_steps = 1
         self._online_cvode = None
+        self._online_disabled_soma_voltage_recorders = 0
         self._online_comm = None
         self._online_rank = None

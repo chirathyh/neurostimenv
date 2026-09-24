@@ -28,6 +28,7 @@ if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from env.models.neuron.env_online import OnlineNeuronEnv
+from env.models.neuron.streaming import OnlineTraceWriter
 from env.models.neuron.stimulation import apply_raised_cosine_block_envelope
 
 
@@ -270,6 +271,15 @@ def _distribution(values) -> dict[str, Any]:
     }
 
 
+def _maximum_recorded_vector_size(diagnostics: dict[str, Any], key: str) -> int:
+    sizes = [
+        int(size)
+        for population_sizes in diagnostics[key].values()
+        for size in population_sizes
+    ]
+    return max(sizes, default=0)
+
+
 def _window_summary(
     *,
     result: dict[str, Any],
@@ -280,6 +290,7 @@ def _window_summary(
     wall_s: float,
     active_peak_by_rank: list[float],
     current_extracellular_by_rank: list[float],
+    recording_diagnostics_by_rank: list[dict[str, Any]],
     expected_active_field: np.ndarray | None,
 ) -> tuple[dict[str, Any], list[str]]:
     errors: list[str] = []
@@ -329,6 +340,21 @@ def _window_summary(
     elif not np.allclose(field, expected_active_field, rtol=0.0, atol=1e-12):
         errors.append(f"{stage}[{stage_window}] field does not match requested sine.")
 
+    spike_vector_maxima = [
+        _maximum_recorded_vector_size(values, "spike_vector_sizes")
+        for values in recording_diagnostics_by_rank
+    ]
+    soma_vector_maxima = [
+        _maximum_recorded_vector_size(values, "soma_voltage_vector_sizes")
+        for values in recording_diagnostics_by_rank
+    ]
+    if any(spike_vector_maxima):
+        errors.append(f"{stage}[{stage_window}] spike vectors were not drained.")
+    if any(soma_vector_maxima):
+        errors.append(
+            f"{stage}[{stage_window}] unused soma-voltage vectors accumulated data."
+        )
+
     return (
         {
             "stage": str(stage),
@@ -352,6 +378,10 @@ def _window_summary(
                 key: float(value)
                 for key, value in (result.get("firing_rates") or {}).items()
             },
+            "bounded_memory_recording": {
+                "maximum_spike_vector_size_by_rank": spike_vector_maxima,
+                "maximum_soma_voltage_vector_size_by_rank": soma_vector_maxima,
+            },
             "errors": errors,
         },
         errors,
@@ -370,7 +400,7 @@ def main(cfg: DictConfig) -> None:
 
     output_directory = Path(str(cfg.experiment.dir)).resolve()
     report_path = output_directory / "l23net_tacs_full_scale_profile.json"
-    trace_path = output_directory / "l23net_tacs_full_scale_trace.npz"
+    trace_path = output_directory / "l23net_tacs_full_scale_trace.h5"
     if rank == 0:
         output_directory.mkdir(parents=True, exist_ok=True)
     comm.Barrier()
@@ -402,13 +432,20 @@ def main(cfg: DictConfig) -> None:
         _write_json_checkpoint(report_path, report)
 
     environment: OnlineNeuronEnv | None = None
-    eeg_parts: list[np.ndarray] = []
-    dipole_parts: list[np.ndarray] = []
-    sample_time_parts: list[np.ndarray] = []
-    field_parts: list[np.ndarray] = []
-    field_time_parts: list[np.ndarray] = []
-    stage_code_parts: list[np.ndarray] = []
+    trace_writer: OnlineTraceWriter | None = None
     stage_codes = {"burn_in": 0, "baseline": 1, "stimulation": 2, "washout": 3}
+    trace_writer_error = None
+    if rank == 0:
+        try:
+            trace_writer = OnlineTraceWriter(
+                trace_path,
+                stage_names=list(stage_codes),
+            )
+        except Exception as exc:
+            trace_writer_error = f"Could not create streamed trace: {exc!r}"
+    trace_writer_error = comm.bcast(trace_writer_error, root=0)
+    if trace_writer_error is not None:
+        raise RuntimeError(trace_writer_error)
 
     try:
         comm.Barrier()
@@ -456,6 +493,28 @@ def main(cfg: DictConfig) -> None:
                 report["errors"].append("At least one MPI rank has no cells.")
             if any(value <= 0 for value in local_segment_counts):
                 report["errors"].append("At least one MPI rank has no segments.")
+            disabled_soma_recorders = [
+                int(values["disabled_soma_voltage_recorders"])
+                for values in build_diagnostics
+            ]
+            for rank_index, values in enumerate(build_diagnostics):
+                if values["online_probe_names"] != ["current_dipole_moment"]:
+                    report["errors"].append(
+                        f"Rank {rank_index} evaluated unexpected online probes "
+                        f"{values['online_probe_names']}."
+                    )
+                if disabled_soma_recorders[rank_index] != local_cell_counts[rank_index]:
+                    report["errors"].append(
+                        f"Rank {rank_index} did not disable every automatic "
+                        "soma-voltage recorder."
+                    )
+                if _maximum_recorded_vector_size(
+                    values, "soma_voltage_vector_sizes"
+                ) != 0:
+                    report["errors"].append(
+                        f"Rank {rank_index} accumulated soma-voltage samples "
+                        "during construction."
+                    )
             report["status"] = "running"
             report["build"] = {
                 "wall_s": float(build_wall_s),
@@ -463,6 +522,12 @@ def main(cfg: DictConfig) -> None:
                 "total_cells": int(sum(population_counts.values())),
                 "local_cells": _distribution(local_cell_counts),
                 "local_segments": _distribution(local_segment_counts),
+                "online_probe_names_by_rank": [
+                    values["online_probe_names"] for values in build_diagnostics
+                ],
+                "disabled_soma_voltage_recorders": _distribution(
+                    disabled_soma_recorders
+                ),
                 "configured_celsius": float(cfg.env.network.celsius),
                 "effective_celsius_by_rank": _distribution(
                     [values["effective_h_celsius"] for values in build_diagnostics]
@@ -541,8 +606,13 @@ def main(cfg: DictConfig) -> None:
                     ),
                     root=0,
                 )
+                recording_diagnostics_by_rank = comm.gather(
+                    environment.network.online_diagnostics(),
+                    root=0,
+                )
                 completed_ms += window_ms
 
+                stream_error = None
                 if rank == 0:
                     stimulation = result["stimulation"]
                     waveform_time = np.asarray(
@@ -594,6 +664,9 @@ def main(cfg: DictConfig) -> None:
                         wall_s=float(window_wall_s),
                         active_peak_by_rank=peak_by_rank,
                         current_extracellular_by_rank=current_by_rank,
+                        recording_diagnostics_by_rank=(
+                            recording_diagnostics_by_rank
+                        ),
                         expected_active_field=expected_field,
                     )
                     current_times = np.asarray(
@@ -610,22 +683,23 @@ def main(cfg: DictConfig) -> None:
                     report["errors"].extend(window_errors)
                     report["windows"].append(summary)
 
-                    sample_time_parts.append(current_times.copy())
-                    eeg_parts.append(
-                        np.asarray(result["eeg_v"], dtype=np.float64).copy()
-                    )
-                    dipole_parts.append(
-                        np.asarray(result["probe_data"][1], dtype=np.float64).copy()
-                    )
-                    field_time_parts.append(waveform_time[:-1].copy())
-                    field_parts.append(field[:-1].copy())
-                    stage_code_parts.append(
-                        np.full(
-                            current_times.size,
-                            stage_codes[stage],
-                            dtype=np.int8,
+                    try:
+                        trace_writer.append_window(
+                            sample_time_ms=current_times,
+                            eeg_v=result["eeg_v"],
+                            dipole_nA_um=result["dipole_nA_um"],
+                            field_left_boundary_time_ms=waveform_time[:-1],
+                            field_left_boundary_v_per_m=field[:-1],
+                            stage_code=stage_codes[stage],
                         )
-                    )
+                    except Exception as exc:
+                        stream_error = (
+                            f"Could not stream {stage}[{stage_window}]: {exc!r}"
+                        )
+
+                stream_error = comm.bcast(stream_error, root=0)
+                if stream_error is not None:
+                    raise RuntimeError(stream_error)
 
                 del result
                 gc.collect()
@@ -725,21 +799,17 @@ def main(cfg: DictConfig) -> None:
                 ),
             }
 
-            np.savez_compressed(
-                trace_path,
-                sample_time_ms=np.concatenate(sample_time_parts),
-                eeg_v=np.concatenate(eeg_parts, axis=-1),
-                dipole_nA_um=np.concatenate(dipole_parts, axis=-1),
-                field_left_boundary_time_ms=np.concatenate(field_time_parts),
-                field_left_boundary_v_per_m=np.concatenate(field_parts),
-                stage_code=np.concatenate(stage_code_parts),
-                stage_names=np.asarray(
-                    ["burn_in", "baseline", "stimulation", "washout"]
-                ),
-            )
+            if trace_writer.committed_samples != expected_total_samples:
+                report["errors"].append(
+                    "Streamed trace sample count "
+                    f"{trace_writer.committed_samples} != {expected_total_samples}."
+                )
             report["artifacts"] = {
                 "report": str(report_path),
                 "trace": str(trace_path),
+                "trace_format": "chunked HDF5",
+                "trace_committed_samples": int(trace_writer.committed_samples),
+                "trace_committed_windows": int(trace_writer.committed_windows),
             }
             report["status"] = "passed" if not report["errors"] else "failed"
             _write_json_checkpoint(report_path, report)
@@ -747,6 +817,8 @@ def main(cfg: DictConfig) -> None:
             print(f"Saved {report_path}")
             print(f"Saved {trace_path}")
     finally:
+        if trace_writer is not None:
+            trace_writer.close()
         if environment is not None:
             environment.close()
 
