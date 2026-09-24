@@ -151,10 +151,33 @@ resource profile and short rank-count benchmark should follow only after this
 gate passes.
 
 Rank count must remain fixed for matched scientific comparisons because the
-current circuit RNG is rank-local. CPU efficiency can be studied separately
-with short 128/256/384/512-rank jobs, accepting that those timing runs construct
-different circuit realizations. The chosen production rank count must then be
-frozen before paired scientific simulations are generated.
+current circuit RNG is rank-local. The replacement 256-rank gate passed. It
+built the complete circuit in 10.85 s and integrated 0.5 simulated seconds in
+95.18 s. The PBS peak was 34.70 GiB, whereas summed process RSS was
+approximately 76.20 GiB, demonstrating why the PBS value is authoritative for
+allocation sizing. PBS CPU time was 2669 s over 154 s of job wall time, or only
+17.3 average effective cores. The reported `cpupercent=3068` is a point-in-time
+PBS measure and is not substituted for this lifetime ratio. The 624-CPU/2470-GB
+gate allocation was therefore deliberately safe but is not suitable for
+production.
+
+Resource selection now uses a two-second strong-scaling suite at 24, 48, 96,
+192, and 288 ranks. Every run retains the complete circuit, production time
+step, 0.5-s burn-in/baseline/stimulation/washout stages, and 250-ms streaming
+windows. These timing runs are chained sequentially and use different
+rank-local circuit realizations; they compare technical throughput and cost,
+not neural outcomes. `summarize_l23net_resources.py` combines each complete
+profile with its PBS checkpoint and reports throughput, effective cores,
+allocation utilization, peak memory, allocated core-hours, stimulation timing
+overhead, and post-warm-up RSS drift. The selected rank count should lie at the
+throughput-versus-core-hour elbow, not simply be the largest or fastest job.
+
+After scaling, `submit_l23net_tacs_15s_profile.sh` requires the chosen rank,
+CPU, and memory values explicitly before submitting the original 4-s burn-in,
+4-s baseline, 5-s stimulation, and 2-s washout profile. This prevents a
+provisional benchmark decomposition from silently becoming the frozen
+scientific decomposition. The chosen production rank count must then remain
+fixed for paired scientific simulations.
 
 The old point-source implementation materialized segment-by-time extracellular
 arrays. Uniform-field storage now scales as `O(N_segments + N_time)` instead

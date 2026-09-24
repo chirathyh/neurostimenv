@@ -271,6 +271,168 @@ def _distribution(values) -> dict[str, Any]:
     }
 
 
+def _stage_performance(windows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarize window timing without treating windows as replicates."""
+    by_stage: dict[str, Any] = {}
+    for stage in ("burn_in", "baseline", "stimulation", "washout"):
+        stage_windows = [window for window in windows if window["stage"] == stage]
+        wall_s = np.asarray(
+            [float(window["wall_s"]) for window in stage_windows],
+            dtype=np.float64,
+        )
+        simulated_ms = float(
+            sum(float(window["duration_ms"]) for window in stage_windows)
+        )
+        total_wall_s = float(np.sum(wall_s))
+        by_stage[stage] = {
+            "window_count": int(wall_s.size),
+            "simulated_ms": simulated_ms,
+            "total_wall_s": total_wall_s,
+            "minimum_window_wall_s": (
+                float(np.min(wall_s)) if wall_s.size else None
+            ),
+            "median_window_wall_s": (
+                float(np.median(wall_s)) if wall_s.size else None
+            ),
+            "maximum_window_wall_s": (
+                float(np.max(wall_s)) if wall_s.size else None
+            ),
+            "simulated_s_per_wall_hour": (
+                simulated_ms / 1000.0 / total_wall_s * 3600.0
+                if total_wall_s > 0.0
+                else None
+            ),
+        }
+
+    inactive_wall_s = np.asarray(
+        [
+            float(window["wall_s"])
+            for window in windows
+            if window["stage"] != "stimulation"
+        ],
+        dtype=np.float64,
+    )
+    active_wall_s = np.asarray(
+        [
+            float(window["wall_s"])
+            for window in windows
+            if window["stage"] == "stimulation"
+        ],
+        dtype=np.float64,
+    )
+    active_to_inactive_ratio = None
+    if active_wall_s.size and inactive_wall_s.size:
+        inactive_median = float(np.median(inactive_wall_s))
+        if inactive_median > 0.0:
+            active_to_inactive_ratio = float(
+                np.median(active_wall_s) / inactive_median
+            )
+    return {
+        "by_stage": by_stage,
+        "stimulation_to_inactive_median_window_wall_ratio": (
+            active_to_inactive_ratio
+        ),
+        "interpretation": (
+            "Window timings are repeated measurements within one trajectory, "
+            "not independent scientific replicates."
+        ),
+    }
+
+
+def _aggregate_rss_trend(
+    memory_snapshots: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Estimate post-warm-up RSS drift from completed-window checkpoints."""
+    completed = [
+        snapshot
+        for snapshot in memory_snapshots
+        if float(snapshot["simulated_ms"]) > 0.0
+    ]
+    # The first completed window commonly includes allocator and library warm-up.
+    post_warmup = completed[1:]
+    slope = None
+    if len(post_warmup) >= 2:
+        simulated_s = np.asarray(
+            [float(row["simulated_ms"]) / 1000.0 for row in post_warmup],
+            dtype=np.float64,
+        )
+        rss_gib = np.asarray(
+            [float(row["rss_gib"]["sum"]) for row in post_warmup],
+            dtype=np.float64,
+        )
+        slope = float(np.polyfit(simulated_s, rss_gib, deg=1)[0])
+    else:
+        rss_gib = np.asarray([], dtype=np.float64)
+
+    all_rss = np.asarray(
+        [float(row["rss_gib"]["sum"]) for row in memory_snapshots],
+        dtype=np.float64,
+    )
+    return {
+        "method": (
+            "Ordinary least-squares slope across completed-window aggregate "
+            "RSS checkpoints after excluding the first completed window."
+        ),
+        "point_count": int(len(post_warmup)),
+        "slope_gib_per_simulated_s": slope,
+        "post_warmup_minimum_gib": (
+            float(np.min(rss_gib)) if rss_gib.size else None
+        ),
+        "post_warmup_maximum_gib": (
+            float(np.max(rss_gib)) if rss_gib.size else None
+        ),
+        "post_warmup_range_gib": (
+            float(np.ptp(rss_gib)) if rss_gib.size else None
+        ),
+        "all_checkpoint_peak_gib": (
+            float(np.max(all_rss)) if all_rss.size else None
+        ),
+        "warning": (
+            "Summed process RSS may double-count shared pages. Use this trend "
+            "to detect within-job drift and the PBS epilogue for the job-level "
+            "peak."
+        ),
+    }
+
+
+def _compact_console_report(report: dict[str, Any]) -> dict[str, Any]:
+    """Return a human-sized summary while the complete report remains on disk."""
+    build = report.get("build", {})
+    probe_rows = build.get("online_probe_names_by_rank", [])
+    unique_probe_sets = sorted({tuple(row) for row in probe_rows})
+    return {
+        "status": report.get("status"),
+        "errors": report.get("errors", []),
+        "completed_simulated_ms": report.get("completed_simulated_ms"),
+        "mpi": report.get("mpi"),
+        "build": {
+            "wall_s": build.get("wall_s"),
+            "population_counts": build.get("population_counts"),
+            "total_cells": build.get("total_cells"),
+            "local_cells": build.get("local_cells"),
+            "local_segments": build.get("local_segments"),
+            "unique_online_probe_sets": [
+                list(values) for values in unique_probe_sets
+            ],
+            "disabled_soma_voltage_recorders": build.get(
+                "disabled_soma_voltage_recorders"
+            ),
+            "configured_celsius": build.get("configured_celsius"),
+            "effective_celsius_by_rank": build.get(
+                "effective_celsius_by_rank"
+            ),
+            "fixed_dt_ms": build.get("fixed_dt_ms"),
+        },
+        "window_count": len(report.get("windows", [])),
+        "performance": report.get("performance"),
+        "artifacts": report.get("artifacts"),
+        "complete_report_note": (
+            "Per-rank and per-window diagnostics are retained in the JSON "
+            "report and intentionally omitted from stdout."
+        ),
+    }
+
+
 def _maximum_recorded_vector_size(diagnostics: dict[str, Any], key: str) -> int:
     sizes = [
         int(size)
@@ -768,13 +930,31 @@ def main(cfg: DictConfig) -> None:
             persistent_growth_gib_per_sim_s = max(
                 0.0, (final_rss_gib - build_rss_gib) / simulated_s
             )
+            aggregate_rss_trend = _aggregate_rss_trend(
+                report["memory_snapshots"]
+            )
+            post_warmup_slope = aggregate_rss_trend[
+                "slope_gib_per_simulated_s"
+            ]
+            projection_growth_gib_per_sim_s = max(
+                0.0,
+                (
+                    float(post_warmup_slope)
+                    if post_warmup_slope is not None
+                    else persistent_growth_gib_per_sim_s
+                ),
+            )
             memory_projection_s = None
-            if persistent_growth_gib_per_sim_s > 0.0:
+            if projection_growth_gib_per_sim_s > 0.0:
                 memory_projection_s = max(
                     0.0,
-                    (0.8 * requested_memory_gib - build_rss_gib)
-                    / persistent_growth_gib_per_sim_s,
+                    (
+                        0.8 * requested_memory_gib
+                        - float(aggregate_rss_trend["all_checkpoint_peak_gib"])
+                    )
+                    / projection_growth_gib_per_sim_s,
                 )
+            requested_ncpus = int(cfg.analysis.resource_request.ncpus)
             report["performance"] = {
                 "build_wall_s": float(report["build"]["wall_s"]),
                 "integration_wall_s": integration_wall_s,
@@ -784,6 +964,11 @@ def main(cfg: DictConfig) -> None:
                     simulated_s / integration_wall_s * 3600.0
                 ),
                 "requested_memory_gib": requested_memory_gib,
+                "requested_ncpus": requested_ncpus,
+                "mpi_ranks": mpi_size,
+                "maximum_rank_to_allocated_cpu_occupancy_fraction": (
+                    mpi_size / requested_ncpus
+                ),
                 "approximate_build_aggregate_rss_gib": build_rss_gib,
                 "approximate_final_aggregate_rss_gib": final_rss_gib,
                 "approximate_persistent_rss_growth_gib_per_simulated_s": (
@@ -792,10 +977,13 @@ def main(cfg: DictConfig) -> None:
                 "rough_80_percent_memory_projection_simulated_s": (
                     memory_projection_s
                 ),
+                "aggregate_rss_trend": aggregate_rss_trend,
+                "stage_performance": _stage_performance(report["windows"]),
                 "projection_warning": (
-                    "The duration projection is a linear extrapolation from "
-                    "process RSS and must be checked against the PBS job-level "
-                    "Memory Used value. It is not a safe production limit."
+                    "The duration projection uses the post-warm-up process-RSS "
+                    "trend where available and must be checked against the PBS "
+                    "job-level Memory Used value. It is not a safe production "
+                    "limit."
                 ),
             }
 
@@ -813,7 +1001,13 @@ def main(cfg: DictConfig) -> None:
             }
             report["status"] = "passed" if not report["errors"] else "failed"
             _write_json_checkpoint(report_path, report)
-            print(json.dumps(report, indent=2, sort_keys=True))
+            print(
+                json.dumps(
+                    _compact_console_report(report),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
             print(f"Saved {report_path}")
             print(f"Saved {trace_path}")
     finally:
