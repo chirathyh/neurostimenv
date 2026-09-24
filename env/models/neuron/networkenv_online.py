@@ -18,6 +18,49 @@ from neuron import units
 from env.models.neuron.networkenv import NetworkEnv
 
 
+def fixed_step_time_tolerance_ms(time_ms: float, dt_ms: float) -> float:
+    """Return a strict tolerance for mapping raw NEURON time to its dt grid.
+
+    Fixed-step NEURON advances ``h.t`` through repeated floating-point
+    additions.  Consequently, a mathematically exact boundary such as
+    1750 ms can be represented a few nanoseconds above or below the grid.
+    The tolerance remains a tiny fraction of one integration step while also
+    allowing that accumulation over long episodes.
+    """
+    time_ms = float(time_ms)
+    dt_ms = float(dt_ms)
+    if not np.isfinite(time_ms):
+        raise ValueError("time_ms must be finite.")
+    if not np.isfinite(dt_ms) or dt_ms <= 0.0:
+        raise ValueError("dt_ms must be finite and positive.")
+    return max(1.0e-8, abs(dt_ms) * 1.0e-5, abs(time_ms) * 1.0e-11)
+
+
+def canonical_fixed_step_boundary(
+    time_ms: float,
+    dt_ms: float,
+    *,
+    name: str = "time_ms",
+) -> tuple[float, int]:
+    """Map a raw time to its integer fixed-step boundary.
+
+    A value farther from the nearest dt boundary than the numerical drift
+    tolerance is rejected; this must not silently round a scientifically
+    meaningful partial integration step.
+    """
+    time_ms = float(time_ms)
+    dt_ms = float(dt_ms)
+    tolerance = fixed_step_time_tolerance_ms(time_ms, dt_ms)
+    step_index = int(round(time_ms / dt_ms))
+    canonical_ms = float(step_index * dt_ms)
+    if abs(time_ms - canonical_ms) > tolerance:
+        raise ValueError(
+            f"{name}={time_ms} ms is not on the fixed-step grid for "
+            f"dt={dt_ms} ms (nearest boundary={canonical_ms} ms)."
+        )
+    return canonical_ms, step_index
+
+
 def hoc_vector_to_numpy(vector) -> np.ndarray:
     """Copy a NEURON ``Vector`` into a NumPy float64 array.
 
@@ -530,25 +573,25 @@ class OnlineNetworkEnv(NetworkEnv):
         if not self._online_initialized:
             raise RuntimeError("Call initialize_online() before advance_online().")
 
-        start_ms = self.current_time_ms
-        stop_ms = float(stop_ms)
-        if stop_ms <= start_ms:
+        dt_ms = float(self.dt)
+        raw_start_ms = self.current_time_ms
+        start_ms, start_step = canonical_fixed_step_boundary(
+            raw_start_ms,
+            dt_ms,
+            name="current NEURON time",
+        )
+        stop_ms, stop_step = canonical_fixed_step_boundary(
+            stop_ms,
+            dt_ms,
+            name="stop_ms",
+        )
+        if stop_step <= start_step:
             raise ValueError(
                 f"stop_ms ({stop_ms}) must exceed current time ({start_ms})."
             )
 
-        duration_ms = stop_ms - start_ms
-        expected_steps = int(round(duration_ms / float(self.dt)))
-        if not np.isclose(
-            expected_steps * float(self.dt),
-            duration_ms,
-            rtol=0.0,
-            atol=1e-9,
-        ):
-            raise ValueError(
-                "Online window duration must be an integer multiple of dt: "
-                f"duration={duration_ms}, dt={self.dt}."
-            )
+        expected_steps = stop_step - start_step
+        duration_ms = float(expected_steps * dt_ms)
 
         local_probe_data = [
             np.empty((transform.shape[0], expected_steps), dtype=np.float64)
@@ -572,13 +615,13 @@ class OnlineNetworkEnv(NetworkEnv):
             for site in self._online_representative_sites
         }
         size = int(self._online_comm.Get_size())
-        dt_ms = float(self.dt)
-        tolerance = max(1e-8, dt_ms * 1e-5)
+        tolerance = fixed_step_time_tolerance_ms(stop_ms, dt_ms)
         diagnostics_before = self.online_diagnostics()
 
         for step_index in range(expected_steps):
-            left_boundary_ms = start_ms + step_index * dt_ms
-            target_ms = start_ms + (step_index + 1) * dt_ms
+            absolute_step = start_step + step_index
+            left_boundary_ms = float(absolute_step * dt_ms)
+            target_ms = float((absolute_step + 1) * dt_ms)
             if before_advance is not None:
                 before_advance(left_boundary_ms)
 
@@ -598,7 +641,9 @@ class OnlineNetworkEnv(NetworkEnv):
                     f"expected={target_ms}."
                 )
 
-            sample_times[step_index] = reached_step_ms
+            # The fixed-step boundary is the scientific sample timestamp.
+            # Keep raw h.t in diagnostics/drift checks, not in the time axis.
+            sample_times[step_index] = target_ms
             local_imem = self._read_local_membrane_currents()
             for probe_index, transform in enumerate(self._online_transforms):
                 local_probe_data[probe_index][:, step_index] = (
@@ -672,7 +717,7 @@ class OnlineNetworkEnv(NetworkEnv):
 
         return {
             "t_start_ms": start_ms,
-            "t_stop_ms": reached_time,
+            "t_stop_ms": stop_ms,
             "time_ms": sample_times,
             "sample_times_ms": sample_times,
             "sample_boundary_convention": "(t_start_ms, t_stop_ms]",

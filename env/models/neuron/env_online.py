@@ -18,7 +18,10 @@ from lfpykit.eegmegcalc import FourSphereVolumeConductor
 from env.eeg import features
 from env.models.neuron.extracellular import ExtracellularModels
 from env.models.neuron.extracellular_online import OnlineExtracellularController
-from env.models.neuron.networkenv_online import OnlineNetworkEnv
+from env.models.neuron.networkenv_online import (
+    OnlineNetworkEnv,
+    canonical_fixed_step_boundary,
+)
 from env.models.neuron.stimulation import (
     apply_raised_cosine_block_envelope,
     make_sinusoidal_electric_field,
@@ -312,26 +315,43 @@ class OnlineNeuronEnv(gym.Env):
             )
         )
 
-        start_ms = self.network.current_time_ms
+        dt_ms = float(self.network.dt)
+        start_ms, start_step = canonical_fixed_step_boundary(
+            self.network.current_time_ms,
+            dt_ms,
+            name="current NEURON time",
+        )
         duration_ms = (
             float(self.args.env.simulation.obs_win_len)
             if duration_ms is None
             else float(duration_ms)
         )
-        if duration_ms <= 0:
-            raise ValueError("duration_ms must be positive.")
-        episode_stop_ms = float(self.args.env.simulation.duration)
-        if start_ms >= episode_stop_ms - 1e-9:
+        if not np.isfinite(duration_ms) or duration_ms <= 0:
+            raise ValueError("duration_ms must be finite and positive.")
+        canonical_duration_ms, duration_steps = canonical_fixed_step_boundary(
+            duration_ms,
+            dt_ms,
+            name="duration_ms",
+        )
+        episode_stop_ms, episode_stop_step = canonical_fixed_step_boundary(
+            self.args.env.simulation.duration,
+            dt_ms,
+            name="simulation.duration",
+        )
+        if start_step >= episode_stop_step:
             raise RuntimeError(
                 f"Episode already ended at t={start_ms} ms "
                 f"(duration={episode_stop_ms} ms)."
             )
-        if start_ms + duration_ms > episode_stop_ms + 1e-9:
+        stop_step = start_step + duration_steps
+        stop_ms = float(stop_step * dt_ms)
+        if stop_step > episode_stop_step:
             raise ValueError(
                 "The next observation window exceeds simulation.duration: "
-                f"start={start_ms}, window={duration_ms}, "
+                f"start={start_ms}, window={canonical_duration_ms}, "
                 f"duration={episode_stop_ms}."
             )
+        duration_ms = canonical_duration_ms
 
         if block_envelope is not None and float(ramp_ms) > 0.0:
             raise ValueError(
@@ -436,7 +456,7 @@ class OnlineNeuronEnv(gym.Env):
             applied = None
 
         result = self.network.advance_online(
-            stop_ms=start_ms + duration_ms,
+            stop_ms=stop_ms,
             before_advance=(
                 self.stimulation_controller.set_time
                 if bool(self.args.env.ts.apply)
@@ -544,8 +564,7 @@ class OnlineNeuronEnv(gym.Env):
                         }
                     ),
                 },
-                "done": self.network.current_time_ms
-                >= episode_stop_ms - 1e-9,
+                "done": stop_step >= episode_stop_step,
             }
         )
         # Retain the historical probe slot for older analysis scripts without

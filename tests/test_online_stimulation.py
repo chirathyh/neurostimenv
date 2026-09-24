@@ -13,6 +13,10 @@ from env.models.neuron.stimulation import (
 from env.models.neuron.extracellular_online import (
     OnlineExtracellularController,
 )
+from env.models.neuron.networkenv_online import (
+    canonical_fixed_step_boundary,
+    fixed_step_time_tolerance_ms,
+)
 
 
 DT_MS = 0.0625
@@ -31,6 +35,35 @@ def _waveform(action, start_ms, duration_ms, phase_rad):
 
 
 class OnlineStimulationTests(unittest.TestCase):
+    def test_neuron_time_drift_maps_to_the_final_fixed_step_window(self):
+        # This is the raw h.t value observed on Gadi after seven 250-ms
+        # windows at dt=0.025 ms.  It must map to step 70,000 so the eighth
+        # window ends exactly at the configured 2,000-ms boundary.
+        start_ms, start_step = canonical_fixed_step_boundary(
+            1750.000000004175,
+            0.025,
+            name="current NEURON time",
+        )
+        duration_ms, duration_steps = canonical_fixed_step_boundary(
+            250.0,
+            0.025,
+            name="duration_ms",
+        )
+
+        self.assertEqual(start_ms, 1750.0)
+        self.assertEqual(start_step, 70_000)
+        self.assertEqual(duration_ms, 250.0)
+        self.assertEqual(duration_steps, 10_000)
+        self.assertEqual((start_step + duration_steps) * 0.025, 2000.0)
+
+    def test_fixed_step_boundary_rejects_a_partial_step(self):
+        with self.assertRaisesRegex(ValueError, "not on the fixed-step grid"):
+            canonical_fixed_step_boundary(1750.001, 0.025)
+        self.assertLess(
+            fixed_step_time_tolerance_ms(1750.0, 0.025),
+            0.025 / 1000.0,
+        )
+
     def test_uniform_field_supports_signed_dc_and_explicit_phase(self):
         dc = make_sinusoidal_electric_field(
             amplitude_v_per_m=0.0,

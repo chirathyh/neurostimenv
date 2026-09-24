@@ -23,6 +23,7 @@ if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from env.models.neuron.env_online import OnlineNeuronEnv
+from env.models.neuron.networkenv_online import canonical_fixed_step_boundary
 
 
 def _mpi_variables(cfg: DictConfig) -> dict[str, Any]:
@@ -206,8 +207,28 @@ def _root_report(
         errors.append(
             f"MPI cell count is {sum(local_cell_counts)}, expected {expected_cells}."
         )
-    if not np.allclose(final_times_ms, final_times_ms[0], rtol=0.0, atol=1e-12):
-        errors.append("MPI ranks ended at different NEURON times.")
+    try:
+        canonical_final_times_ms = [
+            canonical_fixed_step_boundary(
+                value,
+                dt_ms,
+                name=f"rank {rank_index} final NEURON time",
+            )[0]
+            for rank_index, value in enumerate(final_times_ms)
+        ]
+    except ValueError as exc:
+        errors.append(str(exc))
+        canonical_final_times_ms = []
+    expected_final_ms = float(cfg.env.simulation.duration)
+    if canonical_final_times_ms and not np.allclose(
+        canonical_final_times_ms,
+        expected_final_ms,
+        rtol=0.0,
+        atol=1e-12,
+    ):
+        errors.append(
+            "MPI ranks did not all end at the configured fixed-step boundary."
+        )
 
     spans = np.asarray(
         [row["projected_span_um"] for row in projection_rows], dtype=np.float64
@@ -243,7 +264,12 @@ def _root_report(
         "mpi": {
             "size": int(len(mpi_diagnostics)),
             "local_cell_counts": local_cell_counts,
-            "final_times_ms": [float(value) for value in final_times_ms],
+            "raw_final_neuron_times_ms": [
+                float(value) for value in final_times_ms
+            ],
+            "canonical_final_times_ms": [
+                float(value) for value in canonical_final_times_ms
+            ],
         },
         "simulation": {
             "dt_ms": dt_ms,

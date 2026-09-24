@@ -28,6 +28,10 @@ if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from env.models.neuron.env_online import OnlineNeuronEnv
+from env.models.neuron.networkenv_online import (
+    canonical_fixed_step_boundary,
+    fixed_step_time_tolerance_ms,
+)
 from env.models.neuron.streaming import OnlineTraceWriter
 from env.models.neuron.stimulation import apply_raised_cosine_block_envelope
 
@@ -483,10 +487,22 @@ def _window_summary(
         atol=1e-12,
     ):
         errors.append(f"{stage}[{stage_window}] configured/effective temperature differs.")
+    start_tolerance = fixed_step_time_tolerance_ms(
+        result["t_start_ms"], dt_ms
+    )
+    stop_tolerance = fixed_step_time_tolerance_ms(
+        result["t_stop_ms"], dt_ms
+    )
     if not np.isclose(
-        float(before["h_t_ms"]), float(result["t_start_ms"]), atol=1e-9
+        float(before["h_t_ms"]),
+        float(result["t_start_ms"]),
+        rtol=0.0,
+        atol=start_tolerance,
     ) or not np.isclose(
-        float(after["h_t_ms"]), float(result["t_stop_ms"]), atol=1e-9
+        float(after["h_t_ms"]),
+        float(result["t_stop_ms"]),
+        rtol=0.0,
+        atol=stop_tolerance,
     ):
         errors.append(f"{stage}[{stage_window}] continuation diagnostics disagree.")
 
@@ -894,9 +910,27 @@ def main(cfg: DictConfig) -> None:
                 report["errors"].append(
                     f"Total samples {actual_total_samples} != {expected_total_samples}."
                 )
-            if not np.allclose(final_times, total_ms, rtol=0.0, atol=1e-9):
+            try:
+                canonical_final_times = [
+                    canonical_fixed_step_boundary(
+                        value,
+                        dt_ms,
+                        name=f"rank {rank_index} final NEURON time",
+                    )[0]
+                    for rank_index, value in enumerate(final_times)
+                ]
+            except ValueError as exc:
+                report["errors"].append(str(exc))
+                canonical_final_times = []
+            if canonical_final_times and not np.allclose(
+                canonical_final_times,
+                total_ms,
+                rtol=0.0,
+                atol=1e-12,
+            ):
                 report["errors"].append(
-                    f"MPI final times do not all equal {total_ms} ms."
+                    "MPI final times do not all map to the configured "
+                    f"{total_ms} ms fixed-step boundary."
                 )
             if not np.allclose(final_zero, 0.0, rtol=0.0, atol=1e-15):
                 report["errors"].append("The final washout field is not exactly zero.")
