@@ -1,0 +1,31 @@
+# Full-network integration and resource-profiling run. This is still a
+# technical/scaling experiment, not a test of tACS efficacy.
+require_full_network: true
+
+expected_population_sizes:
+  HL23PYR: 800
+  HL23SST: 50
+  HL23PV: 70
+  HL23VIP: 80
+
+timeline:
+  # Advance in bounded windows so probe arrays remain small and a partial
+  # report is written after every simulated second.
+  window_ms: 1000.0
+  burn_in_ms: 4000.0
+  baseline_ms: 4000.0
+  stimulation_ms: 5000.0
+  washout_ms: 2000.0
+  block_ramp_ms: 500.0
+
+stimulation:
+  amplitude_v_per_m: 0.5
+  frequency_hz: 10.0
+  phase_rad: 1.5707963267948966
+  montage: cortical_depth
+
+resource_request:
+  ncpus: 624
+  mpi_ranks: 512
+  memory_gb: 2470.0
+  walltime_hours: 40.0

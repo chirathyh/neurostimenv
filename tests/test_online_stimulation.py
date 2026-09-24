@@ -1,6 +1,7 @@
 """Regression tests for causal online sinusoidal waveform boundaries."""
 
 import unittest
+from types import SimpleNamespace
 
 import numpy as np
 
@@ -106,6 +107,27 @@ class OnlineStimulationTests(unittest.TestCase):
             atol=1e-15,
         )
         self.assertAlmostEqual(float(np.mean(coupling)), 0.0)
+
+    def test_uniform_field_peak_diagnostic_survives_zero_endpoint(self):
+        controller = OnlineExtracellularController()
+        segments = [SimpleNamespace(e_extracellular=0.0) for _ in range(2)]
+        controller._active_time_ms = np.asarray([0.0, 1.0, 2.0])
+        controller._active_uniform_field_v_per_m = np.asarray([0.0, 0.5, 0.0])
+        controller._active_uniform_couplings = [
+            (segments, np.asarray([-0.2, 0.1]))
+        ]
+        controller._uniform_max_abs_coupling_mV_per_v_per_m = 0.2
+
+        controller.set_time(0.0)
+        controller.set_time(1.0)
+        controller.set_time(2.0)
+
+        self.assertAlmostEqual(
+            controller.peak_abs_extracellular_assigned_mV(),
+            0.1,
+        )
+        self.assertEqual(segments[0].e_extracellular, 0.0)
+        self.assertEqual(segments[1].e_extracellular, 0.0)
 
     def test_absolute_block_envelope_does_not_restart_between_windows(self):
         full_time = np.arange(0.0, 3000.0 + DT_MS, DT_MS)

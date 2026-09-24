@@ -93,6 +93,50 @@ ideal EEG, configured/effective temperature equality, a literal sinusoid,
 non-zero field coupling on every occupied rank, MPI time agreement, morphology
 projection onto the requested direction, and exact zero-field washout.
 
+## Full-circuit NCI resource profile
+
+`profile_l23net_tacs_full_scale.py` is the next technical gate. Its frozen
+default is the complete 1,000-cell MDD-configured circuit at `dt=0.025 ms` in
+one persistent 15-s episode:
+
+| Phase | Duration | Purpose |
+|---|---:|---|
+| burn-in | 4 s | reproduce the historical discarded transient |
+| baseline | 4 s | retain a multi-second unstimulated reference |
+| stimulation | 5 s | 0.5 V/m, 10 Hz, axial field with 0.5-s edge ramps |
+| washout | 2 s | verify exact field removal and continued dynamics |
+
+The run advances in one-second windows. This bounds temporary probe arrays and
+writes `l23net_tacs_full_scale_profile.json` after every window, so a walltime
+or memory failure still leaves the last completed timing and memory snapshot.
+The companion compressed NPZ retains ideal EEG, total dipole, field samples,
+and phase labels. The JSON records construction time, per-window time, local
+cell/segment balance, process RSS by node, waveform checks, temperature,
+firing-rate guardrails, non-zero active polarization, and exact washout.
+The legacy full-circuit `STIM_PARAM` table also schedules one-off events to
+subsets of PYR/PV/VIP cells just after 4 s. Consequently, the retained 4--8 s
+reference follows the historical transient boundary but is not a perfectly
+stationary spontaneous baseline. This must be held fixed in later paired runs
+or redesigned as an explicit protocol choice.
+
+The first NCI profile intentionally requests the historical large allocation
+of 624 CPUs and 2470 GB while running 512 MPI ranks spread across all allocated
+nodes. This preserves the old `run_bandit.sh` rank count for the first
+comparison and leaves memory/core headroom; it is an upper-resource baseline,
+not an efficiency claim. Rank count must remain fixed for matched scientific
+comparisons because the current circuit RNG is rank-local. After this profile,
+CPU efficiency can be studied separately with short 256/384/512/624-rank jobs,
+accepting that those timing runs construct different circuit realizations.
+
+The old point-source implementation materialized segment-by-time extracellular
+arrays. Uniform-field storage now scales as `O(N_segments + N_time)` instead
+of `O(N_segments * N_time)`. Remaining duration-dependent memory includes
+NEURON/LFPy recorders and spike histories; remaining runtime includes a Python
+assignment to each local segment at every fixed step. The PBS epilogue's
+job-level `Memory Used` value is authoritative. Summed process RSS in the JSON
+can double-count shared pages and its linear duration projection is only a
+planning estimate, not a safe maximum.
+
 ## Assumptions and limitations
 
 - `cortical_depth = +z` is a configurable circuit-coordinate convention, not a
@@ -118,3 +162,10 @@ projection onto the requested direction, and exact zero-field washout.
   count can change positions, connectivity, weights, delays, and synapse
   locations. Freeze the MPI rank count within every matched scientific
   comparison unless circuit construction is redesigned to be rank-invariant.
+- `env.network.syn_activity=true` is kept in full-profile commands for
+  provenance compatibility with historical jobs, but the current L23Net setup
+  constructs its OU/background mechanisms unconditionally; this switch does
+  not enable or disable them for L23Net.
+- Legacy `env.ts.method`, `env.ts.type`, and point-electrode fields remain in
+  the shared YAML but are not used by `OnlineNeuronEnv` in uniform-field mode;
+  the active waveform and geometry are controlled by `env.online`.

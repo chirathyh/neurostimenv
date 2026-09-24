@@ -53,6 +53,8 @@ class OnlineExtracellularController:
         self._active_uniform_field_v_per_m = np.empty(0, dtype=np.float64)
         self._active_uniform_couplings: list[tuple[list, np.ndarray]] = []
         self._active_index = 0
+        self._uniform_max_abs_coupling_mV_per_v_per_m = 0.0
+        self._peak_abs_extracellular_assigned_mV = 0.0
 
     @staticmethod
     def normalize_field_direction(
@@ -194,6 +196,8 @@ class OnlineExtracellularController:
         self._active_uniform_field_v_per_m = np.empty(0, dtype=np.float64)
         self._active_uniform_couplings = []
         self._active_index = 0
+        self._uniform_max_abs_coupling_mV_per_v_per_m = 0.0
+        self._peak_abs_extracellular_assigned_mV = 0.0
         for cell in self._iter_cells(network):
             self._clear_cell_playback(cell, set_zero=True)
         # Recompute assigned currents at the unchanged dynamic state.  This is
@@ -217,6 +221,16 @@ class OnlineExtracellularController:
                     except (AttributeError, ReferenceError):
                         continue
         return maximum
+
+    def peak_abs_extracellular_assigned_mV(self) -> float:
+        """Return the largest uniform-field voltage assigned this window.
+
+        This diagnostic remains informative when a scientific onset/offset
+        envelope makes the field exactly zero at the end of the window.  It is
+        updated from the factorized scalar field and cached maximum geometric
+        coupling, so it adds no segment-wise work to the integration loop.
+        """
+        return float(self._peak_abs_extracellular_assigned_mV)
 
     def apply_waveform(
         self,
@@ -257,6 +271,8 @@ class OnlineExtracellularController:
         self._active_uniform_field_v_per_m = np.empty(0, dtype=np.float64)
         self._active_uniform_couplings = []
         self._active_index = 0
+        self._uniform_max_abs_coupling_mV_per_v_per_m = 0.0
+        self._peak_abs_extracellular_assigned_mV = 0.0
         for cell in self._iter_cells(network):
             self._clear_cell_playback(cell, set_zero=True)
             if zero_waveform:
@@ -354,6 +370,8 @@ class OnlineExtracellularController:
         self._active_uniform_field_v_per_m = field_v_per_m.copy()
         self._active_uniform_couplings = []
         self._active_index = 0
+        self._uniform_max_abs_coupling_mV_per_v_per_m = 0.0
+        self._peak_abs_extracellular_assigned_mV = 0.0
 
         for cell in self._iter_cells(network):
             self._clear_cell_playback(cell, set_zero=True)
@@ -396,6 +414,11 @@ class OnlineExtracellularController:
             self._active_uniform_couplings.append(
                 (segments, coupling_mV_per_v_per_m)
             )
+            if coupling_mV_per_v_per_m.size:
+                self._uniform_max_abs_coupling_mV_per_v_per_m = max(
+                    self._uniform_max_abs_coupling_mV_per_v_per_m,
+                    float(np.max(np.abs(coupling_mV_per_v_per_m))),
+                )
 
         self.set_time(float(time_ms[0]))
         neuron.h.fcurrent()
@@ -472,6 +495,11 @@ class OnlineExtracellularController:
         if self._active_uniform_couplings:
             field_value_v_per_m = float(
                 self._active_uniform_field_v_per_m[self._active_index]
+            )
+            self._peak_abs_extracellular_assigned_mV = max(
+                self._peak_abs_extracellular_assigned_mV,
+                abs(field_value_v_per_m)
+                * self._uniform_max_abs_coupling_mV_per_v_per_m,
             )
             for segments, coupling_mV_per_v_per_m in (
                 self._active_uniform_couplings
