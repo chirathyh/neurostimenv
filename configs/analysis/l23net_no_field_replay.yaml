@@ -1,0 +1,20 @@
+# Deterministic zero-field replay gate for the persistent L23Net path.
+# This is an engineering validation, not a reference-versus-MDD result.
+require_full_network: true
+condition: reference
+env_seed: 0
+
+expected_population_sizes:
+  HL23PYR: 800
+  HL23SST: 50
+  HL23PV: 70
+  HL23VIP: 80
+
+window_ms: 1000.0
+duration_ms: 6000.0
+
+resource_request:
+  ncpus: 624
+  mpi_ranks: 624
+  memory_gb: 200.0
+  walltime_hours: 0.6666666666666666

@@ -190,6 +190,38 @@ job-level `Memory Used` value is authoritative. Summed process RSS in the JSON
 can double-count shared pages and its linear duration projection is only a
 planning estimate, not a safe maximum.
 
+## Deterministic no-field replay gate
+
+The completed 15-s, 624-rank profile passed with a PBS peak of approximately
+153 GiB and a post-build memory plateau. Gate G1A therefore freezes 624 ranks
+and requests 200 GB: two independent Python/MPI processes each reconstruct the
+same reference circuit and run six seconds at `dt=0.025 ms`, 34 C, and exactly
+zero field. Six seconds crosses the historical subset event just after four
+seconds. Each process streams 240,000 samples, drains spike vectors, and saves
+rank-local seed, geometry, synapse-layout, afferent-event, and recurrent-NetCon
+fingerprints. The comparator requires exact equality of every retained trace
+dataset, every spike-event fingerprint, and the complete structure fingerprint.
+
+This is current-path reproducibility, not literal samplewise reproduction of
+the old `NeuronEnv`. The legacy LFPy 2.3 path is not a bitwise oracle for the
+scientific online path: it effectively used NEURON's 6.3-C default, its network
+loop uses `h.fadvance()` rather than `ParallelContext.psolve()` for MPI, and a
+no-stimulation run omitted the extracellular mechanism that the new active/sham
+counterfactual retains at exactly zero. Preservation of the historical
+reference-versus-reduced-inhibition phenotype is therefore tested prospectively
+in the subsequent matched 28-s pilot instead of weakening numerical tolerances.
+
+Submit the replay gate from the repository root on Gadi with:
+
+```bash
+experiments/l23net_analysis/nci/submit_l23net_no_field_replay.sh
+```
+
+The worker refuses a dirty tracked worktree, records and enforces the submitted
+Git commit, requires NumPy 1.26.3 and SciPy 1.11.4, compiles the unchanged MOD
+files in a shared job-specific directory, verifies mechanism loading on every
+allocated node, and writes a heartbeat plus a final comparison JSON.
+
 ## Assumptions and limitations
 
 - `cortical_depth = +z` is a configurable circuit-coordinate convention, not a
