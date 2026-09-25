@@ -253,7 +253,14 @@ class OnlineExtracellularController:
         if not np.all(np.diff(time_ms) > 0):
             raise ValueError("time_ms must be strictly increasing.")
 
-        current_time_ms = float(neuron.h.t)
+        # OnlineNetworkEnv owns an integer fixed-step clock because raw h.t
+        # accumulates floating-point drift over long episodes.  Waveform axes
+        # are defined on that scientific clock, not on raw solver time.
+        current_time_ms = float(
+            network.canonical_time_ms
+            if hasattr(network, "canonical_time_ms")
+            else neuron.h.t
+        )
         tolerance = max(1e-8, float(getattr(network, "dt", 0.0)) * 1e-5)
         if abs(float(time_ms[0]) - current_time_ms) > tolerance:
             raise ValueError(
@@ -448,7 +455,11 @@ class OnlineExtracellularController:
         if not np.all(np.diff(time_ms) > 0):
             raise ValueError("time_ms must be strictly increasing.")
 
-        current_time_ms = float(neuron.h.t)
+        current_time_ms = float(
+            network.canonical_time_ms
+            if hasattr(network, "canonical_time_ms")
+            else neuron.h.t
+        )
         tolerance = max(1e-8, float(getattr(network, "dt", 0.0)) * 1e-5)
         if abs(float(time_ms[0]) - current_time_ms) > tolerance:
             raise ValueError(

@@ -216,6 +216,20 @@ class OnlineStimulationTests(unittest.TestCase):
         self.assertEqual(segments[0].e_extracellular, 0.0)
         self.assertEqual(segments[1].e_extracellular, 0.0)
 
+    def test_waveform_validation_uses_logical_network_time(self):
+        network = SimpleNamespace(
+            dt=0.025,
+            canonical_time_ms=14000.0,
+        )
+        neuron.h.t = 14000.000000253922
+
+        OnlineExtracellularController._validate_waveform_axis(
+            values=np.asarray([0.0, 0.0]),
+            time_ms=np.asarray([14000.0, 14000.025]),
+            network=network,
+            value_name="field_v_per_m",
+        )
+
     def test_absolute_block_envelope_does_not_restart_between_windows(self):
         full_time = np.arange(0.0, 3000.0 + DT_MS, DT_MS)
         full = apply_raised_cosine_block_envelope(
