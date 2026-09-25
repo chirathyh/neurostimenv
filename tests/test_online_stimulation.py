@@ -3,6 +3,7 @@
 import unittest
 from types import SimpleNamespace
 
+import neuron
 import numpy as np
 
 from env.models.neuron.stimulation import (
@@ -14,7 +15,9 @@ from env.models.neuron.extracellular_online import (
     OnlineExtracellularController,
 )
 from env.models.neuron.networkenv_online import (
+    advance_one_fixed_step,
     canonical_fixed_step_boundary,
+    fixed_step_increment_tolerance_ms,
     fixed_step_time_tolerance_ms,
 )
 
@@ -63,6 +66,57 @@ class OnlineStimulationTests(unittest.TestCase):
             fixed_step_time_tolerance_ms(1750.0, 0.025),
             0.025 / 1000.0,
         )
+
+    def test_long_horizon_raw_neuron_drift_maps_to_15_second_boundary(self):
+        canonical_ms, step_index = canonical_fixed_step_boundary(
+            15000.00000031213,
+            0.025,
+            name="raw NEURON time",
+        )
+
+        self.assertEqual(canonical_ms, 15000.0)
+        self.assertEqual(step_index, 600_000)
+
+    def test_increment_tolerance_cannot_hide_a_missing_step(self):
+        tolerance = fixed_step_increment_tolerance_ms(15000.0, 0.025)
+        self.assertLess(tolerance, 0.025 / 1_000_000.0)
+
+    def test_serial_fixed_step_helper_advances_exactly_once(self):
+        section = neuron.h.Section(name="serial_fixed_step_helper_test")
+        try:
+            neuron.h.dt = 0.025
+            neuron.h.finitialize(-65.0)
+            before_ms = float(neuron.h.t)
+            reached_ms = advance_one_fixed_step(
+                pc=None,
+                dt_ms=0.025,
+                parallel=False,
+            )
+            self.assertAlmostEqual(reached_ms - before_ms, 0.025, places=12)
+        finally:
+            neuron.h.delete_section(sec=section)
+
+    def test_parallel_fixed_step_helper_rejects_a_missing_step(self):
+        class NonAdvancingParallelContext:
+            @staticmethod
+            def psolve(_stop_ms):
+                return None
+
+        section = neuron.h.Section(name="missing_fixed_step_helper_test")
+        try:
+            neuron.h.dt = 0.025
+            neuron.h.finitialize(-65.0)
+            with self.assertRaisesRegex(
+                RuntimeError,
+                "did not advance by exactly one fixed step",
+            ):
+                advance_one_fixed_step(
+                    pc=NonAdvancingParallelContext(),
+                    dt_ms=0.025,
+                    parallel=True,
+                )
+        finally:
+            neuron.h.delete_section(sec=section)
 
     def test_uniform_field_supports_signed_dc_and_explicit_phase(self):
         dc = make_sinusoidal_electric_field(

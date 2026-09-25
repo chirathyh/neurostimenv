@@ -16,6 +16,7 @@ import resource
 import socket
 import sys
 import time
+import traceback
 from typing import Any
 
 import hydra
@@ -894,6 +895,7 @@ def main(cfg: DictConfig) -> None:
                     _write_json_checkpoint(report_path, report)
 
         final_times = comm.gather(environment.network.current_time_ms, root=0)
+        final_steps = comm.gather(environment.network.current_step_index, root=0)
         final_zero = comm.gather(
             environment.stimulation_controller.max_abs_extracellular(
                 environment.network
@@ -903,6 +905,11 @@ def main(cfg: DictConfig) -> None:
         if rank == 0:
             total_ms = float(cfg.env.simulation.duration)
             expected_total_samples = _duration_samples(total_ms, dt_ms)
+            if any(step != expected_total_samples for step in final_steps):
+                report["errors"].append(
+                    "MPI logical fixed-step clocks did not all reach "
+                    f"{expected_total_samples}: {final_steps}."
+                )
             actual_total_samples = int(
                 sum(window["sample_count"] for window in report["windows"])
             )
@@ -1044,6 +1051,57 @@ def main(cfg: DictConfig) -> None:
             )
             print(f"Saved {report_path}")
             print(f"Saved {trace_path}")
+    except Exception as exc:
+        if rank == 0:
+            failure = {
+                "exception_type": type(exc).__name__,
+                "message": str(exc),
+                "traceback": traceback.format_exc(),
+                "completed_simulated_ms": (
+                    None if report is None else report.get("completed_simulated_ms")
+                ),
+            }
+            if report is None:
+                report = {
+                    "status": "failed",
+                    "errors": [],
+                    "completed_simulated_ms": 0.0,
+                }
+            report["status"] = "failed"
+            report.setdefault("errors", []).append(
+                f"{failure['exception_type']}: {failure['message']}"
+            )
+            report["failure"] = failure
+            if trace_writer is not None:
+                report.setdefault("artifacts", {}).update(
+                    {
+                        "trace": str(trace_path),
+                        "trace_format": "chunked HDF5",
+                        "trace_committed_samples": int(
+                            trace_writer.committed_samples
+                        ),
+                        "trace_committed_windows": int(
+                            trace_writer.committed_windows
+                        ),
+                    }
+                )
+            try:
+                _write_json_checkpoint(report_path, report)
+                failure_path = output_directory / "failure_summary.json"
+                _write_json_checkpoint(failure_path, failure)
+                print(
+                    "L23Net profiler failure captured:\n"
+                    + json.dumps(failure, indent=2, sort_keys=True),
+                    flush=True,
+                )
+                print(f"Saved failure diagnostics to {failure_path}", flush=True)
+            except Exception as checkpoint_exc:
+                print(
+                    "Could not persist profiler failure diagnostics: "
+                    f"{checkpoint_exc!r}",
+                    flush=True,
+                )
+        raise SystemExit(1) from None
     finally:
         if trace_writer is not None:
             trace_writer.close()

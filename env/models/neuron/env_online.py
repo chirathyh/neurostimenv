@@ -316,11 +316,8 @@ class OnlineNeuronEnv(gym.Env):
         )
 
         dt_ms = float(self.network.dt)
-        start_ms, start_step = canonical_fixed_step_boundary(
-            self.network.current_time_ms,
-            dt_ms,
-            name="current NEURON time",
-        )
+        start_step = self.network.current_step_index
+        start_ms = self.network.canonical_time_ms
         duration_ms = (
             float(self.args.env.simulation.obs_win_len)
             if duration_ms is None

@@ -33,7 +33,66 @@ def fixed_step_time_tolerance_ms(time_ms: float, dt_ms: float) -> float:
         raise ValueError("time_ms must be finite.")
     if not np.isfinite(dt_ms) or dt_ms <= 0.0:
         raise ValueError("dt_ms must be finite and positive.")
-    return max(1.0e-8, abs(dt_ms) * 1.0e-5, abs(time_ms) * 1.0e-11)
+    # NEURON 8.2.3 updates h.t by repeated double-precision additions.  At
+    # dt=0.025 ms the resulting raw-clock drift is about 3.1e-7 ms at 15 s and
+    # 5.0e-6 ms at 60 s.  Keep enough headroom for that implementation detail
+    # while accepting less than 0.1% of one integration interval.
+    return max(1.0e-8, abs(dt_ms) * 5.0e-4, abs(time_ms) * 1.0e-11)
+
+
+def fixed_step_increment_tolerance_ms(time_ms: float, dt_ms: float) -> float:
+    """Tolerance for verifying that NEURON advanced by exactly one ``dt``.
+
+    This is deliberately much smaller than the boundary-mapping tolerance.
+    It permits only floating-point subtraction error and cannot hide a missed
+    or duplicated integration step.
+    """
+    time_ms = float(time_ms)
+    dt_ms = float(dt_ms)
+    if not np.isfinite(time_ms):
+        raise ValueError("time_ms must be finite.")
+    if not np.isfinite(dt_ms) or dt_ms <= 0.0:
+        raise ValueError("dt_ms must be finite and positive.")
+    spacing = abs(float(np.spacing(max(abs(time_ms), abs(dt_ms)))))
+    return max(1.0e-10, abs(dt_ms) * 1.0e-8, 16.0 * spacing)
+
+
+def advance_one_fixed_step(*, pc, dt_ms: float, parallel: bool) -> float:
+    """Advance NEURON by exactly one fixed step and return the raw ``h.t``.
+
+    ``ParallelContext.psolve`` interprets an absolute stop time.  With a stop
+    computed from the ideal integer grid, accumulated drift in ``h.t`` can
+    make the requested interval infinitesimally shorter than ``dt``.  NEURON
+    8.2.3 then returns without advancing (observed deterministically at
+    11636.95 ms for dt=0.025 ms).  Requesting the next representable value
+    beyond ``raw_h_t + dt`` preserves a single fixed step and avoids coupling
+    solver control to the ideal reporting clock.
+    """
+    dt_ms = float(dt_ms)
+    if not np.isfinite(dt_ms) or dt_ms <= 0.0:
+        raise ValueError("dt_ms must be finite and positive.")
+
+    before_ms = float(neuron.h.t)
+    requested_stop_ms: float | None = None
+    if parallel:
+        requested_stop_ms = float(np.nextafter(before_ms + dt_ms, np.inf))
+        pc.psolve(requested_stop_ms)
+    else:
+        neuron.h.fadvance()
+
+    reached_ms = float(neuron.h.t)
+    increment_ms = reached_ms - before_ms
+    tolerance = fixed_step_increment_tolerance_ms(reached_ms, dt_ms)
+    if abs(increment_ms - dt_ms) > tolerance:
+        detail = (
+            "NEURON did not advance by exactly one fixed step: "
+            f"before={before_ms}, reached={reached_ms}, "
+            f"increment={increment_ms}, dt={dt_ms}"
+        )
+        if requested_stop_ms is not None:
+            detail += f", psolve_stop={requested_stop_ms}"
+        raise RuntimeError(detail + ".")
+    return reached_ms
 
 
 def canonical_fixed_step_boundary(
@@ -114,10 +173,22 @@ class OnlineNetworkEnv(NetworkEnv):
         self._online_cvode = None
         self._online_integration_method = "manual_fadvance"
         self._online_disabled_soma_voltage_recorders = 0
+        self._online_step_index: int | None = None
 
     @property
     def current_time_ms(self) -> float:
         return float(neuron.h.t)
+
+    @property
+    def current_step_index(self) -> int:
+        """Logical fixed-step index, independent of accumulated raw ``h.t`` drift."""
+        if self._online_step_index is None:
+            raise RuntimeError("The online network has not been initialised.")
+        return int(self._online_step_index)
+
+    @property
+    def canonical_time_ms(self) -> float:
+        return float(self.current_step_index * float(self.dt))
 
     def initialize_online(
         self,
@@ -260,7 +331,13 @@ class OnlineNetworkEnv(NetworkEnv):
         neuron.h.finitialize(float(self.v_init) * units.mV)
         neuron.h.fcurrent()
         neuron.h.frecord_init()
-        neuron.h.t = float(self.tstart)
+        start_ms, start_step = canonical_fixed_step_boundary(
+            self.tstart,
+            self.dt,
+            name="network tstart",
+        )
+        neuron.h.t = start_ms
+        self._online_step_index = start_step
 
         # Match LFPy's Network.simulate ordering: load externally specified
         # Synapse event trains after finitialize/frecord_init and before the
@@ -318,6 +395,9 @@ class OnlineNetworkEnv(NetworkEnv):
         return {
             "integration_method": self._online_integration_method,
             "h_t_ms": self.current_time_ms,
+            "fixed_step_index": self.current_step_index,
+            "canonical_time_ms": self.canonical_time_ms,
+            "raw_time_drift_ms": self.current_time_ms - self.canonical_time_ms,
             "local_cell_count": int(local_cells),
             "local_segment_count": int(len(self._online_segments)),
             "local_representative_site_count": int(
@@ -575,11 +655,16 @@ class OnlineNetworkEnv(NetworkEnv):
 
         dt_ms = float(self.dt)
         raw_start_ms = self.current_time_ms
-        start_ms, start_step = canonical_fixed_step_boundary(
-            raw_start_ms,
-            dt_ms,
-            name="current NEURON time",
-        )
+        start_step = self.current_step_index
+        start_ms = float(start_step * dt_ms)
+        if abs(raw_start_ms - start_ms) > fixed_step_time_tolerance_ms(
+            start_ms, dt_ms
+        ):
+            raise RuntimeError(
+                "Raw NEURON time is inconsistent with the logical fixed-step "
+                f"clock: raw={raw_start_ms}, logical={start_ms}, "
+                f"step={start_step}."
+            )
         stop_ms, stop_step = canonical_fixed_step_boundary(
             stop_ms,
             dt_ms,
@@ -625,20 +710,17 @@ class OnlineNetworkEnv(NetworkEnv):
             if before_advance is not None:
                 before_advance(left_boundary_ms)
 
-            if size == 1:
-                neuron.h.fadvance()
-            else:
-                # psolve is required for inter-rank NetCon delivery.  Sampling
-                # after each fixed-dt absolute target keeps the same convention
-                # as the single-rank fadvance loop.
-                self.pc.psolve(target_ms)
-
-            reached_step_ms = self.current_time_ms
-            if abs(reached_step_ms - target_ms) > tolerance:
+            reached_step_ms = advance_one_fixed_step(
+                pc=self.pc,
+                dt_ms=dt_ms,
+                parallel=size > 1,
+            )
+            self._online_step_index += 1
+            if self.current_step_index != absolute_step + 1:
                 raise RuntimeError(
-                    "NEURON fixed-step continuation drifted from its target: "
-                    f"step={step_index}, reached={reached_step_ms}, "
-                    f"expected={target_ms}."
+                    "Logical fixed-step counter is inconsistent after advance: "
+                    f"reached step={self.current_step_index}, "
+                    f"expected={absolute_step + 1}."
                 )
 
             # The fixed-step boundary is the scientific sample timestamp.
@@ -660,6 +742,11 @@ class OnlineNetworkEnv(NetworkEnv):
 
         self._online_comm.Barrier()
         reached_time = self.current_time_ms
+        if self.current_step_index != stop_step:
+            raise RuntimeError(
+                f"Logical fixed-step clock stopped at {self.current_step_index}; "
+                f"expected {stop_step}."
+            )
         if abs(reached_time - stop_ms) > tolerance:
             raise RuntimeError(
                 f"NEURON stopped at {reached_time} ms; expected {stop_ms} ms."
@@ -749,5 +836,6 @@ class OnlineNetworkEnv(NetworkEnv):
         self._online_representative_stride_steps = 1
         self._online_cvode = None
         self._online_disabled_soma_voltage_recorders = 0
+        self._online_step_index = None
         self._online_comm = None
         self._online_rank = None
