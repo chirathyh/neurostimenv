@@ -315,20 +315,40 @@ def _seed_manifest(cfg: DictConfig, mpi_size: int) -> dict[str, Any]:
     }
 
 
-@hydra.main(version_base=None, config_path="../../configs", config_name="config")
-def main(cfg: DictConfig) -> None:
+def run_replay(
+    cfg: DictConfig,
+    *,
+    validator=_validate_configuration,
+    report_name: str = REPORT_NAME,
+    trace_name: str = TRACE_NAME,
+    scope: str = "Independent deterministic zero-field replay gate; not a reference-versus-reduced-inhibition or stimulation result.",
+    build_audit=None,
+    abort_on_failure: bool = False,
+    limitations=None,
+) -> None:
+    """Shared bounded-memory execution; G1A defaults remain frozen.
+
+    A separate experiment can supply its own configuration validator and a
+    collective, read-only build audit without duplicating the integration loop.
+    """
     mpi_variables = _mpi_variables(cfg)
     comm = mpi_variables["COMM"]
     rank = int(mpi_variables["RANK"])
     mpi_size = int(mpi_variables["SIZE"])
-    window_count, samples_per_window = _validate_configuration(cfg, mpi_size)
+    window_count, samples_per_window = validator(cfg, mpi_size)
     dt_ms = float(cfg.env.network.dt)
     window_ms = float(cfg.analysis.window_ms)
     duration_ms = float(cfg.analysis.duration_ms)
 
     output_directory = Path(str(cfg.experiment.dir)).resolve()
-    report_path = output_directory / REPORT_NAME
-    trace_path = output_directory / TRACE_NAME
+    report_path = output_directory / report_name
+    trace_path = output_directory / trace_name
+    exists = comm.bcast(
+        (report_path.exists() or trace_path.exists()) if rank == 0 else None,
+        root=0,
+    )
+    if exists:
+        raise FileExistsError(f"Refusing to overwrite an existing run: {output_directory}")
     if rank == 0:
         output_directory.mkdir(parents=True, exist_ok=True)
     comm.Barrier()
@@ -339,10 +359,7 @@ def main(cfg: DictConfig) -> None:
     if rank == 0:
         report = {
             "status": "building",
-            "scope": (
-                "Independent deterministic zero-field replay gate; not a "
-                "reference-versus-reduced-inhibition or stimulation result."
-            ),
+            "scope": scope,
             "errors": [],
             "configuration": OmegaConf.to_container(cfg, resolve=True),
             "replay_contract": contract,
@@ -352,7 +369,7 @@ def main(cfg: DictConfig) -> None:
             "windows": [],
             "memory_snapshots": [],
             "completed_simulated_ms": 0.0,
-            "limitations": [
+            "limitations": limitations if limitations is not None else [
                 "This gate tests deterministic reconstruction only at the frozen MPI rank count.",
                 "The ideal EEG excludes sensor noise, unrelated sources, and stimulation artifact.",
                 "One reference circuit trajectory is not a biological or statistical replicate.",
@@ -392,7 +409,8 @@ def main(cfg: DictConfig) -> None:
         build_diagnostics = comm.gather(
             environment.network.online_diagnostics(), root=0
         )
-        structure = _global_structure_fingerprint(environment, mpi_variables)
+        structure = _global_structure_fingerprint(environment, environment.MPI_VAR)
+        audit = build_audit(environment, cfg) if build_audit is not None else None
         snapshot = _memory_snapshot(
             comm=comm,
             environment=environment,
@@ -462,9 +480,16 @@ def main(cfg: DictConfig) -> None:
                 "fixed_dt_ms": dt_ms,
             }
             report["structure"] = structure
+            if audit is not None:
+                report["build_audit"] = audit
+                report["errors"].extend(audit.get("errors", []))
             report["memory_snapshots"].append(snapshot)
             report["status"] = "running"
             _write_json_checkpoint(report_path, report)
+
+        build_errors = comm.bcast(report["errors"] if rank == 0 else None, root=0)
+        if build_errors:
+            raise RuntimeError("Build validation failed: " + "; ".join(build_errors[:10]))
 
         previous_sample_time: float | None = None
         integration_wall_s = 0.0
@@ -627,6 +652,8 @@ def main(cfg: DictConfig) -> None:
                 report["memory_snapshots"].append(snapshot)
                 report["completed_simulated_ms"] = completed_ms
                 _write_json_checkpoint(report_path, report)
+                print(f"PROGRESS condition={cfg.analysis.condition} completed_ms={completed_ms:g} "
+                      f"window_wall_s={window_wall_s:.3f}", flush=True)
 
         final_times = comm.gather(environment.network.current_time_ms, root=0)
         final_steps = comm.gather(environment.network.current_step_index, root=0)
@@ -714,6 +741,16 @@ def main(cfg: DictConfig) -> None:
         if status != "passed":
             raise RuntimeError("L23Net no-field replay failed validation.")
     except Exception as exc:
+        if abort_on_failure:
+            # A single rank can fail while its peers wait inside a collective.
+            # Preserve the rank-local cause before terminating the MPI job.
+            try:
+                _write_json_checkpoint(output_directory / f"failure_rank_{rank}.json", {
+                    "rank": rank, "exception_type": type(exc).__name__,
+                    "message": str(exc), "traceback": traceback.format_exc(),
+                })
+            except Exception:
+                pass
         if rank == 0:
             failure = {
                 "exception_type": type(exc).__name__,
@@ -738,12 +775,19 @@ def main(cfg: DictConfig) -> None:
                     f"Could not persist replay failure: {checkpoint_error!r}",
                     flush=True,
                 )
+        if abort_on_failure and mpi_size > 1:
+            comm.Abort(1)
         raise SystemExit(1) from None
     finally:
         if trace_writer is not None:
             trace_writer.close()
         if environment is not None:
             environment.close()
+
+
+@hydra.main(version_base=None, config_path="../../configs", config_name="config")
+def main(cfg: DictConfig) -> None:
+    run_replay(cfg)
 
 
 if __name__ == "__main__":

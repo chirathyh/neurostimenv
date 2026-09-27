@@ -193,6 +193,14 @@ the replication.
 
 ### G1B. Full-network paired 28-s pilot
 
+Implementation and frozen pilot details: [G1B_PROTOCOL.md](G1B_PROTOCOL.md).
+Seeds are 7101/7102, with pair jobs assigned to sj53/fa32 respectively. Each
+requests 624 CPUs, 256 GB and 2.5 hours. The pilot directional composite is the
+equal-weight mean of paired log10 band-power ratios; the standardized R1
+endpoint below awaits the separate reference calibration. Both the literal
+and stable SOS views use the effective 8--28-s interval. Read the protocol for
+predeclared rate/memory checks, pass criteria, commands and claim boundaries.
+
 Run two new circuit structures, each under reference and MDD-configured
 conditions, with no extracellular field:
 

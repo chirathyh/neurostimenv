@@ -224,6 +224,11 @@ allocated node, and writes a heartbeat plus a final comparison JSON.
 
 ## Assumptions and limitations
 
+The next paired phenotype gate is implemented in [G1B_PROTOCOL.md](G1B_PROTOCOL.md).
+Submit it with `bash experiments/l23net_analysis/nci/submit_l23net_g1b.sh`.
+It uses the completed G1A artifacts, two new 28-s pairs, sj53/fa32 project
+allocation, construction checks, streamed output and automatic suite analysis.
+
 - `cortical_depth = +z` is a configurable circuit-coordinate convention, not a
   SimNIBS-derived subject-specific vector. A later head-model bridge must pass
   the local vector field and tissue amplitude explicitly.
