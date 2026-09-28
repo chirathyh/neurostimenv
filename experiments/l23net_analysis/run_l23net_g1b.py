@@ -22,7 +22,7 @@ from experiments.l23net_analysis.replay_validation import canonical_json_sha256
 from experiments.l23net_analysis.g1b_analysis import REPORT_NAME, TRACE_NAME, PILOT_SEEDS
 
 
-def validate_configuration(cfg, mpi_size):
+def validate_configuration(cfg, mpi_size, *, allowed_seeds=PILOT_SEEDS):
     condition = str(cfg.analysis.condition)
     if condition not in ("reference", "mdd"):
         raise ValueError("G1B condition must be reference or mdd.")
@@ -35,8 +35,8 @@ def validate_configuration(cfg, mpi_size):
     if bool(cfg.analysis.require_full_network):
         if (float(cfg.analysis.duration_ms), float(cfg.analysis.window_ms), mpi_size) != (28000., 1000., 624):
             raise ValueError("Full G1B is frozen to 28 s, 1-s windows, 624 ranks.")
-        if int(cfg.experiment.seed) not in PILOT_SEEDS or int(cfg.analysis.env_seed) != 0:
-            raise ValueError("Full G1B requires pilot seed 7101 or 7102 and env_seed=0.")
+        if int(cfg.experiment.seed) not in allowed_seeds or int(cfg.analysis.env_seed) != 0:
+            raise ValueError("Full run requires a frozen cohort seed and env_seed=0.")
     if float(cfg.env.network.tstart) != 0 or float(cfg.env.network.v_init) != -80:
         raise ValueError("G1B requires tstart=0 ms and v_init=-80 mV.")
     return result

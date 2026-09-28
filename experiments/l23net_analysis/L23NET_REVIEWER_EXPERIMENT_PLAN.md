@@ -225,6 +225,13 @@ directional gate and provide no inferential claim.
 
 ## Experiment R1: prospective reference versus reduced-inhibition replication
 
+Implementation update (28 September 2026): G1B passed the audited two-seed gate;
+see `G1B_RESULTS_AUDIT.md`. Executable R1 core/extension submission, frozen seed
+namespaces, analysis conventions and quota/deadline planning are specified in
+`R1_PROTOCOL.md`. Preserve the 16-pair primary analysis before the separately
+submitted 44-pair extension; extension is for precision, not significance-based
+optional stopping. No stimulation or bandit is included in these submissions.
+
 ### Design
 
 - Use 16 new paired circuit structures. This is the confirmatory replication

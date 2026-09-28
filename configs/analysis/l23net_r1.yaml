@@ -1,0 +1,6 @@
+defaults:
+  - l23net_g1b
+  - _self_
+
+# New independent structures; identical validated no-field dynamics.
+cohort: primary
