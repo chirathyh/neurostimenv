@@ -1,5 +1,11 @@
 # L23Net reviewer-response experiment plan
 
+**29 September 2026 implementation update:** R1 and the offline full-spectrum
+S0 audit are complete. The runnable 60-s S1 protocol, S0 findings, gates and
+NCI commands are in [S0_S1_PROTOCOL.md](S0_S1_PROTOCOL.md). It supersedes the
+provisional 27-s S0/S1 timing and alpha-only carrier assumptions below. Phase-
+matched arms remain blocked by the negative S0 measurement qualification.
+
 ## Decision in brief
 
 Do not run another broad MPI scaling sweep. The 15-s, 624-rank profile passed

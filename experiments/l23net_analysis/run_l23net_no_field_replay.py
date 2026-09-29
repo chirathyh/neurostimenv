@@ -325,11 +325,14 @@ def run_replay(
     build_audit=None,
     abort_on_failure: bool = False,
     limitations=None,
+    window_protocol=None,
 ) -> None:
     """Shared bounded-memory execution; G1A defaults remain frozen.
 
     A separate experiment can supply its own configuration validator and a
     collective, read-only build audit without duplicating the integration loop.
+    An optional root-owned window protocol supplies causal actions and audits.
+    Without it, G1A/G1B/R1 retain their exact zero-field execution path.
     """
     mpi_variables = _mpi_variables(cfg)
     comm = mpi_variables["COMM"]
@@ -386,7 +389,7 @@ def run_replay(
             try:
                 trace_writer = OnlineTraceWriter(
                     trace_path,
-                    stage_names=["no_field"],
+                    stage_names=["no_field"] if window_protocol is None else window_protocol.stage_names,
                 )
             except Exception as exc:
                 writer_error = f"Could not create replay trace: {exc!r}"
@@ -496,12 +499,15 @@ def run_replay(
         for window_index in range(window_count):
             comm.Barrier()
             window_start_s = time.perf_counter()
-            result = environment.step_online(
-                {"ac_amplitude_v_per_m": 0.0, "frequency_hz": 0.0},
-                duration_ms=window_ms,
-                phase_continuous=True,
-                ramp_ms=0.0,
-            )
+            if window_protocol is None:
+                action = {"ac_amplitude_v_per_m": 0.0, "frequency_hz": 0.0}
+                step_kwargs = {}
+                stage_code = 0
+            else:
+                request = window_protocol.action(window_index) if rank == 0 else None
+                action, step_kwargs, stage_code = comm.bcast(request, root=0)
+            result = environment.step_online(action, duration_ms=window_ms,
+                                             phase_continuous=True, ramp_ms=0.0, **step_kwargs)
             comm.Barrier()
             window_wall_s = comm.reduce(
                 time.perf_counter() - window_start_s,
@@ -514,6 +520,10 @@ def run_replay(
                 ),
                 root=0,
             )
+            assigned_peaks = None
+            if window_protocol is not None:
+                assigned_peaks = comm.gather(
+                    environment.stimulation_controller.peak_abs_extracellular_assigned_mV(), root=0)
             diagnostics = comm.gather(
                 environment.network.online_diagnostics(), root=0
             )
@@ -559,15 +569,15 @@ def run_replay(
                         f"window {window_index} does not continue time strictly."
                     )
                 previous_sample_time = float(times[-1])
-                if bool(stimulation["enabled"]):
+                if window_protocol is None and bool(stimulation["enabled"]):
                     window_errors.append(
                         f"window {window_index} reports stimulation enabled."
                     )
-                if np.count_nonzero(field) != 0:
+                if window_protocol is None and np.count_nonzero(field) != 0:
                     window_errors.append(
                         f"window {window_index} generated a nonzero field."
                     )
-                if not np.allclose(
+                if window_protocol is None and not np.allclose(
                     current_extracellular, 0.0, rtol=0.0, atol=1e-15
                 ):
                     window_errors.append(
@@ -605,6 +615,12 @@ def run_replay(
                         f"window {window_index} continuation boundary is incorrect."
                     )
 
+                protocol_metadata = {}
+                if window_protocol is not None:
+                    extra_errors, protocol_metadata = window_protocol.observe(
+                        window_index, result, current_extracellular, assigned_peaks)
+                    window_errors.extend(extra_errors)
+                    report["window_protocol"] = window_protocol.summary()
                 spikes = _spike_summary(result["spikes"])
                 report["windows"].append(
                     {
@@ -619,6 +635,7 @@ def run_replay(
                             for name, value in result["firing_rates"].items()
                         },
                         "errors": window_errors,
+                        **protocol_metadata,
                     }
                 )
                 report["errors"].extend(window_errors)
@@ -629,7 +646,7 @@ def run_replay(
                         dipole_nA_um=dipole,
                         field_left_boundary_time_ms=field_time[:-1],
                         field_left_boundary_v_per_m=field[:-1],
-                        stage_code=0,
+                        stage_code=stage_code,
                     )
                 except Exception as exc:
                     stream_error = (
@@ -781,6 +798,8 @@ def run_replay(
     finally:
         if trace_writer is not None:
             trace_writer.close()
+        if window_protocol is not None:
+            window_protocol.close()
         if environment is not None:
             environment.close()
 

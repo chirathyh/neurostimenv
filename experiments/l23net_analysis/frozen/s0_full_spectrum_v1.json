@@ -1,0 +1,555 @@
+{
+  "allowed_arms": [
+    "sham",
+    "fixed_theta",
+    "fixed_alpha",
+    "fixed_low_beta",
+    "transverse_alpha"
+  ],
+  "analysis_code_sha256": {
+    "experiments/l23net_analysis/analyze_l23net_s0.py": "69aa24c23cdbf647095010d580130c06483e5959e4bbf5e97ff1ee5309ef1dd9",
+    "experiments/l23net_analysis/s0_protocol.py": "33f15dff215d2068119db3ba9295dd5425777d7fd299c6df9890dab5f9314cf6"
+  },
+  "core_discovery": {
+    "bands": {
+      "alpha": {
+        "mean": 0.15404758805512064,
+        "mean_bootstrap_ci95": [
+          0.11147151158007029,
+          0.19498817206022764
+        ],
+        "mean_t_ci95": [
+          0.10741124476436492,
+          0.20068393134587637
+        ],
+        "n_structures": 16,
+        "p_one_sided": 3.0517578125e-05,
+        "paired_dz": 1.7601329691927265,
+        "permutation_draws": 65536,
+        "permutation_method": "exact_sign_flip",
+        "positive_structures": 15,
+        "q_bh_three_bands": 4.57763671875e-05,
+        "sample_sd": 0.0875204264401533,
+        "uncertainty_scope": "Structure variability conditional on the frozen reference calibration; no clinical uncertainty."
+      },
+      "low_beta": {
+        "mean": 0.24778728847405973,
+        "mean_bootstrap_ci95": [
+          0.20607485091892982,
+          0.2887674185769806
+        ],
+        "mean_t_ci95": [
+          0.20098892596921566,
+          0.2945856509789038
+        ],
+        "n_structures": 16,
+        "p_one_sided": 1.52587890625e-05,
+        "paired_dz": 2.8213920057498987,
+        "permutation_draws": 65536,
+        "permutation_method": "exact_sign_flip",
+        "positive_structures": 16,
+        "q_bh_three_bands": 4.57763671875e-05,
+        "sample_sd": 0.08782448095446427,
+        "uncertainty_scope": "Structure variability conditional on the frozen reference calibration; no clinical uncertainty."
+      },
+      "theta": {
+        "mean": 0.15087145095819188,
+        "mean_bootstrap_ci95": [
+          0.10303063740955767,
+          0.19305113232230314
+        ],
+        "mean_t_ci95": [
+          0.1003624585907302,
+          0.20138044332565355
+        ],
+        "n_structures": 16,
+        "p_one_sided": 7.62939453125e-05,
+        "paired_dz": 1.5916714554667848,
+        "permutation_draws": 65536,
+        "permutation_method": "exact_sign_flip",
+        "positive_structures": 15,
+        "q_bh_three_bands": 7.62939453125e-05,
+        "sample_sd": 0.09478806096572628,
+        "uncertainty_scope": "Structure variability conditional on the frozen reference calibration; no clinical uncertainty."
+      }
+    },
+    "composite": {
+      "mean": 3.2808936001603852,
+      "mean_bootstrap_ci95": [
+        2.748064476867229,
+        3.785164407067304
+      ],
+      "mean_t_ci95": [
+        2.691003830532711,
+        3.8707833697880596
+      ],
+      "n_structures": 16,
+      "p_one_sided": 1.52587890625e-05,
+      "paired_dz": 2.963714380698707,
+      "permutation_draws": 65536,
+      "permutation_method": "exact_sign_flip",
+      "positive_structures": 16,
+      "sample_sd": 1.1070208457087898,
+      "uncertainty_scope": "Structure variability conditional on the frozen reference calibration; no clinical uncertainty."
+    },
+    "measurement": {
+      "alpha": {
+        "frequency_passed": false,
+        "long_block_phase_passed": false,
+        "phase_horizons": {
+          "1.0": {
+            "accepted_predictions": 1,
+            "possible_predictions": 48,
+            "scored_structures": 1,
+            "structure_mean_absolute_error_rad": 0.3679913262406372,
+            "uniform_phase_null_mae_rad": 1.5707963267948966
+          },
+          "4.0": {
+            "accepted_predictions": 1,
+            "possible_predictions": 48,
+            "scored_structures": 1,
+            "structure_mean_absolute_error_rad": 3.0289163787009734,
+            "uniform_phase_null_mae_rad": 1.5707963267948966
+          }
+        },
+        "phase_reason": "28-s sources cannot qualify 22-s open-loop phase prediction after the required baseline.",
+        "stable_peak_coverage": 0.125
+      },
+      "low_beta": {
+        "frequency_passed": false,
+        "long_block_phase_passed": false,
+        "phase_horizons": {
+          "1.0": {
+            "accepted_predictions": 0,
+            "possible_predictions": 48,
+            "scored_structures": 0,
+            "structure_mean_absolute_error_rad": null,
+            "uniform_phase_null_mae_rad": 1.5707963267948966
+          },
+          "4.0": {
+            "accepted_predictions": 0,
+            "possible_predictions": 48,
+            "scored_structures": 0,
+            "structure_mean_absolute_error_rad": null,
+            "uniform_phase_null_mae_rad": 1.5707963267948966
+          }
+        },
+        "phase_reason": "28-s sources cannot qualify 22-s open-loop phase prediction after the required baseline.",
+        "stable_peak_coverage": 0.0
+      },
+      "theta": {
+        "frequency_passed": false,
+        "long_block_phase_passed": false,
+        "phase_horizons": {
+          "1.0": {
+            "accepted_predictions": 1,
+            "possible_predictions": 48,
+            "scored_structures": 1,
+            "structure_mean_absolute_error_rad": 0.14180241042341463,
+            "uniform_phase_null_mae_rad": 1.5707963267948966
+          },
+          "4.0": {
+            "accepted_predictions": 1,
+            "possible_predictions": 48,
+            "scored_structures": 1,
+            "structure_mean_absolute_error_rad": 3.091012758970336,
+            "uniform_phase_null_mae_rad": 1.5707963267948966
+          }
+        },
+        "phase_reason": "28-s sources cannot qualify 22-s open-loop phase prediction after the required baseline.",
+        "stable_peak_coverage": 0.25
+      }
+    },
+    "n": 16,
+    "phenotype_passed": true,
+    "sensitivity": 1.0,
+    "specificity": 0.9375
+  },
+  "extension_validation": {
+    "bands": {
+      "alpha": {
+        "mean": 0.13214444784728244,
+        "mean_bootstrap_ci95": [
+          0.10950397148159173,
+          0.1557185068064616
+        ],
+        "mean_t_ci95": [
+          0.10787972143775774,
+          0.15640917425680712
+        ],
+        "n_structures": 44,
+        "p_one_sided": 9.99990000099999e-06,
+        "paired_dz": 1.6557196457247116,
+        "permutation_draws": 100000,
+        "permutation_method": "monte_carlo_sign_flip_plus_one",
+        "positive_structures": 43,
+        "q_bh_three_bands": 9.99990000099999e-06,
+        "sample_sd": 0.07981088355658338,
+        "uncertainty_scope": "Structure variability conditional on the frozen reference calibration; no clinical uncertainty."
+      },
+      "low_beta": {
+        "mean": 0.2545941806868605,
+        "mean_bootstrap_ci95": [
+          0.23149636278323737,
+          0.27790060545061634
+        ],
+        "mean_t_ci95": [
+          0.2300689769738663,
+          0.27911938439985473
+        ],
+        "n_structures": 44,
+        "p_one_sided": 9.99990000099999e-06,
+        "paired_dz": 3.156088184736398,
+        "permutation_draws": 100000,
+        "permutation_method": "monte_carlo_sign_flip_plus_one",
+        "positive_structures": 44,
+        "q_bh_three_bands": 9.99990000099999e-06,
+        "sample_sd": 0.08066763847668745,
+        "uncertainty_scope": "Structure variability conditional on the frozen reference calibration; no clinical uncertainty."
+      },
+      "theta": {
+        "mean": 0.14759724133136884,
+        "mean_bootstrap_ci95": [
+          0.12733125023434735,
+          0.16751723232700386
+        ],
+        "mean_t_ci95": [
+          0.12671170739798704,
+          0.16848277526475064
+        ],
+        "n_structures": 44,
+        "p_one_sided": 9.99990000099999e-06,
+        "paired_dz": 2.1485523417047347,
+        "permutation_draws": 100000,
+        "permutation_method": "monte_carlo_sign_flip_plus_one",
+        "positive_structures": 43,
+        "q_bh_three_bands": 9.99990000099999e-06,
+        "sample_sd": 0.0686961348189731,
+        "uncertainty_scope": "Structure variability conditional on the frozen reference calibration; no clinical uncertainty."
+      }
+    },
+    "composite": {
+      "mean": 3.200087642707403,
+      "mean_bootstrap_ci95": [
+        2.987050752544313,
+        3.4110799545519934
+      ],
+      "mean_t_ci95": [
+        2.9782656162371564,
+        3.42190966917765
+      ],
+      "n_structures": 44,
+      "p_one_sided": 9.99990000099999e-06,
+      "paired_dz": 4.386018754953804,
+      "permutation_draws": 100000,
+      "permutation_method": "monte_carlo_sign_flip_plus_one",
+      "positive_structures": 44,
+      "sample_sd": 0.7296110257378752,
+      "uncertainty_scope": "Structure variability conditional on the frozen reference calibration; no clinical uncertainty."
+    },
+    "measurement": {
+      "alpha": {
+        "frequency_passed": false,
+        "long_block_phase_passed": false,
+        "phase_horizons": {
+          "1.0": {
+            "accepted_predictions": 1,
+            "possible_predictions": 132,
+            "scored_structures": 1,
+            "structure_mean_absolute_error_rad": 2.98072542444817,
+            "uniform_phase_null_mae_rad": 1.5707963267948966
+          },
+          "4.0": {
+            "accepted_predictions": 1,
+            "possible_predictions": 132,
+            "scored_structures": 1,
+            "structure_mean_absolute_error_rad": 2.180167439959244,
+            "uniform_phase_null_mae_rad": 1.5707963267948966
+          }
+        },
+        "phase_reason": "28-s sources cannot qualify 22-s open-loop phase prediction after the required baseline.",
+        "stable_peak_coverage": 0.20454545454545456
+      },
+      "low_beta": {
+        "frequency_passed": false,
+        "long_block_phase_passed": false,
+        "phase_horizons": {
+          "1.0": {
+            "accepted_predictions": 0,
+            "possible_predictions": 132,
+            "scored_structures": 0,
+            "structure_mean_absolute_error_rad": null,
+            "uniform_phase_null_mae_rad": 1.5707963267948966
+          },
+          "4.0": {
+            "accepted_predictions": 0,
+            "possible_predictions": 132,
+            "scored_structures": 0,
+            "structure_mean_absolute_error_rad": null,
+            "uniform_phase_null_mae_rad": 1.5707963267948966
+          }
+        },
+        "phase_reason": "28-s sources cannot qualify 22-s open-loop phase prediction after the required baseline.",
+        "stable_peak_coverage": 0.11363636363636363
+      },
+      "theta": {
+        "frequency_passed": false,
+        "long_block_phase_passed": false,
+        "phase_horizons": {
+          "1.0": {
+            "accepted_predictions": 3,
+            "possible_predictions": 132,
+            "scored_structures": 3,
+            "structure_mean_absolute_error_rad": 0.7972597942485398,
+            "uniform_phase_null_mae_rad": 1.5707963267948966
+          },
+          "4.0": {
+            "accepted_predictions": 3,
+            "possible_predictions": 132,
+            "scored_structures": 3,
+            "structure_mean_absolute_error_rad": 0.7391875954281537,
+            "uniform_phase_null_mae_rad": 1.5707963267948966
+          }
+        },
+        "phase_reason": "28-s sources cannot qualify 22-s open-loop phase prediction after the required baseline.",
+        "stable_peak_coverage": 0.1590909090909091
+      }
+    },
+    "n": 44,
+    "phenotype_passed": true,
+    "sensitivity": 1.0,
+    "specificity": 0.9318181818181818
+  },
+  "gates": {
+    "fixed_frequency_discovery_allowed": true,
+    "full_spectrum_phenotype": true,
+    "phase_matched_discovery_allowed": false
+  },
+  "limitations": [
+    "No latent neural phase ground truth; future sinusoid fit is a scoring convention only.",
+    "Longer active/sham and reference stationarity still require prospective checks.",
+    "Targets are matched in duration, not in absolute epoch; the late 60-s qualification reference audits transfer.",
+    "Core R1 phenotype outcomes were previously inspected; S0 is measurement qualification, not new blinded disease confirmation.",
+    "Short-window discrepancies share data with the 20-s estimate and are not independent noise variance.",
+    "No calibration/selection on active stimulation outcomes."
+  ],
+  "protocol": {
+    "amplitude_v_per_m": 0.4,
+    "analysis_fs_hz": 250.0,
+    "bands_hz": {
+      "alpha": [
+        8.0,
+        12.0
+      ],
+      "low_beta": [
+        12.0,
+        16.0
+      ],
+      "theta": [
+        4.0,
+        8.0
+      ]
+    },
+    "baseline_ms": 20000,
+    "discovery_seeds": [
+      8401,
+      8402,
+      8403
+    ],
+    "duration_ms": 60000,
+    "excluded_ms": 8000,
+    "fixed_frequencies_hz": {
+      "alpha": 10.0,
+      "low_beta": 14.0,
+      "theta": 6.0
+    },
+    "frequency_minimum_coverage": 0.8,
+    "lowpass_hz": 80.0,
+    "lowpass_order": 8,
+    "native_dt_ms": 0.025,
+    "outcome_ms": [
+      29000,
+      49000
+    ],
+    "outcome_rule": "RMS standardized log10 theta/alpha/low-beta distance; positive benefit=sham distance minus active distance",
+    "peak_half_difference_hz": 0.5,
+    "peak_prominence_db": 3.0,
+    "phase_audit_boundaries_s": [
+      16.0,
+      20.0,
+      23.0
+    ],
+    "phase_fit_minimum_r2": 0.1,
+    "phase_history_s": 2.0,
+    "phase_horizons_s": [
+      1.0,
+      4.0
+    ],
+    "phase_maximum_mae_rad": 0.7853981633974483,
+    "phase_rule": "One-time phase requires a qualified forecast horizon spanning the entire active block; otherwise blocked.",
+    "phase_scoring_halfwidth_s": 1.0,
+    "phenotype_minimum_sensitivity": 0.8,
+    "phenotype_minimum_specificity": 0.8,
+    "qualification_seed": 8451,
+    "ramp_ms": 1000,
+    "screening_rule": "equal-weight signed standardized three-band score above empirical calibration 95th percentile",
+    "stimulation_ms": 22000,
+    "version": 1,
+    "washout_ms": 10000,
+    "welch_overlap": 0.5,
+    "welch_segment_s": 4.0
+  },
+  "reference_contract": {
+    "circuit": "hl23net",
+    "contract_version": 1,
+    "debug": false,
+    "eeg": {
+      "foursphereheadmodel": {
+        "radii": [
+          79000.0,
+          80000.0,
+          85000.0,
+          90000.0
+        ],
+        "sigmas": [
+          0.3,
+          1.5,
+          0.015,
+          0.3
+        ]
+      },
+      "locations": [
+        [
+          0.0,
+          0.0,
+          90000.0
+        ]
+      ],
+      "measure": true
+    },
+    "env_seed": 0,
+    "mpi_ranks": 624,
+    "network": {
+      "celsius": 34.0,
+      "dt_ms": 0.025,
+      "syn_activity": true,
+      "tstart_ms": 0.0,
+      "v_init_mV": -80.0
+    },
+    "online": {
+      "field_direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "max_step_ms": 10.0,
+      "parameterization": "uniform_field",
+      "temperature_mode": "configured",
+      "waveform": "sinusoidal"
+    },
+    "package_versions": {
+      "LFPy": "2.3",
+      "NEURON": "8.2.3",
+      "h5py": "3.11.0",
+      "mpi4py": "3.1.5",
+      "numpy": "1.26.3",
+      "scipy": "1.11.4"
+    },
+    "simulation": {
+      "DRUG": false,
+      "duration_ms": 28000.0,
+      "window_ms": 1000.0
+    },
+    "stimulation_enabled": false
+  },
+  "sha256": "cbe3717e8c89c6b65629775694204d66446ae6839a49222d9e1cd25ea32c7c73",
+  "source_hashes": {
+    "results/r1_results/l23net_r1_core_20260928_141233_eml_t84c/r1_summary.json": "cdc192054d70787b705c0a90c70adf85a80779efffe052f3f4e8757effc0d54d",
+    "results/r1_results/l23net_r1_extension_20260929_092724_3cj5fq9a/r1_summary.json": "84e210bfde3f4c1c82e593709e39c861b22dac1a605808a76a87712ed213cd1b"
+  },
+  "targets": {
+    "10s": {
+      "mean_log10": [
+        -18.841098203072068,
+        -18.858758864055904,
+        -19.254850848340613
+      ],
+      "n_structures": 16,
+      "scale_floor": 0.01,
+      "scale_log10": [
+        0.07389411907770406,
+        0.1000081897139762,
+        0.08829499664975624
+      ],
+      "screen_caveat": "Empirical calibration cutoff, not a finite-sample 95% specificity guarantee.",
+      "screen_cutoff": 0.5497051178158604
+    },
+    "20s": {
+      "mean_log10": [
+        -18.82755339401114,
+        -18.861082176147892,
+        -19.26011631823952
+      ],
+      "n_structures": 16,
+      "scale_floor": 0.01,
+      "scale_log10": [
+        0.059545573910763816,
+        0.06732099660158604,
+        0.04935301639323999
+      ],
+      "screen_caveat": "Empirical calibration cutoff, not a finite-sample 95% specificity guarantee.",
+      "screen_cutoff": 0.6665596788354685
+    },
+    "fundamental_excluded": {
+      "alpha": {
+        "mean_log10": [
+          -18.82755339401114,
+          -19.001885366507043,
+          -19.26011631823952
+        ],
+        "n_structures": 16,
+        "scale_floor": 0.01,
+        "scale_log10": [
+          0.059545573910763816,
+          0.0713709758924949,
+          0.04935301639323999
+        ],
+        "screen_caveat": "Empirical calibration cutoff, not a finite-sample 95% specificity guarantee.",
+        "screen_cutoff": 0.746973225888869
+      },
+      "low_beta": {
+        "mean_log10": [
+          -18.82755339401114,
+          -18.861082176147892,
+          -19.371816678526017
+        ],
+        "n_structures": 16,
+        "scale_floor": 0.01,
+        "scale_log10": [
+          0.059545573910763816,
+          0.06732099660158604,
+          0.051775614767995554
+        ],
+        "screen_caveat": "Empirical calibration cutoff, not a finite-sample 95% specificity guarantee.",
+        "screen_cutoff": 0.7124651389487244
+      },
+      "theta": {
+        "mean_log10": [
+          -18.94833242816392,
+          -18.861082176147892,
+          -19.26011631823952
+        ],
+        "n_structures": 16,
+        "scale_floor": 0.01,
+        "scale_log10": [
+          0.05651858181840961,
+          0.06732099660158604,
+          0.04935301639323999
+        ],
+        "screen_caveat": "Empirical calibration cutoff, not a finite-sample 95% specificity guarantee.",
+        "screen_cutoff": 0.739091900125267
+      }
+    }
+  },
+  "technical_passed": true
+}

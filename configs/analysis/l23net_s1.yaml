@@ -1,0 +1,17 @@
+defaults:
+  - l23net_g1b
+  - _self_
+
+mode: qualification
+condition: mdd
+arm: sham
+s0_gate: null
+qualification: null
+duration_ms: 60000.0
+window_ms: 1000.0
+excluded_ms: 8000.0
+stim_start_ms: 28000.0
+stim_stop_ms: 50000.0
+ramp_ms: 1000.0
+resource_request:
+  walltime_hours: 2.5
