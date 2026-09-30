@@ -1,0 +1,9 @@
+defaults:
+  - l23net_s1
+  - _self_
+
+mode: reference_calibration
+condition: reference
+arm: sham
+resource_request:
+  walltime_hours: 2.0
