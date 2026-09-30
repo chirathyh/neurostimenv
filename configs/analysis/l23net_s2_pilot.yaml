@@ -1,0 +1,10 @@
+defaults:
+  - l23net_s1
+  - _self_
+
+mode: replication_pilot
+condition: mdd
+arm: sham
+reference_suite: null
+resource_request:
+  walltime_hours: 1.6666666666666667
