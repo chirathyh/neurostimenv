@@ -1,0 +1,3 @@
+# Install into a NEW ML environment. Select a workstation-compatible PyTorch build
+# separately; never use this file to downgrade an existing CUDA environment.
+-r eegrepr-base.txt

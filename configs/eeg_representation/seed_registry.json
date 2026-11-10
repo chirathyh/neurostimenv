@@ -1,0 +1,15 @@
+{
+  "schema_version": "eegrepr-seeds-v1",
+  "source_audit_commit": "855a1c33623573aeae71682dc7740658bdeac401",
+  "maximum_structure_seed": 429495,
+  "reason": "LFPy initialization multiplies structure seed by 10000 before NumPy uint32 seed validation",
+  "reserved_structure_ranges": {
+    "analytical_smoke": [31000, 31002],
+    "simulator_smoke": [31003, 31005],
+    "core_pilot": [32000, 32007],
+    "core_confirmation": [33000, 33039],
+    "factor_development": [34000, 34005]
+  },
+  "nonstructure_streams": "SHA256(namespace, semantic stream, structure, independent trial) mapped to uint32; separate events, phase, envelope, sensor and future namespaces",
+  "audit": "No explicit integer in these ranges found in tracked legacy configs/analysis or experiments/ballnstick_analysis Python/YAML at the audited commit. Computed ranges also require review when adding profiles."
+}

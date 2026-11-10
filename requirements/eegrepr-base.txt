@@ -1,0 +1,9 @@
+# Optional analysis/data dependencies verified in the existing simulation environment.
+# Install in a new environment only; do not upgrade the validated simulator stack.
+numpy==1.26.3
+scipy==1.15.3
+h5py==3.15.0
+PyYAML==6.0.3
+scikit-learn==1.7.2
+matplotlib==3.10.7
+joblib==1.5.3

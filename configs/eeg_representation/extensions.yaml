@@ -1,0 +1,35 @@
+# Targeted exploratory extension, not a Cartesian-product campaign.
+schema_version: eegrepr-1.0
+name: complementary_factor_development
+claim_status: pilot
+data:
+  backend: neuron
+  namespace: eegrepr-extensions-development-v1
+  structures:
+    train: [34000, 34001, 34002]
+    development: [34003]
+    test: [34004, 34005]
+  trials_per_regime: 4
+  regimes:
+    - {name: R0}
+    - {name: Ralpha, frequency_hz: 10, modulation_depth: 0.04}
+    - {name: Rnear9, family: nearby, frequency_hz: 9, modulation_depth: 0.04}
+    - {name: Rnear11, family: nearby, frequency_hz: 11, modulation_depth: 0.04}
+    - {name: Rcoherent, family: coherence, frequency_hz: 10, modulation_depth: 0.04, diffusion: 0.5}
+    - {name: Rdiffuse, family: coherence, frequency_hz: 10, modulation_depth: 0.04, diffusion: 2.0}
+    - {name: Rburst, family: envelope, frequency_hz: 10, modulation_depth: 0.08, burst: true}
+    - {name: Rtonic_power_candidate, family: envelope, frequency_hz: 10, modulation_depth: 0.046188021535170064}
+    - {name: RfastI, family: kinetics, frequency_hz: 10, modulation_depth: 0.04, kinetics_scale: 0.8}
+    - {name: RslowI, family: kinetics, frequency_hz: 10, modulation_depth: 0.04, kinetics_scale: 1.2}
+    - {name: Rpartial, family: shared_fraction, frequency_hz: 10, modulation_depth: 0.04, shared_fraction: 0.5}
+forecast:
+  history_s: 4.0
+training:
+  source_tasks: [rhythm, nearby_carrier, coherence]
+  source_order: [rhythm, nearby_carrier, coherence]
+  heldout_tasks: [burst, kinetics, shared_fraction]
+  label_budgets: [2, 4, 8]
+evaluation:
+  tasks: [burst, burst_occupancy, kinetics, shared_fraction]
+  heldout_families: [envelope, kinetics, shared_fraction]
+  allow_test: true

@@ -1,0 +1,44 @@
+schema_version: eegrepr-1.0
+name: analytical_functional_smoke
+claim_status: smoke
+simulation:
+  native_dt_ms: 0.5
+  burn_in_s: 0.25
+  duration_s: 2.0
+data:
+  backend: analytical
+  analytical_kind: oscillator
+  namespace: eegrepr-smoke-v1
+  structures:
+    train: [31000]
+    development: [31001]
+    test: [31002]
+  trials_per_regime: 2
+  regimes:
+    - {name: R0}
+    - {name: Ralpha, frequency_hz: 10, modulation_depth: 0.04}
+    - {name: Rbeta_low, frequency_hz: 16, modulation_depth: 0.04}
+    - {name: Rbeta_high, frequency_hz: 24, modulation_depth: 0.04}
+forecast:
+  history_s: 0.25
+  stride_s: 0.5
+forks:
+  states_per_regime: 1
+  futures: 4
+  convergence_futures: 8
+  decision_s: 0.25
+  bootstrap_samples: 100
+model:
+  embedding_dim: 16
+  layers: 1
+  heads: 2
+training:
+  recipes: [features, specialist, masked_mse, masked_l1, spectral_hybrid, momentum_contrastive, forecast_lowrank, forecast_diagonal, forecast_ar, joint, progressive, reverse, random_order, reconstruction_supervised]
+  seeds: [0]
+  steps: 4
+  batch_size: 4
+  label_budgets: [1, 2]
+evaluation:
+  probe_steps: 5
+  bootstrap_samples: 100
+  forecast_draws: 16

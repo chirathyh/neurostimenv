@@ -1,0 +1,28 @@
+# PROVISIONAL. Freeze counts, margins, target tasks and configs from pilot before test access.
+schema_version: eegrepr-1.0
+name: core_confirmation_provisional_4000
+claim_status: confirmation
+data:
+  backend: neuron
+  namespace: eegrepr-core-confirmation-v1
+  structures:
+    train: [33000, 33001, 33002, 33003, 33004, 33005, 33006, 33007, 33008, 33009, 33010, 33011, 33012, 33013, 33014, 33015, 33016, 33017, 33018, 33019, 33020, 33021, 33022, 33023]
+    development: [33024, 33025, 33026, 33027, 33028, 33029]
+    test: [33030, 33031, 33032, 33033, 33034, 33035, 33036, 33037, 33038, 33039]
+  trials_per_regime: 25
+  regimes:
+    - {name: R0}
+    - {name: Ralpha, frequency_hz: 10, modulation_depth: 0.04}
+    - {name: Rbeta_low, frequency_hz: 16, modulation_depth: 0.04}
+    - {name: Rbeta_high, frequency_hz: 24, modulation_depth: 0.04}
+forecast:
+  history_s: 4.0
+training:
+  recipes: [features, specialist, masked_mse, masked_l1, spectral_hybrid, momentum_contrastive, forecast_lowrank, forecast_diagonal, forecast_ar, joint, progressive, reverse, random_order, reconstruction_supervised]
+  seeds: [0, 1, 2, 3, 4]
+  label_budgets: [10, 50, 250, 500]
+  random_orders: 3
+evaluation:
+  frozen: false
+  allow_test: false
+  minimum_gain: 0.02
