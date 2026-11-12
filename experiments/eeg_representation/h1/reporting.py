@@ -130,7 +130,7 @@ def summarize(config,root):
                 axes[1].scatter([i]*len(group),[r['corrected_excess'] for r in group],s=28)
             axes[0].axhline(1,color='black',ls='--',lw=1);axes[1].axhline(0,color='black',ls='--',lw=1)
             for ax in axes:ax.set_xticks(range(len(names)),names,rotation=45,ha='right',fontsize=7)
-            axes[0].set_ylabel('Model risk / training-mean test risk');axes[1].set_ylabel('Bias-corrected combined excess (standardized)')
+            axes[0].set_ylabel('Model risk / training-mean test risk');axes[1].set_ylabel('Corrected combined excess\n(standardized MSE)')
             fig.suptitle(f'{job}: individual circuit means; {config["claim_status"]}, {config["backend"]}')
             for ext in ['png','pdf']:fig.savefig(directory/f'{job}_matched_risk.{ext}',dpi=180)
             plt.close(fig)
