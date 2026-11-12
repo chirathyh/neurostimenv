@@ -28,12 +28,12 @@ The legacy scientific source hash remains exactly `9a1fa6f48f04125143569c062b839
 - A nonzero-diffusion 2E/1I early-stop test matched a longer episode exactly through the required final sample, including causal checkpoint and event-queue state. No checkpoint-restoration cache is claimed.
 - `bash -n` passed. The actual launcher completed analytical and simulator modes and a compatible analytical resume. An extracted ZIP outside the checkout independently recomputed all eight analytical benchmark MSEs and reaggregated the saved circuit scores without Git, NEURON or model pickles. Figures were visually checked, including a rendered PDF.
 
-| Final committed-source smoke | Native episodes | Evaluation circuits / contexts | Models | End-to-end wall time | Peak process RSS | Output bytes before extra exports |
+| Functional qualification smoke | Native episodes | Evaluation circuits / contexts | Models | End-to-end wall time | Peak process RSS | Output bytes before extra exports |
 |---|---:|---:|---:|---:|---:|---:|
 | Analytical | 64 | 2 / 4 | 8 | 22.02 s | 643,473,408 | 32,037,738 |
 | NEURON 2E/1I | 12 | 1 / 2 | 4 | 25.37 s | 555,958,272 | 14,337,953 |
 
-Both roots record the clean tested commit above and backend/engineering status. Timings include CLI startup, exact controls, generation, fitting/analysis and export. These validations ran concurrently on the CPU laptop (CUDA unavailable), so these times do not estimate isolated GPU training or full-network simulation speed. The two engineering runs include one extra numerical replay per generation invocation, outside the counted saved episodes. Measured generation timings and native byte counts are in their timing artifacts.
+Both qualification roots record the clean tested implementation commit above and backend/engineering status. After the PDF-label correction at `9534b68ee9ef49b3b9d33506c36254fe8daee410`, both end-to-end runs were repeated (20.80 s analytical; 23.12 s simulator). All saved truth, mean, variance and risk arrays matched the qualification runs exactly for all twelve model records. The corrected PDF was rendered and visually checked, and eight benchmark scores were recomputed from its extracted package outside the checkout. Final delivered evidence uses this corrected source snapshot. Timings include CLI startup, exact controls, generation, fitting/analysis and export. These validations ran concurrently on the CPU laptop (CUDA unavailable), so these times do not estimate isolated GPU training or full-network simulation speed. The two engineering runs include one extra numerical replay per generation invocation, outside the counted saved episodes. Measured generation timings and native byte counts are in their timing artifacts.
 
 ## Qualifications and deviations requiring attention
 
