@@ -1,0 +1,58 @@
+schema_version: eegrepr-h1-2.0
+name: input_noise_extension
+claim_status: development
+namespace: eegrepr-h1-v2-noise-development
+data:
+  structures:
+    train:
+    - 35300
+    - 35301
+    - 35302
+    - 35303
+    development:
+    - 35304
+    - 35305
+    evaluation:
+    - 35306
+    - 35307
+    - 35308
+    - 35309
+cost_gate:
+  required: true
+jobs:
+- id: primary
+  history_s: 4.0
+  lead_ms: 10.0
+  duration_ms: 128.0
+  operator: bin_average_waveform
+  output_grid_hz: 500.0
+  input_rate_hz: 500.0
+  acquisition_bits: null
+  snr_db: null
+- id: noise20
+  history_s: 4.0
+  lead_ms: 10.0
+  duration_ms: 128.0
+  operator: bin_average_waveform
+  output_grid_hz: 500.0
+  input_rate_hz: 500.0
+  acquisition_bits: null
+  snr_db: 20
+- id: noise10
+  history_s: 4.0
+  lead_ms: 10.0
+  duration_ms: 128.0
+  operator: bin_average_waveform
+  output_grid_hz: 500.0
+  input_rate_hz: 500.0
+  acquisition_bits: null
+  snr_db: 10
+- id: noise0
+  history_s: 4.0
+  lead_ms: 10.0
+  duration_ms: 128.0
+  operator: bin_average_waveform
+  output_grid_hz: 500.0
+  input_rate_hz: 500.0
+  acquisition_bits: null
+  snr_db: 0

@@ -1,0 +1,28 @@
+schema_version: eegrepr-h1-2.0
+name: compression
+claim_status: development
+cost_gate:
+  required: true
+jobs:
+- id: primary
+  history_s: 4.0
+  lead_ms: 10.0
+  duration_ms: 128.0
+  operator: bin_average_waveform
+  output_grid_hz: 500.0
+  input_rate_hz: 500.0
+  acquisition_bits: null
+  snr_db: null
+compression:
+  dimensions:
+  - 8
+  - 32
+  - 128
+  code_bits:
+  - 32
+  - 128
+  - 512
+  label_budgets:
+  - 8
+  - 32
+  - all

@@ -1,0 +1,31 @@
+schema_version: eegrepr-h1-2.0
+name: fixed_budget_extension
+claim_status: development
+cost_gate:
+  required: true
+fixed_budget_extension:
+  enabled: true
+jobs:
+- id: primary
+  history_s: 4.0
+  lead_ms: 10.0
+  duration_ms: 128.0
+  operator: bin_average_waveform
+  output_grid_hz: 500.0
+  input_rate_hz: 500.0
+  acquisition_bits: null
+  snr_db: null
+forks:
+  score_futures: 32
+  reference_futures: 32
+  high_score_futures: 128
+  high_reference_futures: 256
+  high_contexts:
+  - s35006-p0000-R0
+  - s35006-p0000-Rbeta_low
+  - s35007-p0000-Ralpha
+  - s35007-p0000-Rbeta_high
+  - s35008-p0000-R0
+  - s35008-p0000-Rbeta_low
+  - s35009-p0000-Ralpha
+  - s35009-p0000-Rbeta_high

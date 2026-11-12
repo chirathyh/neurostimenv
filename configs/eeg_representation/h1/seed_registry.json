@@ -1,0 +1,34 @@
+{
+  "schema_version": "eegrepr-h1-seeds-v2",
+  "base_pilot_excluded": [
+    32000,
+    32007
+  ],
+  "ranges": {
+    "bounded_development": [
+      35000,
+      35009
+    ],
+    "analytic_smoke": [
+      35100,
+      35106
+    ],
+    "simulator_smoke": [
+      35110,
+      35112
+    ],
+    "timing_gate": [
+      35120,
+      35121
+    ],
+    "confirmation_plan": [
+      35200,
+      35219
+    ],
+    "noise_development": [
+      35300,
+      35309
+    ]
+  },
+  "note": "Namespaces identify streams; full-state futures never include RNG state in physical conditioning. Expanded/reference/compression/scale reuse the declared DEVELOPMENT circuits as analysis views, not new independent confirmations."
+}

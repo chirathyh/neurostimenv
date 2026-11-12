@@ -1,0 +1,55 @@
+schema_version: eegrepr-h1-2.0
+name: confirmation_plan
+claim_status: planned_confirmation
+namespace: eegrepr-h1-v2-confirmation
+data:
+  structures:
+    train:
+    - 35200
+    - 35201
+    - 35202
+    - 35203
+    development:
+    - 35204
+    - 35205
+    - 35206
+    - 35207
+    evaluation:
+    - 35208
+    - 35209
+    - 35210
+    - 35211
+    - 35212
+    - 35213
+    - 35214
+    - 35215
+    - 35216
+    - 35217
+    - 35218
+    - 35219
+  prefixes_per_regime:
+    train: 32
+    development: 16
+    evaluation: 2
+forks:
+  score_futures: 128
+  reference_futures: 256
+benchmark:
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+cost_gate:
+  required: true
+jobs:
+- id: primary
+  history_s: 4.0
+  lead_ms: 10.0
+  duration_ms: 128.0
+  operator: bin_average_waveform
+  output_grid_hz: 500.0
+  input_rate_hz: 500.0
+  acquisition_bits: null
+  snr_db: null
