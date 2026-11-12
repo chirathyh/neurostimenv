@@ -1,0 +1,1925 @@
+{
+  "schema_version": "eegrepr-h1-implementation-validation-v2",
+  "tested_commit": "a5247e69a89c8bc5bf6c588898108bb292f9c768",
+  "branch": "codex/eegrepr-h1-information-v2",
+  "base_commit": "4532e19f29cfcf318f8afbe7c25850f29981803e",
+  "scientific_source_hash": "34f62a20aa67c8d5d8fa8793d417292fccaf73e01f0628a52c1e1bb6623ed0c6",
+  "new_tests": {
+    "count": 65,
+    "passed": true,
+    "seconds": 15.265,
+    "skips": 0
+  },
+  "existing_regression": {
+    "scope": "existing implementation/physics regressions from /tmp/neurostimenv-h1-information-v2; no H1 gate or full campaign",
+    "unit_tests": {
+      "count": 70,
+      "elapsed_seconds": 18.125,
+      "passed": true,
+      "neuron_tests_enabled": true,
+      "skipped": false,
+      "modules": [
+        "tests.test_eegrepr_analytical",
+        "tests.test_eegrepr_aggregation",
+        "tests.test_eegrepr_data",
+        "tests.test_eegrepr_learning",
+        "tests.test_eegrepr_simulator",
+        "tests.test_ballnstick_background",
+        "tests.test_ballnstick_synapse_kinetics",
+        "tests.test_online_stimulation"
+      ]
+    },
+    "polarization": {
+      "axial_dc_soma_gain_mV_per_v_per_m": -0.1043571315545535,
+      "axial_dc_linearity_r2": 0.9999794677851673,
+      "transverse_to_axial_soma_response_ratio": 1.514397523145404e-09,
+      "max_abs_realistic_soma_mean_shift_mV": 0.08391024213999287,
+      "max_axial_ac_soma_gain_mV_per_v_per_m": 0.2123175322367977,
+      "checks": {
+        "all_finite": true,
+        "axial_dc_polarizes_soma": true,
+        "axial_dc_is_linear": true,
+        "transverse_negative_control": true,
+        "polarity_reverses_response": true
+      },
+      "polarization_validation_passed": true,
+      "interpretation": "This validates field-to-membrane coupling only; network-level A-like controllability requires the separate open-loop screen."
+    },
+    "online_legacy": {
+      "legacy_samples": 8001,
+      "online_samples": 8000,
+      "correlation": 1.0,
+      "rms_error_v": 3.473602206380971e-20,
+      "relative_rms_error": 2.546350745429157e-11,
+      "max_abs_error_v": 6.273954015158514e-19,
+      "configured_celsius": 6.3,
+      "online_effective_celsius": 6.3,
+      "sample_boundary_convention": "(start, stop] online; legacy t=0 dropped"
+    },
+    "logs": {
+      "existing-tests.log": {
+        "path": "/tmp/eegrepr-h1-physics-regression/existing-tests.log",
+        "bytes": 20181,
+        "sha256": "95832f23d089b216bd3e48f040353ba346f3a5c2db29d0616113625e77690c52",
+        "returncode": 0
+      },
+      "polarization.log": {
+        "path": "/tmp/eegrepr-h1-physics-regression/polarization.log",
+        "bytes": 3317,
+        "sha256": "a2f3f9f71d878b063316545a22352516b0d311f68496ef087965ed2bb85e4fd7",
+        "returncode": 0
+      },
+      "online-legacy.log": {
+        "path": "/tmp/eegrepr-h1-physics-regression/online-legacy.log",
+        "bytes": 1491,
+        "sha256": "c1f0ea6669c7ca7fa2f15329527e351b85724a52d0e1317a8152170cc99beef0",
+        "returncode": 0
+      }
+    },
+    "environment": {
+      "MAIN_PATH": "/tmp/neurostimenv-h1-information-v2",
+      "python": "/home/chirath/Documents/depression-simulator/bin/python",
+      "EEGREPR_RUN_NEURON": "1 for unittest suite",
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1"
+    },
+    "commands": {
+      "unittest": "python -m unittest -v tests.test_eegrepr_analytical tests.test_eegrepr_aggregation tests.test_eegrepr_data tests.test_eegrepr_learning tests.test_eegrepr_simulator tests.test_ballnstick_background tests.test_ballnstick_synapse_kinetics tests.test_online_stimulation",
+      "polarization": "python experiments/ballnstick_analysis/validate_ballnstick_polarization.py experiment.name=h1_cellular_polarization_regression env=ballnstick analysis=ballnstick_polarization experiment.plot=false experiment.tqdm=false experiment.dir=/tmp/eegrepr-h1-physics-regression/polarization hydra.run.dir=/tmp/eegrepr-h1-physics-regression/polarization-hydra",
+      "legacy": "python experiments/ballnstick_analysis/validate_online_legacy.py experiment.name=h1_online_legacy_regression env=ballnstick env.simulation.duration=500 env.simulation.obs_win_len=250 experiment.plot=false experiment.tqdm=false experiment.dir=/tmp/eegrepr-h1-physics-regression/online hydra.run.dir=/tmp/eegrepr-h1-physics-regression/online-hydra"
+    }
+  },
+  "new_smokes": {
+    "analytic_smoke": {
+      "root": "/tmp/eegrepr-h1-a5247e6-validation/analytic_smoke",
+      "claim_status": "engineering",
+      "backend": "analytical",
+      "native_episodes": 64,
+      "source_hash": "34f62a20aa67c8d5d8fa8793d417292fccaf73e01f0628a52c1e1bb6623ed0c6",
+      "commit": "a5247e69a89c8bc5bf6c588898108bb292f9c768",
+      "dirty": false,
+      "wall_seconds": 22.02,
+      "maximum_rss_bytes": 643473408,
+      "bytes_before_extra_exports": 32037738,
+      "models": 8,
+      "actual_jobs": 1,
+      "phases": {
+        "P0_targets": {
+          "completed_jobs": 1,
+          "counts_scope": "explicit nested status/diagnostic records; these counts are not independent contexts/circuits or a scientific pass",
+          "execution_status": "complete",
+          "path": "panels/manifest.json",
+          "qualification_examples": [],
+          "qualification_examples_omitted": 0,
+          "qualification_status": "no_explicit_qualification_failures_recorded",
+          "recorded_status": null,
+          "status": "complete",
+          "status_record_counts": {}
+        },
+        "P1_exact_controls": {
+          "completed_jobs": 0,
+          "counts_scope": "explicit nested status/diagnostic records; these counts are not independent contexts/circuits or a scientific pass",
+          "execution_status": "complete",
+          "path": "controls/controls.json",
+          "qualification_examples": [
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "$.repeated.rows[0].sample_variance_status"
+            }
+          ],
+          "qualification_examples_omitted": 0,
+          "qualification_status": "inspect_pending_unsupported_or_failed_items",
+          "recorded_status": "executed analytical controls; no empirical biophysical conclusion",
+          "status": "complete_with_qualifications",
+          "status_record_counts": {
+            "unavailable": 1
+          }
+        },
+        "P1_matched_benchmark": {
+          "completed_jobs": 1,
+          "counts_scope": "explicit nested status/diagnostic records; these counts are not independent contexts/circuits or a scientific pass",
+          "execution_status": "complete",
+          "path": "benchmarks/manifest.json",
+          "qualification_examples": [
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[0].summary.risk_over_r0.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[0].summary.skill.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[1].summary.risk_over_r0.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[1].summary.skill.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[2].summary.risk_over_r0.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[2].summary.skill.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[3].summary.risk_over_r0.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[3].summary.skill.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[4].summary.risk_over_r0.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[4].summary.skill.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[5].summary.risk_over_r0.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[5].summary.skill.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[6].summary.risk_over_r0.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[6].summary.skill.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[7].summary.risk_over_r0.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[7].summary.skill.status"
+            },
+            {
+              "category": "failed_diagnostic",
+              "detail": "within_tolerance=false; execution success does not establish qualification",
+              "path": "benchmarks/primary/summary.json.neural_pair_accounting[0].within_tolerance"
+            }
+          ],
+          "qualification_examples_omitted": 0,
+          "qualification_status": "inspect_pending_unsupported_or_failed_items",
+          "recorded_status": null,
+          "status": "complete_with_qualifications",
+          "status_record_counts": {
+            "failed_diagnostic": 1,
+            "unavailable": 16
+          }
+        },
+        "P2_replication": {
+          "completed_jobs": 1,
+          "counts_scope": "explicit nested status/diagnostic records; these counts are not independent contexts/circuits or a scientific pass",
+          "execution_status": "complete",
+          "path": "replication/summary.json",
+          "qualification_examples": [
+            {
+              "category": "unavailable",
+              "detail": "unavailable: one future",
+              "path": "$.jobs[0].contexts[0].rows[0].variance_status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[0].rows[3].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[0].rows[4].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[0].rows[5].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[0].rows[6].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[0].rows[7].status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable: one future",
+              "path": "$.jobs[0].contexts[1].rows[0].variance_status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[1].rows[3].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[1].rows[4].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[1].rows[5].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[1].rows[6].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[1].rows[7].status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable: one future",
+              "path": "$.jobs[0].contexts[2].rows[0].variance_status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[2].rows[3].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[2].rows[4].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[2].rows[5].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[2].rows[6].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[2].rows[7].status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable: one future",
+              "path": "$.jobs[0].contexts[3].rows[0].variance_status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[3].rows[3].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[3].rows[4].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[3].rows[5].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[3].rows[6].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[3].rows[7].status"
+            },
+            {
+              "category": "unsupported",
+              "detail": "unsupported or insufficient candidate design",
+              "path": "$.jobs[0].fixed_budget_comparison.status"
+            },
+            {
+              "category": "unsupported",
+              "detail": "unsupported balanced allocation for this engineering configuration",
+              "path": "$.jobs[0].fixed_budget_plan.status"
+            },
+            {
+              "category": "pending",
+              "detail": "executed available analyses; inspect pending references/allocations",
+              "path": "$.status"
+            }
+          ],
+          "qualification_examples_omitted": 0,
+          "qualification_status": "inspect_pending_unsupported_or_failed_items",
+          "recorded_status": "executed available analyses; inspect pending references/allocations",
+          "status": "complete_with_qualifications",
+          "status_record_counts": {
+            "pending": 21,
+            "unavailable": 4,
+            "unsupported": 2
+          }
+        },
+        "P3_compression": {
+          "completed_jobs": 1,
+          "counts_scope": "explicit nested status/diagnostic records; these counts are not independent contexts/circuits or a scientific pass",
+          "execution_status": "complete",
+          "path": "compression/summary.json",
+          "qualification_examples": [
+            {
+              "category": "unsupported",
+              "detail": "unsupported",
+              "path": "$.rows[6].status"
+            },
+            {
+              "category": "unsupported",
+              "detail": "unsupported",
+              "path": "$.rows[7].status"
+            },
+            {
+              "category": "unsupported",
+              "detail": "unsupported",
+              "path": "$.rows[20].status"
+            },
+            {
+              "category": "unsupported",
+              "detail": "unsupported",
+              "path": "$.rows[21].status"
+            },
+            {
+              "category": "unsupported",
+              "detail": "unsupported",
+              "path": "$.rows[34].status"
+            },
+            {
+              "category": "unsupported",
+              "detail": "unsupported",
+              "path": "$.rows[35].status"
+            },
+            {
+              "category": "unsupported",
+              "detail": "unsupported",
+              "path": "$.rows[48].status"
+            },
+            {
+              "category": "unsupported",
+              "detail": "unsupported",
+              "path": "$.rows[49].status"
+            },
+            {
+              "category": "unsupported",
+              "detail": "unsupported",
+              "path": "$.rows[62].status"
+            },
+            {
+              "category": "unsupported",
+              "detail": "unsupported",
+              "path": "$.rows[63].status"
+            }
+          ],
+          "qualification_examples_omitted": 0,
+          "qualification_status": "inspect_pending_unsupported_or_failed_items",
+          "recorded_status": "complete",
+          "status": "complete_with_qualifications",
+          "status_record_counts": {
+            "unsupported": 10
+          }
+        },
+        "P4_scale": {
+          "completed_jobs": 1,
+          "counts_scope": "explicit nested status/diagnostic records; these counts are not independent contexts/circuits or a scientific pass",
+          "execution_status": "complete",
+          "path": "scale/summary.json",
+          "qualification_examples": [],
+          "qualification_examples_omitted": 0,
+          "qualification_status": "no_explicit_qualification_failures_recorded",
+          "recorded_status": "complete",
+          "status": "complete",
+          "status_record_counts": {}
+        }
+      },
+      "neural_pair_accounting": [
+        {
+          "compute_match": "fixed updates; measured time/FLOPs differ and are reported",
+          "declared_tolerance": 0.15,
+          "mean_decoder_initialization": "same seed and construction order; variance head allocated afterwards",
+          "relative_parameter_overhead": 0.23943661971830985,
+          "seed": 0,
+          "shared_encoder_and_mean_decoder": true,
+          "updates_gaussian": 30,
+          "updates_mse": 30,
+          "within_tolerance": false
+        }
+      ],
+      "generation_seconds_by_split": {
+        "development-train": 0.5229229126125574,
+        "evaluation": 0.47052013454958797
+      }
+    },
+    "simulator_smoke": {
+      "root": "/tmp/eegrepr-h1-a5247e6-validation/simulator_smoke",
+      "claim_status": "engineering",
+      "backend": "neuron",
+      "native_episodes": 12,
+      "source_hash": "34f62a20aa67c8d5d8fa8793d417292fccaf73e01f0628a52c1e1bb6623ed0c6",
+      "commit": "a5247e69a89c8bc5bf6c588898108bb292f9c768",
+      "dirty": false,
+      "wall_seconds": 25.37,
+      "maximum_rss_bytes": 555958272,
+      "bytes_before_extra_exports": 14337953,
+      "models": 4,
+      "actual_jobs": 1,
+      "phases": {
+        "P0_targets": {
+          "completed_jobs": 1,
+          "counts_scope": "explicit nested status/diagnostic records; these counts are not independent contexts/circuits or a scientific pass",
+          "execution_status": "complete",
+          "path": "panels/manifest.json",
+          "qualification_examples": [],
+          "qualification_examples_omitted": 0,
+          "qualification_status": "no_explicit_qualification_failures_recorded",
+          "recorded_status": null,
+          "status": "complete",
+          "status_record_counts": {}
+        },
+        "P1_exact_controls": {
+          "completed_jobs": 0,
+          "counts_scope": "explicit nested status/diagnostic records; these counts are not independent contexts/circuits or a scientific pass",
+          "execution_status": "complete",
+          "path": "controls/controls.json",
+          "qualification_examples": [
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "$.repeated.rows[0].sample_variance_status"
+            }
+          ],
+          "qualification_examples_omitted": 0,
+          "qualification_status": "inspect_pending_unsupported_or_failed_items",
+          "recorded_status": "executed analytical controls; no empirical biophysical conclusion",
+          "status": "complete_with_qualifications",
+          "status_record_counts": {
+            "unavailable": 1
+          }
+        },
+        "P1_matched_benchmark": {
+          "completed_jobs": 1,
+          "counts_scope": "explicit nested status/diagnostic records; these counts are not independent contexts/circuits or a scientific pass",
+          "execution_status": "complete",
+          "path": "benchmarks/manifest.json",
+          "qualification_examples": [
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[0].summary.excess_jackknife_mc_se.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[0].summary.excess_jackknife_mc_se_physical.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[0].summary.floor_jackknife_mc_se.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[0].summary.floor_jackknife_mc_se_physical.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[0].summary.risk_over_r0.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[0].summary.skill.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[1].summary.excess_jackknife_mc_se.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[1].summary.excess_jackknife_mc_se_physical.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[1].summary.floor_jackknife_mc_se.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[1].summary.floor_jackknife_mc_se_physical.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[1].summary.risk_over_r0.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[1].summary.skill.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[2].summary.excess_jackknife_mc_se.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[2].summary.excess_jackknife_mc_se_physical.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[2].summary.floor_jackknife_mc_se.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[2].summary.floor_jackknife_mc_se_physical.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[2].summary.risk_over_r0.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[2].summary.skill.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[3].summary.excess_jackknife_mc_se.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[3].summary.excess_jackknife_mc_se_physical.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[3].summary.floor_jackknife_mc_se.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "benchmarks/primary/summary.json.models[3].summary.floor_jackknife_mc_se_physical.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[3].summary.risk_over_r0.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable denominator or too few independent circuits for population precision",
+              "path": "benchmarks/primary/summary.json.models[3].summary.skill.status"
+            }
+          ],
+          "qualification_examples_omitted": 0,
+          "qualification_status": "inspect_pending_unsupported_or_failed_items",
+          "recorded_status": null,
+          "status": "complete_with_qualifications",
+          "status_record_counts": {
+            "unavailable": 24
+          }
+        },
+        "P2_replication": {
+          "completed_jobs": 1,
+          "counts_scope": "explicit nested status/diagnostic records; these counts are not independent contexts/circuits or a scientific pass",
+          "execution_status": "complete",
+          "path": "replication/summary.json",
+          "qualification_examples": [
+            {
+              "category": "unavailable",
+              "detail": "unavailable: one future",
+              "path": "$.jobs[0].contexts[0].rows[0].variance_status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[0].rows[2].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[0].rows[3].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[0].rows[4].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[0].rows[5].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[0].rows[6].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[0].rows[7].status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable: one future",
+              "path": "$.jobs[0].contexts[1].rows[0].variance_status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[1].rows[2].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[1].rows[3].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[1].rows[4].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[1].rows[5].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[1].rows[6].status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: insufficient independent scoring futures",
+              "path": "$.jobs[0].contexts[1].rows[7].status"
+            },
+            {
+              "category": "unsupported",
+              "detail": "unsupported or insufficient candidate design",
+              "path": "$.jobs[0].fixed_budget_comparison.status"
+            },
+            {
+              "category": "unsupported",
+              "detail": "unsupported balanced allocation for this engineering configuration",
+              "path": "$.jobs[0].fixed_budget_plan.status"
+            },
+            {
+              "category": "pending",
+              "detail": "pending: at least three independent training circuits required",
+              "path": "$.jobs[0].pooled_one_future.status"
+            },
+            {
+              "category": "pending",
+              "detail": "executed available analyses; inspect pending references/allocations",
+              "path": "$.status"
+            }
+          ],
+          "qualification_examples_omitted": 0,
+          "qualification_status": "inspect_pending_unsupported_or_failed_items",
+          "recorded_status": "executed available analyses; inspect pending references/allocations",
+          "status": "complete_with_qualifications",
+          "status_record_counts": {
+            "pending": 14,
+            "unavailable": 2,
+            "unsupported": 2
+          }
+        },
+        "P3_compression": {
+          "execution_status": "not_run",
+          "path": "compression/summary.json",
+          "status": "not_run"
+        },
+        "P4_scale": {
+          "completed_jobs": 1,
+          "counts_scope": "explicit nested status/diagnostic records; these counts are not independent contexts/circuits or a scientific pass",
+          "execution_status": "complete",
+          "path": "scale/summary.json",
+          "qualification_examples": [
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "$.rows[0].circuit_summary.summary.excess_jackknife_mc_se.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "$.rows[0].circuit_summary.summary.floor_jackknife_mc_se.status"
+            },
+            {
+              "category": "unavailable",
+              "detail": "unavailable",
+              "path": "$.rows[0].circuit_summary.summary.floor_jackknife_mc_se_physical.status"
+            }
+          ],
+          "qualification_examples_omitted": 0,
+          "qualification_status": "inspect_pending_unsupported_or_failed_items",
+          "recorded_status": "complete",
+          "status": "complete_with_qualifications",
+          "status_record_counts": {
+            "unavailable": 3
+          }
+        }
+      },
+      "neural_pair_accounting": [],
+      "generation_seconds_by_split": {
+        "development-train": 4.862345937639475,
+        "evaluation": 6.489851733669639
+      }
+    }
+  },
+  "logs": {
+    "h1-new-tests-final.log": {
+      "path": "/tmp/h1-new-tests-final.log",
+      "bytes": 10455,
+      "sha256": "2d5ceeb4ab019f3ebbdf66fb2007fbe92011570985439171a38b23dfa00c5909"
+    },
+    "h1-analytic-final.log": {
+      "path": "/tmp/h1-analytic-final.log",
+      "bytes": 610431,
+      "sha256": "1ce15a189778102a0021319209e36d46087b26f83026ca581184e602a969e19b"
+    },
+    "h1-simulator-final.log": {
+      "path": "/tmp/h1-simulator-final.log",
+      "bytes": 152254,
+      "sha256": "99b854bdbeb995a99666682bed9aebf2e6a80e5964a749d1497ba0c509071f4c"
+    },
+    "h1-resume-final.log": {
+      "path": "/tmp/h1-resume-final.log",
+      "bytes": 605272,
+      "sha256": "bc0044f8357f96d02dedff4d8ceaeb668d3b61afbb2a0dc425ce5822eb2ec14c"
+    },
+    "h1-independent-rescore.log": {
+      "path": "/tmp/h1-independent-rescore.log",
+      "bytes": 125,
+      "sha256": "5eae9cb70b6113b26d2c51b98cc2f354f108511059bc3f93df591d50d8ff7619"
+    },
+    "h1-earlystop-final.log": {
+      "path": "/tmp/h1-earlystop-final.log",
+      "bytes": 3171,
+      "sha256": "ca7c6e31121b39686b5fd482129750dfd7b429ab3ee83ee2e6c1605f6ec51ae1"
+    },
+    "ab.log": {
+      "path": "/tmp/eegrepr-h1-physics-regression/ab.log",
+      "bytes": 9684,
+      "sha256": "822d6dd15a6d1e1c6029c9a821c5f4974c888e5f8b26c9fda5270f6ab87d51f4"
+    },
+    "stim.log": {
+      "path": "/tmp/eegrepr-h1-physics-regression/stim.log",
+      "bytes": 3775,
+      "sha256": "3800a8c8838269207cb26a65e198c061bf87ff57a20130f193e8dbe50b6a2fc7"
+    }
+  },
+  "planned_only": {
+    "analytic_smoke": {
+      "requires_full_network_gate": false,
+      "context_counts": {
+        "train": 24,
+        "development": 8,
+        "evaluation": 4
+      },
+      "continuations": {
+        "train": 24,
+        "development": 8,
+        "evaluation": 32
+      },
+      "jobs": 1,
+      "final_models": 8,
+      "search_candidate_fits": 8,
+      "compression_heads_upper": 70,
+      "note": "structural arithmetic only; timing requirement disabled only for this offline inventory, not a qualifying runnable plan"
+    },
+    "bounded_development": {
+      "requires_full_network_gate": true,
+      "context_counts": {
+        "train": 256,
+        "development": 64,
+        "evaluation": 16
+      },
+      "continuations": {
+        "train": 256,
+        "development": 64,
+        "evaluation": 256
+      },
+      "jobs": 1,
+      "final_models": 10,
+      "search_candidate_fits": 16,
+      "compression_heads_upper": 588,
+      "note": "structural arithmetic only; timing requirement disabled only for this offline inventory, not a qualifying runnable plan"
+    },
+    "compression": {
+      "requires_full_network_gate": true,
+      "context_counts": {
+        "train": 256,
+        "development": 64,
+        "evaluation": 16
+      },
+      "continuations": {
+        "train": 256,
+        "development": 64,
+        "evaluation": 256
+      },
+      "jobs": 1,
+      "final_models": 10,
+      "search_candidate_fits": 16,
+      "compression_heads_upper": 1932,
+      "note": "structural arithmetic only; timing requirement disabled only for this offline inventory, not a qualifying runnable plan"
+    },
+    "confirmation_plan": {
+      "requires_full_network_gate": true,
+      "context_counts": {
+        "train": 512,
+        "development": 256,
+        "evaluation": 96
+      },
+      "continuations": {
+        "train": 512,
+        "development": 256,
+        "evaluation": 36864
+      },
+      "jobs": 1,
+      "final_models": 16,
+      "search_candidate_fits": 22,
+      "compression_heads_upper": 588,
+      "note": "structural arithmetic only; timing requirement disabled only for this offline inventory, not a qualifying runnable plan"
+    },
+    "expanded_reference": {
+      "requires_full_network_gate": true,
+      "context_counts": {
+        "train": 256,
+        "development": 64,
+        "evaluation": 16
+      },
+      "continuations": {
+        "train": 256,
+        "development": 64,
+        "evaluation": 3584
+      },
+      "jobs": 1,
+      "final_models": 10,
+      "search_candidate_fits": 16,
+      "compression_heads_upper": 588,
+      "note": "structural arithmetic only; timing requirement disabled only for this offline inventory, not a qualifying runnable plan"
+    },
+    "fixed_budget_extension": {
+      "requires_full_network_gate": true,
+      "context_counts": {
+        "train": 256,
+        "development": 64,
+        "evaluation": 16
+      },
+      "continuations": {
+        "train": 768,
+        "development": 64,
+        "evaluation": 3584
+      },
+      "jobs": 1,
+      "final_models": 10,
+      "search_candidate_fits": 16,
+      "compression_heads_upper": 588,
+      "note": "structural arithmetic only; timing requirement disabled only for this offline inventory, not a qualifying runnable plan"
+    },
+    "input_noise_extension": {
+      "requires_full_network_gate": true,
+      "context_counts": {
+        "train": 256,
+        "development": 64,
+        "evaluation": 16
+      },
+      "continuations": {
+        "train": 256,
+        "development": 64,
+        "evaluation": 256
+      },
+      "jobs": 4,
+      "final_models": 40,
+      "search_candidate_fits": 64,
+      "compression_heads_upper": 2352,
+      "note": "structural arithmetic only; timing requirement disabled only for this offline inventory, not a qualifying runnable plan"
+    },
+    "scale_core": {
+      "requires_full_network_gate": true,
+      "context_counts": {
+        "train": 256,
+        "development": 64,
+        "evaluation": 16
+      },
+      "continuations": {
+        "train": 256,
+        "development": 64,
+        "evaluation": 256
+      },
+      "jobs": 7,
+      "final_models": 70,
+      "search_candidate_fits": 112,
+      "compression_heads_upper": 4116,
+      "note": "structural arithmetic only; timing requirement disabled only for this offline inventory, not a qualifying runnable plan"
+    },
+    "scale_targeted": {
+      "requires_full_network_gate": true,
+      "context_counts": {
+        "train": 256,
+        "development": 64,
+        "evaluation": 16
+      },
+      "continuations": {
+        "train": 256,
+        "development": 64,
+        "evaluation": 256
+      },
+      "jobs": 25,
+      "final_models": 250,
+      "search_candidate_fits": 400,
+      "compression_heads_upper": 14700,
+      "note": "structural arithmetic only; timing requirement disabled only for this offline inventory, not a qualifying runnable plan"
+    },
+    "simulator_smoke": {
+      "requires_full_network_gate": false,
+      "context_counts": {
+        "train": 2,
+        "development": 2,
+        "evaluation": 2
+      },
+      "continuations": {
+        "train": 2,
+        "development": 2,
+        "evaluation": 8
+      },
+      "jobs": 1,
+      "final_models": 4,
+      "search_candidate_fits": 4,
+      "compression_heads_upper": 70,
+      "note": "structural arithmetic only; timing requirement disabled only for this offline inventory, not a qualifying runnable plan"
+    },
+    "timing_gate": {
+      "requires_full_network_gate": false,
+      "context_counts": {
+        "train": 0,
+        "development": 0,
+        "evaluation": 4
+      },
+      "continuations": {
+        "train": 0,
+        "development": 0,
+        "evaluation": 8
+      },
+      "jobs": 1,
+      "final_models": 0,
+      "search_candidate_fits": 0,
+      "compression_heads_upper": 0,
+      "note": "structural arithmetic only; timing requirement disabled only for this offline inventory, not a qualifying runnable plan"
+    }
+  },
+  "independent_rescore": {
+    "checks": [
+      {
+        "job": "primary",
+        "model": "train_mean",
+        "mse_recomputed_from_truth_and_mean": true,
+        "raw_scores_reaggregate": true
+      },
+      {
+        "job": "primary",
+        "model": "train_mean_unit_variance",
+        "mse_recomputed_from_truth_and_mean": true,
+        "raw_scores_reaggregate": true
+      },
+      {
+        "job": "primary",
+        "model": "persistence",
+        "mse_recomputed_from_truth_and_mean": true,
+        "raw_scores_reaggregate": true
+      },
+      {
+        "job": "primary",
+        "model": "ridge_wiener",
+        "mse_recomputed_from_truth_and_mean": true,
+        "raw_scores_reaggregate": true
+      },
+      {
+        "job": "primary",
+        "model": "harmonic",
+        "mse_recomputed_from_truth_and_mean": true,
+        "raw_scores_reaggregate": true
+      },
+      {
+        "job": "primary",
+        "model": "state_space",
+        "mse_recomputed_from_truth_and_mean": true,
+        "raw_scores_reaggregate": true
+      },
+      {
+        "job": "primary",
+        "model": "neural_mse__seed_0",
+        "mse_recomputed_from_truth_and_mean": true,
+        "raw_scores_reaggregate": true
+      },
+      {
+        "job": "primary",
+        "model": "neural_gaussian__seed_0",
+        "mse_recomputed_from_truth_and_mean": true,
+        "raw_scores_reaggregate": true
+      }
+    ],
+    "rows": [
+      {
+        "context_risk_ratio": 1.0,
+        "context_skill": 0.0,
+        "corrected_excess": 0.009412679691411317,
+        "corrected_excess_physical": 1.0707759495867898e-14,
+        "corrected_loo_risk": 0.18294973866717767,
+        "corrected_loo_risk_physical": 2.081215834070623e-13,
+        "coverage_50": 0.919921875,
+        "coverage_80": 1.0,
+        "coverage_95": 1.0,
+        "energy": 0.41651924360699,
+        "energy_physical": 4.442503053770595e-07,
+        "excess_jackknife_mc_se": 0.058257695479218566,
+        "excess_jackknife_mc_se_physical": 6.627330499137065e-14,
+        "floor_jackknife_mc_se": 0.10114123740903713,
+        "floor_jackknife_mc_se_physical": 1.150571442772706e-13,
+        "gaussian_nll": 1.162369932924492,
+        "gaussian_nll_physical": -12.588685134283732,
+        "independent_reference_mean_risk": 0.23484298459073305,
+        "job": "primary",
+        "loo_oracle_risk": 0.24393298488957021,
+        "loo_oracle_risk_physical": 2.7749544454274975e-13,
+        "marginal_crps": 0.34162268706306376,
+        "marginal_crps_physical": 3.6436727805713994e-07,
+        "matched_risk_for_floor": 0.192362418358589,
+        "mean_risk": 0.192362418358589,
+        "mean_risk_physical": 2.188293429029302e-13,
+        "model": "train_mean",
+        "n_contexts": 2,
+        "pair_half_mse": 0.18380810807288286,
+        "pair_half_mse_physical": 2.090980548749365e-13,
+        "pit": 0.5065930846582032,
+        "predictive_sd": 1.1922106818386278,
+        "predictive_sd_physical": 1.2715858093230108e-06,
+        "r0": 0.192362418358589,
+        "r0_physical": 2.188293429029302e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": 0.0,
+        "risk_difference_from_r0_physical": 0.0,
+        "risk_mc_se": 0.0613105115744768,
+        "risk_mc_se_physical": 6.974615455226317e-14,
+        "risk_over_r0": 1.0,
+        "sharpness_95": 4.673379996775303,
+        "sharpness_95_physical": 4.984524779050635e-06,
+        "skill": 0.0,
+        "state_floor": 0.18294973866717767,
+        "state_floor_physical": 2.0812158340706235e-13,
+        "structure_id": "35105",
+        "uncorrected_mean_error": 0.055150114358205736
+      },
+      {
+        "context_risk_ratio": 1.0,
+        "context_skill": 0.0,
+        "corrected_excess": 0.5163537432517367,
+        "corrected_excess_physical": 5.873982626409454e-13,
+        "corrected_loo_risk": 0.24290208028272647,
+        "corrected_loo_risk_physical": 2.7632269895327243e-13,
+        "coverage_50": 0.58984375,
+        "coverage_80": 0.9140625,
+        "coverage_95": 1.0,
+        "energy": 0.6279834390581351,
+        "energy_physical": 6.69793386152761e-07,
+        "excess_jackknife_mc_se": 0.2660055174557453,
+        "excess_jackknife_mc_se_physical": 3.026049115523381e-13,
+        "floor_jackknife_mc_se": 0.08506496500683536,
+        "floor_jackknife_mc_se_physical": 9.676895599121786e-14,
+        "gaussian_nll": 1.3697095068092544,
+        "gaussian_nll_physical": -12.381345560398971,
+        "independent_reference_mean_risk": 0.3954883775594388,
+        "job": "primary",
+        "loo_oracle_risk": 0.32386944037696863,
+        "loo_oracle_risk_physical": 3.6843026527102994e-13,
+        "marginal_crps": 0.5117540386448516,
+        "marginal_crps_physical": 5.458256525608064e-07,
+        "matched_risk_for_floor": 0.7592558235344632,
+        "mean_risk": 0.7592558235344632,
+        "mean_risk_physical": 8.637209615942179e-13,
+        "model": "train_mean",
+        "n_contexts": 2,
+        "pair_half_mse": 0.12597038498735047,
+        "pair_half_mse_physical": 1.4330250579728284e-13,
+        "pit": 0.615185016229721,
+        "predictive_sd": 1.1922106818386278,
+        "predictive_sd_physical": 1.2715858093230108e-06,
+        "r0": 0.7592558235344632,
+        "r0_physical": 8.637209615942179e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": 0.0,
+        "risk_difference_from_r0_physical": 0.0,
+        "risk_mc_se": 0.2880154762541214,
+        "risk_mc_se_physical": 3.276431953411744e-13,
+        "risk_over_r0": 1.0,
+        "sharpness_95": 4.673379996775303,
+        "sharpness_95_physical": 4.984524779050635e-06,
+        "skill": 0.0,
+        "state_floor": 0.24290208028272647,
+        "state_floor_physical": 2.7632269895327243e-13,
+        "structure_id": "35106",
+        "uncorrected_mean_error": 0.5770792633224183
+      },
+      {
+        "context_risk_ratio": 1.0,
+        "context_skill": 0.0,
+        "corrected_excess": 0.009412679691411317,
+        "corrected_excess_physical": 1.0707759495867898e-14,
+        "corrected_loo_risk": 0.18294973866717767,
+        "corrected_loo_risk_physical": 2.081215834070623e-13,
+        "coverage_50": 0.87109375,
+        "coverage_80": 1.0,
+        "coverage_95": 1.0,
+        "energy": 0.40323887695672145,
+        "energy_physical": 4.3008575708678183e-07,
+        "excess_jackknife_mc_se": 0.058257695479218566,
+        "excess_jackknife_mc_se_physical": 6.627330499137065e-14,
+        "floor_jackknife_mc_se": 0.10114123740903713,
+        "floor_jackknife_mc_se_physical": 1.150571442772706e-13,
+        "gaussian_nll": 1.015119742383967,
+        "gaussian_nll_physical": -12.735935324824258,
+        "independent_reference_mean_risk": 0.23484298459073305,
+        "job": "primary",
+        "loo_oracle_risk": 0.24393298488957021,
+        "loo_oracle_risk_physical": 2.7749544454274975e-13,
+        "marginal_crps": 0.30728774867781333,
+        "marginal_crps_physical": 3.2774638455253533e-07,
+        "matched_risk_for_floor": 0.192362418358589,
+        "mean_risk": 0.192362418358589,
+        "mean_risk_physical": 2.188293429029302e-13,
+        "model": "train_mean_unit_variance",
+        "n_contexts": 2,
+        "pair_half_mse": 0.18380810807288286,
+        "pair_half_mse_physical": 2.090980548749365e-13,
+        "pit": 0.5065455935981316,
+        "predictive_sd": 1.0,
+        "predictive_sd_physical": 1.0665781046030981e-06,
+        "r0": 0.192362418358589,
+        "r0_physical": 2.188293429029302e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": 0.0,
+        "risk_difference_from_r0_physical": 0.0,
+        "risk_mc_se": 0.0613105115744768,
+        "risk_mc_se_physical": 6.974615455226317e-14,
+        "risk_over_r0": 1.0,
+        "sharpness_95": 3.919927969080107,
+        "sharpness_95_physical": 4.180909343442132e-06,
+        "skill": 0.0,
+        "state_floor": 0.18294973866717767,
+        "state_floor_physical": 2.0812158340706235e-13,
+        "structure_id": "35105",
+        "uncorrected_mean_error": 0.055150114358205736
+      },
+      {
+        "context_risk_ratio": 1.0,
+        "context_skill": 0.0,
+        "corrected_excess": 0.5163537432517367,
+        "corrected_excess_physical": 5.873982626409454e-13,
+        "corrected_loo_risk": 0.24290208028272647,
+        "corrected_loo_risk_physical": 2.7632269895327243e-13,
+        "coverage_50": 0.51171875,
+        "coverage_80": 0.875,
+        "coverage_95": 0.982421875,
+        "energy": 0.6032904833131346,
+        "energy_physical": 6.434564202172101e-07,
+        "excess_jackknife_mc_se": 0.2660055174557453,
+        "excess_jackknife_mc_se_physical": 3.026049115523381e-13,
+        "floor_jackknife_mc_se": 0.08506496500683536,
+        "floor_jackknife_mc_se_physical": 9.676895599121786e-14,
+        "gaussian_nll": 1.2985664449719043,
+        "gaussian_nll_physical": -12.452488622236322,
+        "independent_reference_mean_risk": 0.3954883775594388,
+        "job": "primary",
+        "loo_oracle_risk": 0.32386944037696863,
+        "loo_oracle_risk_physical": 3.6843026527102994e-13,
+        "marginal_crps": 0.49908726933698244,
+        "marginal_crps_physical": 5.323155537609747e-07,
+        "matched_risk_for_floor": 0.7592558235344632,
+        "mean_risk": 0.7592558235344632,
+        "mean_risk_physical": 8.637209615942179e-13,
+        "model": "train_mean_unit_variance",
+        "n_contexts": 2,
+        "pair_half_mse": 0.12597038498735047,
+        "pair_half_mse_physical": 1.4330250579728284e-13,
+        "pit": 0.6315741472683918,
+        "predictive_sd": 1.0,
+        "predictive_sd_physical": 1.0665781046030981e-06,
+        "r0": 0.7592558235344632,
+        "r0_physical": 8.637209615942179e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": 0.0,
+        "risk_difference_from_r0_physical": 0.0,
+        "risk_mc_se": 0.2880154762541214,
+        "risk_mc_se_physical": 3.276431953411744e-13,
+        "risk_over_r0": 1.0,
+        "sharpness_95": 3.919927969080107,
+        "sharpness_95_physical": 4.180909343442132e-06,
+        "skill": 0.0,
+        "state_floor": 0.24290208028272647,
+        "state_floor_physical": 2.7632269895327243e-13,
+        "structure_id": "35106",
+        "uncorrected_mean_error": 0.5770792633224183
+      },
+      {
+        "context_risk_ratio": 2.2671656091540284,
+        "context_skill": -1.2671656091540284,
+        "corrected_excess": 0.2648407637556342,
+        "corrected_excess_physical": 3.012799007263464e-13,
+        "corrected_loo_risk": 0.18294973866717767,
+        "corrected_loo_risk_physical": 2.081215834070623e-13,
+        "coverage_50": 0.5390625,
+        "coverage_80": 0.8515625,
+        "coverage_95": 0.970703125,
+        "energy": 0.5065501958815486,
+        "energy_physical": 5.402753478096701e-07,
+        "excess_jackknife_mc_se": 0.08768728659399708,
+        "excess_jackknife_mc_se_physical": 9.975207979832788e-14,
+        "floor_jackknife_mc_se": 0.10114123740903713,
+        "floor_jackknife_mc_se_physical": 1.150571442772706e-13,
+        "gaussian_nll": 1.1079700751896078,
+        "gaussian_nll_physical": -12.643084992018618,
+        "independent_reference_mean_risk": 0.23484298459073305,
+        "job": "primary",
+        "loo_oracle_risk": 0.24393298488957021,
+        "loo_oracle_risk_physical": 2.7749544454274975e-13,
+        "marginal_crps": 0.3951653272155705,
+        "marginal_crps_physical": 4.214746857064463e-07,
+        "matched_risk_for_floor": 0.4477905024228118,
+        "mean_risk": 0.4477905024228118,
+        "mean_risk_physical": 5.094014841334087e-13,
+        "model": "persistence",
+        "n_contexts": 2,
+        "pair_half_mse": 0.18380810807288286,
+        "pair_half_mse_physical": 2.090980548749365e-13,
+        "pit": 0.7090880832972286,
+        "predictive_sd": 0.8397392102279251,
+        "predictive_sd_physical": 8.956474552058029e-07,
+        "r0": 0.192362418358589,
+        "r0_physical": 2.188293429029302e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": 0.25542808406422285,
+        "risk_difference_from_r0_physical": 2.905721412304785e-13,
+        "risk_mc_se": 0.10283848893354519,
+        "risk_mc_se_physical": 1.1698791869265945e-13,
+        "risk_over_r0": 2.3278481641256508,
+        "sharpness_95": 3.2917172169056843,
+        "sharpness_95_physical": 3.51087351009665e-06,
+        "skill": -1.3278481641256508,
+        "state_floor": 0.18294973866717767,
+        "state_floor_physical": 2.0812158340706235e-13,
+        "structure_id": "35105",
+        "uncorrected_mean_error": 0.3105781984224286
+      },
+      {
+        "context_risk_ratio": 1.9901763689550376,
+        "context_skill": -0.9901763689550375,
+        "corrected_excess": 1.4270531496638612,
+        "corrected_excess_physical": 1.623399756008299e-12,
+        "corrected_loo_risk": 0.24290208028272647,
+        "corrected_loo_risk_physical": 2.7632269895327243e-13,
+        "coverage_50": 0.25390625,
+        "coverage_80": 0.591796875,
+        "coverage_95": 0.787109375,
+        "energy": 0.8847998378676727,
+        "energy_physical": 9.437081340260308e-07,
+        "excess_jackknife_mc_se": 0.24445727617783536,
+        "excess_jackknife_mc_se_physical": 2.7809187246811985e-13,
+        "floor_jackknife_mc_se": 0.08506496500683536,
+        "floor_jackknife_mc_se_physical": 9.676895599121786e-14,
+        "gaussian_nll": 1.8519980469654906,
+        "gaussian_nll_physical": -11.899057020242736,
+        "independent_reference_mean_risk": 0.3954883775594388,
+        "job": "primary",
+        "loo_oracle_risk": 0.32386944037696863,
+        "loo_oracle_risk_physical": 3.6843026527102994e-13,
+        "marginal_crps": 0.7476130936432925,
+        "marginal_crps_physical": 7.973877563945215e-07,
+        "matched_risk_for_floor": 1.6699552299465878,
+        "mean_risk": 1.6699552299465878,
+        "mean_risk_physical": 1.8997224549615716e-12,
+        "model": "persistence",
+        "n_contexts": 2,
+        "pair_half_mse": 0.12597038498735047,
+        "pair_half_mse_physical": 1.4330250579728284e-13,
+        "pit": 0.47267271029722296,
+        "predictive_sd": 0.8397392102279251,
+        "predictive_sd_physical": 8.956474552058029e-07,
+        "r0": 0.7592558235344632,
+        "r0_physical": 8.637209615942179e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": 0.9106994064121247,
+        "risk_difference_from_r0_physical": 1.0360014933673537e-12,
+        "risk_mc_se": 0.2631753219262025,
+        "risk_mc_se_physical": 2.9938531266550077e-13,
+        "risk_over_r0": 2.1994631824786883,
+        "sharpness_95": 3.2917172169056843,
+        "sharpness_95_physical": 3.51087351009665e-06,
+        "skill": -1.1994631824786883,
+        "state_floor": 0.24290208028272647,
+        "state_floor_physical": 2.7632269895327243e-13,
+        "structure_id": "35106",
+        "uncorrected_mean_error": 1.487778669734543
+      },
+      {
+        "context_risk_ratio": 2.4675074127738306,
+        "context_skill": -1.4675074127738308,
+        "corrected_excess": 0.3048788342377716,
+        "corrected_excess_physical": 3.4682676341121204e-13,
+        "corrected_loo_risk": 0.18294973866717767,
+        "corrected_loo_risk_physical": 2.081215834070623e-13,
+        "coverage_50": 0.583984375,
+        "coverage_80": 0.849609375,
+        "coverage_95": 0.9609375,
+        "energy": 0.5009465731642022,
+        "energy_physical": 5.34298646512892e-07,
+        "excess_jackknife_mc_se": 0.17340833862097826,
+        "excess_jackknife_mc_se_physical": 1.972673930704051e-13,
+        "floor_jackknife_mc_se": 0.10114123740903713,
+        "floor_jackknife_mc_se_physical": 1.150571442772706e-13,
+        "gaussian_nll": 1.0808622385628635,
+        "gaussian_nll_physical": -12.670192828645362,
+        "independent_reference_mean_risk": 0.23484298459073305,
+        "job": "primary",
+        "loo_oracle_risk": 0.24393298488957021,
+        "loo_oracle_risk_physical": 2.7749544454274975e-13,
+        "marginal_crps": 0.39386315967765134,
+        "marginal_crps_physical": 4.2008582232197674e-07,
+        "matched_risk_for_floor": 0.4878285729049493,
+        "mean_risk": 0.4878285729049493,
+        "mean_risk_physical": 5.549483468182744e-13,
+        "model": "ridge_wiener",
+        "n_contexts": 2,
+        "pair_half_mse": 0.18380810807288286,
+        "pair_half_mse_physical": 2.090980548749365e-13,
+        "pit": 0.6200417929607047,
+        "predictive_sd": 0.7756052964526221,
+        "predictive_sd_physical": 8.272436270105617e-07,
+        "r0": 0.192362418358589,
+        "r0_physical": 2.188293429029302e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": 0.2954661545463603,
+        "risk_difference_from_r0_physical": 3.3611900391534423e-13,
+        "risk_mc_se": 0.18353742965826333,
+        "risk_mc_se_physical": 2.0879013412765845e-13,
+        "risk_over_r0": 2.535986899455445,
+        "sharpness_95": 3.0403168945313026,
+        "sharpness_95_physical": 3.242735430761974e-06,
+        "skill": -1.535986899455445,
+        "state_floor": 0.18294973866717767,
+        "state_floor_physical": 2.0812158340706235e-13,
+        "structure_id": "35105",
+        "uncorrected_mean_error": 0.350616268904566
+      },
+      {
+        "context_risk_ratio": 1.4273454088769353,
+        "context_skill": -0.4273454088769352,
+        "corrected_excess": 0.8241260267338043,
+        "corrected_excess_physical": 9.375165816598228e-13,
+        "corrected_loo_risk": 0.24290208028272647,
+        "corrected_loo_risk_physical": 2.7632269895327243e-13,
+        "coverage_50": 0.322265625,
+        "coverage_80": 0.658203125,
+        "coverage_95": 0.865234375,
+        "energy": 0.7357441355780578,
+        "energy_physical": 7.847285855976899e-07,
+        "excess_jackknife_mc_se": 0.21425904905400883,
+        "excess_jackknife_mc_se_physical": 2.437387059050871e-13,
+        "floor_jackknife_mc_se": 0.08506496500683536,
+        "floor_jackknife_mc_se_physical": 9.676895599121786e-14,
+        "gaussian_nll": 1.5326242515507091,
+        "gaussian_nll_physical": -12.218430815657516,
+        "independent_reference_mean_risk": 0.3954883775594388,
+        "job": "primary",
+        "loo_oracle_risk": 0.32386944037696863,
+        "loo_oracle_risk_physical": 3.6843026527102994e-13,
+        "marginal_crps": 0.6001973048007331,
+        "marginal_crps_physical": 6.401573037422539e-07,
+        "matched_risk_for_floor": 1.0670281070165308,
+        "mean_risk": 1.0670281070165308,
+        "mean_risk_physical": 1.2138392806130952e-12,
+        "model": "ridge_wiener",
+        "n_contexts": 2,
+        "pair_half_mse": 0.12597038498735047,
+        "pair_half_mse_physical": 1.4330250579728284e-13,
+        "pit": 0.5759339861532482,
+        "predictive_sd": 0.7756052964526221,
+        "predictive_sd_physical": 8.272436270105617e-07,
+        "r0": 0.7592558235344632,
+        "r0_physical": 8.637209615942179e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": 0.30777228348206753,
+        "risk_difference_from_r0_physical": 3.501183190188773e-13,
+        "risk_mc_se": 0.20949190821323188,
+        "risk_mc_se_physical": 2.3831565962289544e-13,
+        "risk_over_r0": 1.4053604515660296,
+        "sharpness_95": 3.0403168945313026,
+        "sharpness_95_physical": 3.242735430761974e-06,
+        "skill": -0.4053604515660296,
+        "state_floor": 0.24290208028272647,
+        "state_floor_physical": 2.7632269895327243e-13,
+        "structure_id": "35106",
+        "uncorrected_mean_error": 0.884851546804486
+      },
+      {
+        "context_risk_ratio": 2.902113302895289,
+        "context_skill": -1.9021133028952888,
+        "corrected_excess": 0.3512531147048341,
+        "corrected_excess_physical": 3.995816279465818e-13,
+        "corrected_loo_risk": 0.18294973866717767,
+        "corrected_loo_risk_physical": 2.081215834070623e-13,
+        "coverage_50": 0.51171875,
+        "coverage_80": 0.90625,
+        "coverage_95": 0.99609375,
+        "energy": 0.5013632310594451,
+        "energy_physical": 5.347430447010682e-07,
+        "excess_jackknife_mc_se": 0.14682594363175833,
+        "excess_jackknife_mc_se_physical": 1.6702755683881088e-13,
+        "floor_jackknife_mc_se": 0.10114123740903713,
+        "floor_jackknife_mc_se_physical": 1.150571442772706e-13,
+        "gaussian_nll": 1.1219827383487404,
+        "gaussian_nll_physical": -12.629072328859486,
+        "independent_reference_mean_risk": 0.23484298459073305,
+        "job": "primary",
+        "loo_oracle_risk": 0.24393298488957021,
+        "loo_oracle_risk_physical": 2.7749544454274975e-13,
+        "marginal_crps": 0.42044876822833205,
+        "marginal_crps_physical": 4.484414502996817e-07,
+        "matched_risk_for_floor": 0.5342028533720118,
+        "mean_risk": 0.5342028533720118,
+        "mean_risk_physical": 6.077032113536442e-13,
+        "model": "harmonic",
+        "n_contexts": 2,
+        "pair_half_mse": 0.18380810807288286,
+        "pair_half_mse_physical": 2.090980548749365e-13,
+        "pit": 0.6410988083908609,
+        "predictive_sd": 0.9060800912461988,
+        "predictive_sd_physical": 9.66405186339973e-07,
+        "r0": 0.192362418358589,
+        "r0_physical": 2.188293429029302e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": 0.34184043501342276,
+        "risk_difference_from_r0_physical": 3.888738684507139e-13,
+        "risk_mc_se": 0.14615452363484865,
+        "risk_mc_se_physical": 1.662637569344983e-13,
+        "risk_over_r0": 2.7770645530988647,
+        "sharpness_95": 3.551768691902631,
+        "sharpness_95_physical": 3.788238719398133e-06,
+        "skill": -1.7770645530988647,
+        "state_floor": 0.18294973866717767,
+        "state_floor_physical": 2.0812158340706235e-13,
+        "structure_id": "35105",
+        "uncorrected_mean_error": 0.3969905493716286
+      },
+      {
+        "context_risk_ratio": 1.6322921446002834,
+        "context_skill": -0.6322921446002833,
+        "corrected_excess": 1.1553413667452848,
+        "corrected_excess_physical": 1.314303460471937e-12,
+        "corrected_loo_risk": 0.24290208028272647,
+        "corrected_loo_risk_physical": 2.7632269895327243e-13,
+        "coverage_50": 0.369140625,
+        "coverage_80": 0.65234375,
+        "coverage_95": 0.83203125,
+        "energy": 0.8077971625032653,
+        "energy_physical": 8.615787664864935e-07,
+        "excess_jackknife_mc_se": 0.33162639052693543,
+        "excess_jackknife_mc_se_physical": 3.772544852966056e-13,
+        "floor_jackknife_mc_se": 0.08506496500683536,
+        "floor_jackknife_mc_se_physical": 9.676895599121786e-14,
+        "gaussian_nll": 1.8224599759746045,
+        "gaussian_nll_physical": -11.928595091233621,
+        "independent_reference_mean_risk": 0.3954883775594388,
+        "job": "primary",
+        "loo_oracle_risk": 0.32386944037696863,
+        "loo_oracle_risk_physical": 3.6843026527102994e-13,
+        "marginal_crps": 0.6977334965438188,
+        "marginal_crps_physical": 7.441872702617986e-07,
+        "matched_risk_for_floor": 1.3982434470280114,
+        "mean_risk": 1.3982434470280114,
+        "mean_risk_physical": 1.5906261594252096e-12,
+        "model": "harmonic",
+        "n_contexts": 2,
+        "pair_half_mse": 0.12597038498735047,
+        "pair_half_mse_physical": 1.4330250579728284e-13,
+        "pit": 0.6669706732325191,
+        "predictive_sd": 0.9060800912461988,
+        "predictive_sd_physical": 9.66405186339973e-07,
+        "r0": 0.7592558235344632,
+        "r0_physical": 8.637209615942179e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": 0.6389876234935483,
+        "risk_difference_from_r0_physical": 7.269051978309918e-13,
+        "risk_mc_se": 0.3483426913213832,
+        "risk_mc_se_physical": 3.9627076274742083e-13,
+        "risk_over_r0": 1.841597263645544,
+        "sharpness_95": 3.551768691902631,
+        "sharpness_95_physical": 3.788238719398133e-06,
+        "skill": -0.841597263645544,
+        "state_floor": 0.24290208028272647,
+        "state_floor_physical": 2.7632269895327243e-13,
+        "structure_id": "35106",
+        "uncorrected_mean_error": 1.2160668868159663
+      },
+      {
+        "context_risk_ratio": 2.9328505537458893,
+        "context_skill": -1.9328505537458893,
+        "corrected_excess": 0.4030453993088199,
+        "corrected_excess_physical": 4.584999535948085e-13,
+        "corrected_loo_risk": 0.18294973866717767,
+        "corrected_loo_risk_physical": 2.081215834070623e-13,
+        "coverage_50": 0.54296875,
+        "coverage_80": 0.791015625,
+        "coverage_95": 0.919921875,
+        "energy": 0.5257980607487536,
+        "energy_physical": 5.608046990373901e-07,
+        "excess_jackknife_mc_se": 0.2039545659323802,
+        "excess_jackknife_mc_se_physical": 2.3201644076774174e-13,
+        "floor_jackknife_mc_se": 0.10114123740903713,
+        "floor_jackknife_mc_se_physical": 1.150571442772706e-13,
+        "gaussian_nll": 1.1981920029893716,
+        "gaussian_nll_physical": -12.552863064218855,
+        "independent_reference_mean_risk": 0.23484298459073305,
+        "job": "primary",
+        "loo_oracle_risk": 0.24393298488957021,
+        "loo_oracle_risk_physical": 2.7749544454274975e-13,
+        "marginal_crps": 0.4324964283878474,
+        "marginal_crps_physical": 4.6129122083751987e-07,
+        "matched_risk_for_floor": 0.5859951379759976,
+        "mean_risk": 0.5859951379759976,
+        "mean_risk_physical": 6.666215370018708e-13,
+        "model": "state_space",
+        "n_contexts": 2,
+        "pair_half_mse": 0.18380810807288286,
+        "pair_half_mse_physical": 2.090980548749365e-13,
+        "pit": 0.5787699354686401,
+        "predictive_sd": 0.7556894479696881,
+        "predictive_sd_physical": 8.060018190840714e-07,
+        "r0": 0.192362418358589,
+        "r0_physical": 2.188293429029302e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": 0.39363271961740864,
+        "risk_difference_from_r0_physical": 4.477921940989406e-13,
+        "risk_mc_se": 0.21406079863986022,
+        "risk_mc_se_physical": 2.435131784438056e-13,
+        "risk_over_r0": 3.046307813013793,
+        "sharpness_95": 2.962248203035087,
+        "sharpness_95_physical": 3.1594690737570966e-06,
+        "skill": -2.046307813013793,
+        "state_floor": 0.18294973866717767,
+        "state_floor_physical": 2.0812158340706235e-13,
+        "structure_id": "35105",
+        "uncorrected_mean_error": 0.4487828339756143
+      },
+      {
+        "context_risk_ratio": 1.4269010517485332,
+        "context_skill": -0.4269010517485332,
+        "corrected_excess": 0.8423768618596905,
+        "corrected_excess_physical": 9.582785282609639e-13,
+        "corrected_loo_risk": 0.24290208028272647,
+        "corrected_loo_risk_physical": 2.7632269895327243e-13,
+        "coverage_50": 0.310546875,
+        "coverage_80": 0.677734375,
+        "coverage_95": 0.828125,
+        "energy": 0.7402895482107008,
+        "energy_physical": 7.895766231880532e-07,
+        "excess_jackknife_mc_se": 0.2145236168491616,
+        "excess_jackknife_mc_se_physical": 2.440396752797735e-13,
+        "floor_jackknife_mc_se": 0.08506496500683536,
+        "floor_jackknife_mc_se_physical": 9.676895599121786e-14,
+        "gaussian_nll": 1.6915623835802183,
+        "gaussian_nll_physical": -12.059492683628008,
+        "independent_reference_mean_risk": 0.3954883775594388,
+        "job": "primary",
+        "loo_oracle_risk": 0.32386944037696863,
+        "loo_oracle_risk_physical": 3.6843026527102994e-13,
+        "marginal_crps": 0.6162412785313457,
+        "marginal_crps_physical": 6.572694548341525e-07,
+        "matched_risk_for_floor": 1.0852789421424172,
+        "mean_risk": 1.0852789421424172,
+        "mean_risk_physical": 1.2346012272142364e-12,
+        "model": "state_space",
+        "n_contexts": 2,
+        "pair_half_mse": 0.12597038498735047,
+        "pair_half_mse_physical": 1.4330250579728284e-13,
+        "pit": 0.5902730840773308,
+        "predictive_sd": 0.7556894479696881,
+        "predictive_sd_physical": 8.060018190840714e-07,
+        "r0": 0.7592558235344632,
+        "r0_physical": 8.637209615942179e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": 0.3260231186079539,
+        "risk_difference_from_r0_physical": 3.708802656200186e-13,
+        "risk_mc_se": 0.20513289994083272,
+        "risk_mc_se_physical": 2.333569004011259e-13,
+        "risk_over_r0": 1.429398245627227,
+        "sharpness_95": 2.962248203035087,
+        "sharpness_95_physical": 3.1594690737570966e-06,
+        "skill": -0.42939824562722695,
+        "state_floor": 0.24290208028272647,
+        "state_floor_physical": 2.7632269895327243e-13,
+        "structure_id": "35106",
+        "uncorrected_mean_error": 0.9031023819303722
+      },
+      {
+        "context_risk_ratio": 1.8787081387554516,
+        "context_skill": -0.8787081387554515,
+        "corrected_excess": 0.1705517859450581,
+        "corrected_excess_physical": 1.9401781058764619e-13,
+        "corrected_loo_risk": 0.18294973866717767,
+        "corrected_loo_risk_physical": 2.081215834070623e-13,
+        "coverage_50": 0.55859375,
+        "coverage_80": 0.896484375,
+        "coverage_95": 0.978515625,
+        "energy": 0.4223079604082186,
+        "energy_physical": 4.50424423970998e-07,
+        "excess_jackknife_mc_se": 0.10473645693341717,
+        "excess_jackknife_mc_se_physical": 1.191470259330797e-13,
+        "floor_jackknife_mc_se": 0.10114123740903713,
+        "floor_jackknife_mc_se_physical": 1.150571442772706e-13,
+        "gaussian_nll": 0.9482660341380132,
+        "gaussian_nll_physical": -12.802789033070212,
+        "independent_reference_mean_risk": 0.23484298459073305,
+        "job": "primary",
+        "loo_oracle_risk": 0.24393298488957021,
+        "loo_oracle_risk_physical": 2.7749544454274975e-13,
+        "marginal_crps": 0.34279125031642355,
+        "marginal_crps_physical": 3.656136420370172e-07,
+        "matched_risk_for_floor": 0.3535015246122358,
+        "mean_risk": 0.3535015246122358,
+        "mean_risk_physical": 4.0213939399470853e-13,
+        "model": "neural_mse__seed_0",
+        "n_contexts": 2,
+        "pair_half_mse": 0.18380810807288286,
+        "pair_half_mse_physical": 2.090980548749365e-13,
+        "pit": 0.5553012378243352,
+        "predictive_sd": 0.753577190923957,
+        "predictive_sd_physical": 8.037489319678011e-07,
+        "r0": 0.192362418358589,
+        "r0_physical": 2.188293429029302e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": 0.16113910625364677,
+        "risk_difference_from_r0_physical": 1.8331005109177827e-13,
+        "risk_mc_se": 0.11810386855798635,
+        "risk_mc_se_physical": 1.343536443935762e-13,
+        "risk_over_r0": 1.8376849679299736,
+        "sharpness_95": 2.95396830756364,
+        "sharpness_95_physical": 3.150637918538849e-06,
+        "skill": -0.8376849679299736,
+        "state_floor": 0.18294973866717767,
+        "state_floor_physical": 2.0812158340706235e-13,
+        "structure_id": "35105",
+        "uncorrected_mean_error": 0.21628922061185252
+      },
+      {
+        "context_risk_ratio": 0.8632564436613495,
+        "context_skill": 0.13674355633865048,
+        "corrected_excess": 0.44428952035015745,
+        "corrected_excess_physical": 5.054188059522384e-13,
+        "corrected_loo_risk": 0.24290208028272647,
+        "corrected_loo_risk_physical": 2.7632269895327243e-13,
+        "coverage_50": 0.44140625,
+        "coverage_80": 0.763671875,
+        "coverage_95": 0.900390625,
+        "energy": 0.5366489728755486,
+        "energy_physical": 5.72378044326802e-07,
+        "excess_jackknife_mc_se": 0.25160639719953276,
+        "excess_jackknife_mc_se_physical": 2.8622463285271455e-13,
+        "floor_jackknife_mc_se": 0.08506496500683536,
+        "floor_jackknife_mc_se_physical": 9.676895599121786e-14,
+        "gaussian_nll": 1.2730909743417955,
+        "gaussian_nll_physical": -12.47796409286643,
+        "independent_reference_mean_risk": 0.3954883775594388,
+        "job": "primary",
+        "loo_oracle_risk": 0.32386944037696863,
+        "loo_oracle_risk_physical": 3.6843026527102994e-13,
+        "marginal_crps": 0.4690065604575529,
+        "marginal_crps_physical": 5.002321282992351e-07,
+        "matched_risk_for_floor": 0.687191600632884,
+        "mean_risk": 0.687191600632884,
+        "mean_risk_physical": 7.817415049055109e-13,
+        "model": "neural_mse__seed_0",
+        "n_contexts": 2,
+        "pair_half_mse": 0.12597038498735047,
+        "pair_half_mse_physical": 1.4330250579728284e-13,
+        "pit": 0.6101199497495091,
+        "predictive_sd": 0.753577190923957,
+        "predictive_sd_physical": 8.037489319678011e-07,
+        "r0": 0.7592558235344632,
+        "r0_physical": 8.637209615942179e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": -0.07206422290157927,
+        "risk_difference_from_r0_physical": -8.197945668870702e-14,
+        "risk_mc_se": 0.2765901239394826,
+        "risk_mc_se_physical": 3.146458419039444e-13,
+        "risk_over_r0": 0.9050857159499835,
+        "sharpness_95": 2.95396830756364,
+        "sharpness_95_physical": 3.150637918538849e-06,
+        "skill": 0.09491428405001645,
+        "state_floor": 0.24290208028272647,
+        "state_floor_physical": 2.7632269895327243e-13,
+        "structure_id": "35106",
+        "uncorrected_mean_error": 0.5050150404208391
+      },
+      {
+        "context_risk_ratio": 1.7174637807620656,
+        "context_skill": -0.7174637807620656,
+        "corrected_excess": 0.14080478042675376,
+        "corrected_excess_physical": 1.601779486933869e-13,
+        "corrected_loo_risk": 0.18294973866717767,
+        "corrected_loo_risk_physical": 2.081215834070623e-13,
+        "coverage_50": 0.7109375,
+        "coverage_80": 0.95703125,
+        "coverage_95": 1.0,
+        "energy": 0.4292281129292964,
+        "energy_physical": 4.5780530713049354e-07,
+        "excess_jackknife_mc_se": 0.09442076587937999,
+        "excess_jackknife_mc_se_physical": 1.0741201077675875e-13,
+        "floor_jackknife_mc_se": 0.10114123740903713,
+        "floor_jackknife_mc_se_physical": 1.150571442772706e-13,
+        "gaussian_nll": 1.0294671554777748,
+        "gaussian_nll_physical": -12.721587911730452,
+        "independent_reference_mean_risk": 0.23484298459073305,
+        "job": "primary",
+        "loo_oracle_risk": 0.24393298488957021,
+        "loo_oracle_risk_physical": 2.7749544454274975e-13,
+        "marginal_crps": 0.3458974824893877,
+        "marginal_crps_physical": 3.689266812605144e-07,
+        "matched_risk_for_floor": 0.3237545190939315,
+        "mean_risk": 0.3237545190939315,
+        "mean_risk_physical": 3.682995321004493e-13,
+        "model": "neural_gaussian__seed_0",
+        "n_contexts": 2,
+        "pair_half_mse": 0.18380810807288286,
+        "pair_half_mse_physical": 2.090980548749365e-13,
+        "pit": 0.5492302924586155,
+        "predictive_sd": 0.9124388053875084,
+        "predictive_sd_physical": 9.731872516165238e-07,
+        "r0": 0.192362418358589,
+        "r0_physical": 2.188293429029302e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": 0.13139210073534247,
+        "risk_difference_from_r0_physical": 1.4947018919751904e-13,
+        "risk_mc_se": 0.1083813502877698,
+        "risk_mc_se_physical": 1.2329341598416229e-13,
+        "risk_over_r0": 1.683044546104688,
+        "sharpness_95": 3.5766943933125357,
+        "sharpness_95_physical": 3.814823926763812e-06,
+        "skill": -0.6830445461046879,
+        "state_floor": 0.18294973866717767,
+        "state_floor_physical": 2.0812158340706235e-13,
+        "structure_id": "35105",
+        "uncorrected_mean_error": 0.18654221509354818
+      },
+      {
+        "context_risk_ratio": 0.8792712173234203,
+        "context_skill": 0.12072878267657966,
+        "corrected_excess": 0.4490102691273586,
+        "corrected_excess_physical": 5.107890771400285e-13,
+        "corrected_loo_risk": 0.24290208028272647,
+        "corrected_loo_risk_physical": 2.7632269895327243e-13,
+        "coverage_50": 0.537109375,
+        "coverage_80": 0.853515625,
+        "coverage_95": 0.970703125,
+        "energy": 0.5578990385737885,
+        "energy_physical": 5.950428991219222e-07,
+        "excess_jackknife_mc_se": 0.25085877016607594,
+        "excess_jackknife_mc_se_physical": 2.853741406730891e-13,
+        "floor_jackknife_mc_se": 0.08506496500683536,
+        "floor_jackknife_mc_se_physical": 9.676895599121786e-14,
+        "gaussian_nll": 1.2563039156123847,
+        "gaussian_nll_physical": -12.49475115159584,
+        "independent_reference_mean_risk": 0.3954883775594388,
+        "job": "primary",
+        "loo_oracle_risk": 0.32386944037696863,
+        "loo_oracle_risk_physical": 3.6843026527102994e-13,
+        "marginal_crps": 0.47430975659509295,
+        "marginal_crps_physical": 5.058884011839511e-07,
+        "matched_risk_for_floor": 0.6919123494100851,
+        "mean_risk": 0.6919123494100851,
+        "mean_risk_physical": 7.871117760933009e-13,
+        "model": "neural_gaussian__seed_0",
+        "n_contexts": 2,
+        "pair_half_mse": 0.12597038498735047,
+        "pair_half_mse_physical": 1.4330250579728284e-13,
+        "pit": 0.6072860228754858,
+        "predictive_sd": 0.9391417365918094,
+        "predictive_sd_physical": 1.0016680133677542e-06,
+        "r0": 0.7592558235344632,
+        "r0_physical": 8.637209615942179e-13,
+        "reference_futures": 4.0,
+        "risk_difference_from_r0": -0.06734347412437816,
+        "risk_difference_from_r0_physical": -7.660918550091706e-14,
+        "risk_mc_se": 0.27446441773557495,
+        "risk_mc_se_physical": 3.1222766222116116e-13,
+        "risk_over_r0": 0.9113033156454659,
+        "sharpness_95": 3.681367960196697,
+        "sharpness_95_physical": 3.926466461333167e-06,
+        "skill": 0.08869668435453415,
+        "state_floor": 0.24290208028272647,
+        "state_floor_physical": 2.7632269895327243e-13,
+        "structure_id": "35106",
+        "uncorrected_mean_error": 0.5097357891980402
+      }
+    ],
+    "scope": "MSE recomputed from raw truth/mean; all saved context score components reaggregated with equal circuit weighting; no model refit",
+    "status": "complete"
+  },
+  "scope": {
+    "full_network_H1_gate_run": false,
+    "full_network_H1_campaign_run": false,
+    "cuda_validation": false,
+    "cpu_available": true,
+    "full_existing_model_regressions_run": true,
+    "parallel_local_validation_note": "Analytical smoke, tiny NEURON smoke and unit tests ran concurrently; these timings are not isolated full-network forecasts."
+  }
+}
