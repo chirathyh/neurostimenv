@@ -11,6 +11,8 @@ export MPLBACKEND=Agg
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
+# Configure deterministic CUDA matmul before any Python process initializes CUDA.
+export CUBLAS_WORKSPACE_CONFIG="${CUBLAS_WORKSPACE_CONFIG:-:4096:8}"
 export MAIN_PATH="$PWD"
 if [[ ! -f "$CONFIGS/analytic_smoke.yaml" ]]; then
   echo 'Run this script from the H1 implementation repository root.' >&2; exit 2

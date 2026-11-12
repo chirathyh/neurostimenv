@@ -76,6 +76,25 @@ This executes `bounded_development.yaml`: 256 separate training histories/outcom
 
 The script always uses `--resume`, which safely creates an empty new root on its first invocation. Rerunning it checks and reuses compatible completed stages. Do not edit a configuration/source halfway through a run, delete provenance, or overwrite old data to bypass an incompatibility. Choose a new versioned output base after a scientific change. An existing archive is retained; choose a new archive filename for a later export. The per-command logs are outside the immutable scientific roots.
 
+## Recovering a CUDA determinism error during compression
+
+If `h1-replication` finished and `h1-compression` reported that cuBLAS requires `CUBLAS_WORKSPACE_CONFIG`, the bounded pipeline stopped before its final scale/summary/export stages. This is a GPU startup configuration failure, not evidence that saved simulations are invalid. The `additional_futures` entries immediately before it describe optional fixed-budget allocations that the bounded dataset cannot fill; they are not failed simulations.
+
+The launcher now sets `CUBLAS_WORKSPACE_CONFIG=:4096:8` before any Python process, while preserving a nonempty explicitly supplied setting (such as `:16:8`). The same recovery works with the original launcher without pulling or editing scientific code:
+
+```bash
+cd /home/u7041472/Documents/chirath/depression-simulator/neurostimenv-eegrepr-h1
+source /home/u7041472/Documents/chirath/depression-simulator/bin/activate
+export CUBLAS_WORKSPACE_CONFIG=:4096:8
+bash scripts/eegrepr/run_h1.sh bounded /data/u7041472/eegrepr-results/h1-information-v2 cuda
+```
+
+The export applies to this shell and its child processes; set it again in a fresh shell when using an older launcher. Keep deterministic algorithms enabled. The launcher checks/reuses completed generation, derivation, benchmark and replication artifacts. Compression retries its unfinished representation bank/readouts; already written incomplete feature/PCA artifacts may be recomputed. Do not delete existing results or change the scientific configuration to bypass compatibility checks.
+
+The startup-only fix does not change Python scientific-source or configuration hashes, so it does not invalidate the completed timing gate or bounded data. This recovery was checked for shell inheritance and compatible saved-artifact resume on the implementation host; an actual GPU rerun remains the workstation validation.
+
+Successful completion creates `bounded_development/summary/summary.json` and `bounded_development-evidence.zip` with its SHA-256 sidecar. Verify and inspect that bounded evidence before launching expanded-reference or confirmatory experiments. NVIDIA documents the deterministic workspace settings in its [cuBLAS reproducibility guidance](https://docs.nvidia.com/cuda/cublas/index.html#results-reproducibility).
+
 ## Seven-job scale comparison
 
 This is a **separate** planned dataset root, because the longer maximum target lead changes episode duration/cutoff requirements and job metadata. It is not an assertion that the bounded single-job data already executed a sweep.
