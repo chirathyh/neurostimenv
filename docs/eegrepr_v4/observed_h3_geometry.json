@@ -1,0 +1,1487 @@
+{
+  "schema_version": "eegrepr-v4-observed-h3-geometry-review-1",
+  "date": "2026-11-13",
+  "scope": "Existing-data exploratory attribution and geometry only. No new NEURON generation or retraining of scientific neural encoders. New linear/logistic readouts fitted on train/development; evaluated on already inspected circuits.",
+  "original_archive_sha256": "c88d205875ca9b63770c48dc3f71ce46be9861b5c98973bcda662c7c940589aa",
+  "original_scientific_source_hash": "ad0083206c74d98b8777dfc4fb43a4cc67387879525daa0e4992ebdf2c4bd929",
+  "original_config_hash": "db9192a4ef46ffe666094ff8563faa36839f88e1393dd1fa5e1cb8eaf8e53d59",
+  "current_retention_module_sha256": "df166b252642cd1ea38bcf74dd5ba4611d2f1804f11f8afe16393e477fae2024",
+  "retention_signature": "4997703bb2898188ae7d623eb1b06a63909d35c6e1d6b4d07a5a41654ca15789",
+  "retention_summary_sha256": "578574cacec3eb599c8cc15b27b03af34ecde99f7401a8424d85927b200a7f43",
+  "retention_status": "complete; checksum-validated resume passed on frozen retention code",
+  "retention_row_statuses": {
+    "unsupported": 1,
+    "complete": 1092,
+    "unavailable": 84
+  },
+  "retention_execution": {
+    "root": "/tmp/eegrepr-v4-h3geometry-verified-20261113",
+    "grid": "All five original banks, forecast recomputed pooled/full-token/fixed-token views, and raw identity; native unquantized, d8/d32 unquantized, B32/B128, both train-only ranges, label budgets 8/all, and all seven declared tasks.",
+    "optimizer_training": "No new scientific neural encoder optimization; original numeric banks/weights reused. Separate unit test exercised three tiny one-step optimization repeats.",
+    "cost_note": "A full-grid CPU execution before the final contrast-summary addition took 102.182 seconds. The current full grid completed and resume was verified. This measures laptop reuse/readout cost, not workstation NEURON generation or prospective three-repeat encoder fitting.",
+    "bytes_by_filename": {
+      "task_targets.npz": 8044476,
+      "summary.json": 7676376,
+      "matched_contrast.json": 2639,
+      "analysis_identity.json": 16625,
+      "metadata.json": 64241,
+      "representations.npz": 14330469,
+      "codebook.npz": 97906,
+      "codes.npz": 1149895,
+      "codebook.json": 285124,
+      "readout_weights.npz": 476320878,
+      "scores.json": 3361957,
+      "predictions.npz": 445313189,
+      "projection.npz": 2924875
+    },
+    "compact_note": "Readout weights can be omitted separately. Retention evidence alone approaches the prior 512 MB upload budget; combined exports must measure actual size or use explicit multipart output."
+  },
+  "matched_code_contrast": {
+    "carrier_population": "conditional on true rhythmic membership",
+    "circuit_count": 4,
+    "circuit_interval": {
+      "caveat": "few-circuit precision is weak; no power or confirmatory coverage guarantee",
+      "lower": 1.2895309638715031,
+      "method": "exploratory 95% percentile circuit bootstrap,10000draws",
+      "status": "complete",
+      "upper": 1.5221199360540165
+    },
+    "claim_status": "exploratory inspected historical panel",
+    "contrast": "forecast minus feature18 per-circuit loss; positive favors feature18 pipeline",
+    "family_mean_loss": {
+      "feature18": 0.1876932408142319,
+      "forecast": 1.5935186907769918
+    },
+    "historical_optimizer_limit": "single frozen training repeat; no objective comparison",
+    "interpretation": "complete representation/projection/range/quantizer/decoder pipelines; no training-objective superiority claim",
+    "mean_difference": 1.4058254499627598,
+    "multiplicity": "one frozen primary matched-code contrast; other grid points are descriptive sensitivities",
+    "optimizer_repeat_counts": {
+      "feature18": 1,
+      "forecast": 1
+    },
+    "optimizer_repeats": {
+      "feature18": [
+        {
+          "circuit_loss": {
+            "35006": 0.23904680923680885,
+            "35007": 0.06755530825487195,
+            "35008": 0.37615598637187736,
+            "35009": 0.06801485939336936
+          },
+          "optimization_seed": null,
+          "representation": "feature18"
+        }
+      ],
+      "forecast": [
+        {
+          "circuit_loss": {
+            "35006": 1.5961269025450031,
+            "35007": 1.572809288727991,
+            "35008": 1.5981378208066894,
+            "35009": 1.607000751028283
+          },
+          "optimization_seed": null,
+          "representation": "forecast"
+        }
+      ]
+    },
+    "per_circuit_difference": {
+      "35006": 1.3570800933081943,
+      "35007": 1.505253980473119,
+      "35008": 1.2219818344348121,
+      "35009": 1.5389858916349137
+    },
+    "protocol_hash": "1484e297156df4e1dedd8d1b9d6dcaaeb0289923e6e9c524fc237609117f2092",
+    "sampling_unit": "circuit; optimizer repeats averaged within circuit before inference",
+    "signflip": {
+      "method": "exact two-sided circuit sign flips under paired exchangeability",
+      "minimum_two_sided_p": 0.125,
+      "p_value": 0.125,
+      "permutations": 16,
+      "status": "complete"
+    },
+    "specification": {
+      "banks": [
+        "feature18",
+        "forecast"
+      ],
+      "bits": 32,
+      "dimension": 8,
+      "job_id": "A0__T0_l10_d128",
+      "label_budget": "all",
+      "pooling": "native pooled",
+      "range_rule": "quantile_005_995",
+      "readout": "linear",
+      "task": "carrier"
+    },
+    "status": "complete",
+    "units": "bits of decoder cross entropy"
+  },
+  "native_projection_quantization_carrier": [
+    {
+      "representation": "feature18",
+      "variant": "native_unquantized",
+      "dimension": 18,
+      "code_bits": null,
+      "selected_alpha": 0.01,
+      "evaluation": {
+        "accuracy": 0.8333333333333334,
+        "balanced_accuracy": 0.8333333333333334,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            2,
+            2,
+            0
+          ],
+          [
+            0,
+            4,
+            0
+          ],
+          [
+            0,
+            0,
+            4
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 1.1760512293375183,
+        "per_circuit_loss": {
+          "35006": 0.01496472455236108,
+          "35007": 0.03604344134785931,
+          "35008": 0.4876626192333251,
+          "35009": 4.165534132216528
+        }
+      }
+    },
+    {
+      "representation": "feature18",
+      "variant": "d8_unquantized",
+      "dimension": 8,
+      "code_bits": null,
+      "selected_alpha": 1.0,
+      "evaluation": {
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            4,
+            0,
+            0
+          ],
+          [
+            0,
+            4,
+            0
+          ],
+          [
+            0,
+            0,
+            4
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 0.18631661706598465,
+        "per_circuit_loss": {
+          "35006": 0.12907146282778859,
+          "35007": 0.1115970454364567,
+          "35008": 0.33042600371614533,
+          "35009": 0.174171956283548
+        }
+      }
+    },
+    {
+      "representation": "feature18",
+      "variant": "d8_B32_quantile_005_995",
+      "dimension": 8,
+      "code_bits": 32,
+      "selected_alpha": 0.01,
+      "evaluation": {
+        "accuracy": 0.9166666666666666,
+        "balanced_accuracy": 0.9166666666666666,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            3,
+            1,
+            0
+          ],
+          [
+            0,
+            4,
+            0
+          ],
+          [
+            0,
+            0,
+            4
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 0.1876932408142319,
+        "per_circuit_loss": {
+          "35006": 0.23904680923680885,
+          "35007": 0.06755530825487195,
+          "35008": 0.37615598637187736,
+          "35009": 0.06801485939336936
+        }
+      }
+    },
+    {
+      "representation": "pca",
+      "variant": "native_unquantized",
+      "dimension": 32,
+      "code_bits": null,
+      "selected_alpha": 0.01,
+      "evaluation": {
+        "accuracy": 0.3333333333333333,
+        "balanced_accuracy": 0.3333333333333333,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            1,
+            2,
+            1
+          ],
+          [
+            2,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            2
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 1.5999940957742682,
+        "per_circuit_loss": {
+          "35006": 1.5603838029929922,
+          "35007": 1.6215623039623719,
+          "35008": 1.7759366639295902,
+          "35009": 1.4420936122121188
+        }
+      }
+    },
+    {
+      "representation": "pca",
+      "variant": "d8_unquantized",
+      "dimension": 8,
+      "code_bits": null,
+      "selected_alpha": 0.01,
+      "evaluation": {
+        "accuracy": 0.4166666666666667,
+        "balanced_accuracy": 0.4166666666666667,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            2,
+            2,
+            0
+          ],
+          [
+            1,
+            2,
+            1
+          ],
+          [
+            1,
+            2,
+            1
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 1.5919035099886247,
+        "per_circuit_loss": {
+          "35006": 1.5415697788199847,
+          "35007": 1.6305272000236375,
+          "35008": 1.7224693069054677,
+          "35009": 1.4730477542054097
+        }
+      }
+    },
+    {
+      "representation": "pca",
+      "variant": "d8_B32_quantile_005_995",
+      "dimension": 8,
+      "code_bits": 32,
+      "selected_alpha": 0.01,
+      "evaluation": {
+        "accuracy": 0.3333333333333333,
+        "balanced_accuracy": 0.3333333333333333,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            1,
+            3,
+            0
+          ],
+          [
+            2,
+            2,
+            0
+          ],
+          [
+            1,
+            2,
+            1
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 1.5905684944368568,
+        "per_circuit_loss": {
+          "35006": 1.5142317207572822,
+          "35007": 1.6532702298265398,
+          "35008": 1.7387500239882885,
+          "35009": 1.4560220031753168
+        }
+      }
+    },
+    {
+      "representation": "untrained",
+      "variant": "native_unquantized",
+      "dimension": 128,
+      "code_bits": null,
+      "selected_alpha": 1.0,
+      "evaluation": {
+        "accuracy": 0.6666666666666666,
+        "balanced_accuracy": 0.6666666666666666,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            2,
+            2,
+            0
+          ],
+          [
+            0,
+            3,
+            1
+          ],
+          [
+            0,
+            1,
+            3
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 0.8592136548997186,
+        "per_circuit_loss": {
+          "35006": 0.6973527434675494,
+          "35007": 1.0040187373157565,
+          "35008": 0.608802735747309,
+          "35009": 1.1266804030682591
+        }
+      }
+    },
+    {
+      "representation": "untrained",
+      "variant": "d8_unquantized",
+      "dimension": 8,
+      "code_bits": null,
+      "selected_alpha": 1.0,
+      "evaluation": {
+        "accuracy": 0.4166666666666667,
+        "balanced_accuracy": 0.4166666666666667,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            3,
+            1,
+            0
+          ],
+          [
+            3,
+            1,
+            0
+          ],
+          [
+            1,
+            2,
+            1
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 1.7077926092509301,
+        "per_circuit_loss": {
+          "35006": 1.7255565979018093,
+          "35007": 1.4884313702559495,
+          "35008": 1.5328668138509831,
+          "35009": 2.084315654994979
+        }
+      }
+    },
+    {
+      "representation": "untrained",
+      "variant": "d8_B32_quantile_005_995",
+      "dimension": 8,
+      "code_bits": 32,
+      "selected_alpha": 1.0,
+      "evaluation": {
+        "accuracy": 0.5,
+        "balanced_accuracy": 0.5,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            3,
+            1,
+            0
+          ],
+          [
+            2,
+            2,
+            0
+          ],
+          [
+            1,
+            2,
+            1
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 1.652090384187521,
+        "per_circuit_loss": {
+          "35006": 1.6629391913357938,
+          "35007": 1.441816659612127,
+          "35008": 1.5447866763838187,
+          "35009": 1.9588190094183446
+        }
+      }
+    },
+    {
+      "representation": "masked_mse",
+      "variant": "native_unquantized",
+      "dimension": 128,
+      "code_bits": null,
+      "selected_alpha": 100.0,
+      "evaluation": {
+        "accuracy": 0.5833333333333334,
+        "balanced_accuracy": 0.5833333333333334,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            2,
+            1,
+            1
+          ],
+          [
+            0,
+            2,
+            2
+          ],
+          [
+            0,
+            1,
+            3
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 1.24027091248248,
+        "per_circuit_loss": {
+          "35006": 1.0823597561255427,
+          "35007": 1.4141473525616484,
+          "35008": 1.0011184954935028,
+          "35009": 1.4634580457492259
+        }
+      }
+    },
+    {
+      "representation": "masked_mse",
+      "variant": "d8_unquantized",
+      "dimension": 8,
+      "code_bits": null,
+      "selected_alpha": 100.0,
+      "evaluation": {
+        "accuracy": 0.4166666666666667,
+        "balanced_accuracy": 0.4166666666666667,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            2,
+            1,
+            1
+          ],
+          [
+            1,
+            2,
+            1
+          ],
+          [
+            2,
+            1,
+            1
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 1.5224656037658097,
+        "per_circuit_loss": {
+          "35006": 1.5171276960489628,
+          "35007": 1.5350250613763607,
+          "35008": 1.4304540494153943,
+          "35009": 1.6072556082225204
+        }
+      }
+    },
+    {
+      "representation": "masked_mse",
+      "variant": "d8_B32_quantile_005_995",
+      "dimension": 8,
+      "code_bits": 32,
+      "selected_alpha": 1.0,
+      "evaluation": {
+        "accuracy": 0.4166666666666667,
+        "balanced_accuracy": 0.4166666666666667,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            2,
+            1,
+            1
+          ],
+          [
+            1,
+            2,
+            1
+          ],
+          [
+            2,
+            1,
+            1
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 1.40775468469654,
+        "per_circuit_loss": {
+          "35006": 1.3554415409170841,
+          "35007": 1.4332663452656813,
+          "35008": 1.2341572533248704,
+          "35009": 1.6081535992785245
+        }
+      }
+    },
+    {
+      "representation": "forecast",
+      "variant": "native_unquantized",
+      "dimension": 128,
+      "code_bits": null,
+      "selected_alpha": 100.0,
+      "evaluation": {
+        "accuracy": 0.3333333333333333,
+        "balanced_accuracy": 0.3333333333333333,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            1,
+            2,
+            1
+          ],
+          [
+            1,
+            1,
+            2
+          ],
+          [
+            1,
+            1,
+            2
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 1.5398728221125968,
+        "per_circuit_loss": {
+          "35006": 1.3942828167589358,
+          "35007": 1.6017646475148883,
+          "35008": 1.4704529669068116,
+          "35009": 1.692990857269751
+        }
+      }
+    },
+    {
+      "representation": "forecast",
+      "variant": "d8_unquantized",
+      "dimension": 8,
+      "code_bits": null,
+      "selected_alpha": 100.0,
+      "evaluation": {
+        "accuracy": 0.16666666666666666,
+        "balanced_accuracy": 0.16666666666666666,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            1,
+            3,
+            0
+          ],
+          [
+            1,
+            1,
+            2
+          ],
+          [
+            2,
+            2,
+            0
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 1.5946112947699838,
+        "per_circuit_loss": {
+          "35006": 1.59401010345629,
+          "35007": 1.5762004940257066,
+          "35008": 1.607444201502106,
+          "35009": 1.6007903800958332
+        }
+      }
+    },
+    {
+      "representation": "forecast",
+      "variant": "d8_B32_quantile_005_995",
+      "dimension": 8,
+      "code_bits": 32,
+      "selected_alpha": 100.0,
+      "evaluation": {
+        "accuracy": 0.16666666666666666,
+        "balanced_accuracy": 0.16666666666666666,
+        "balanced_accuracy_scope": "classes present in scoring set; required coverage checked separately",
+        "circuits": 4,
+        "class_order": [
+          0,
+          1,
+          2
+        ],
+        "class_support": [
+          4,
+          4,
+          4
+        ],
+        "confusion_matrix": [
+          [
+            1,
+            3,
+            0
+          ],
+          [
+            1,
+            1,
+            2
+          ],
+          [
+            2,
+            2,
+            0
+          ]
+        ],
+        "contexts": 12,
+        "cross_entropy_bits": 1.5935186907769918,
+        "per_circuit_loss": {
+          "35006": 1.5961269025450031,
+          "35007": 1.572809288727991,
+          "35008": 1.5981378208066894,
+          "35009": 1.607000751028283
+        }
+      }
+    }
+  ],
+  "architecture": [
+    {
+      "bank": "untrained",
+      "fixed_readout_shape": [
+        512
+      ],
+      "forecasting_and_classification_use": "token mean pooled vector",
+      "maximum_pooled_reproduction_error": 0.00047147274017333984,
+      "numerical_note": "Frozen saved pooled arrays retained verbatim; token inference from verified numeric weights may differ across CPU/CUDA float32 kernels; maximum difference reported",
+      "numerical_tolerance_relative_rms": 0.01,
+      "pooled_shape": [
+        128
+      ],
+      "reconstruction_uses": "token sequence",
+      "relative_rms_error": 8.389619324589148e-05,
+      "statistical_unit": "circuit; token coordinates are not independent replicates",
+      "status": "complete",
+      "token_shape": [
+        63,
+        128
+      ]
+    },
+    {
+      "bank": "masked_mse",
+      "fixed_readout_shape": [
+        512
+      ],
+      "forecasting_and_classification_use": "token mean pooled vector",
+      "maximum_pooled_reproduction_error": 4.291534423828125e-05,
+      "numerical_note": "Frozen saved pooled arrays retained verbatim; token inference from verified numeric weights may differ across CPU/CUDA float32 kernels; maximum difference reported",
+      "numerical_tolerance_relative_rms": 0.01,
+      "pooled_shape": [
+        128
+      ],
+      "reconstruction_uses": "token sequence",
+      "relative_rms_error": 7.917081347841304e-06,
+      "statistical_unit": "circuit; token coordinates are not independent replicates",
+      "status": "complete",
+      "token_shape": [
+        63,
+        128
+      ]
+    },
+    {
+      "bank": "forecast",
+      "fixed_readout_shape": [
+        512
+      ],
+      "forecasting_and_classification_use": "token mean pooled vector",
+      "maximum_pooled_reproduction_error": 0.0026912949979305267,
+      "numerical_note": "Frozen saved pooled arrays retained verbatim; token inference from verified numeric weights may differ across CPU/CUDA float32 kernels; maximum difference reported",
+      "numerical_tolerance_relative_rms": 0.01,
+      "pooled_shape": [
+        128
+      ],
+      "reconstruction_uses": "token sequence",
+      "relative_rms_error": 0.0004675869713537395,
+      "statistical_unit": "circuit; token coordinates are not independent replicates",
+      "status": "complete",
+      "token_shape": [
+        63,
+        128
+      ]
+    }
+  ],
+  "geometry_status": "Complete on final corrected code; checksum-validated resume passed.",
+  "geometry_summary_path": "/tmp/eegrepr-v4-geometry-inventory-verified-20261113/geometry/summary.json",
+  "geometry_signature": "79bb27e1a4cbfe742e891983bef6fbd16559503a6bf6a1d17744f333eeed3ac5",
+  "geometry_module_sha256": "4064e3602902543e7263b015997fda68c75a1b37ff8959524930dcbc5bc4106c",
+  "geometry_runtime": {
+    "unique_contexts": 336,
+    "state_scope": "Stored membrane/gate/synapse numeric snapshot only; causally pending variable-length queue and phase are inventoried separately, not claimed to be represented by this covariance matrix",
+    "cells": 40,
+    "compartments": 880,
+    "mechanisms": {
+      "extracellular": 880,
+      "hh_soma": 40,
+      "passive_apical": 840
+    },
+    "external_contacts": 2560,
+    "first_context": {
+      "additive_contact_groups": 900,
+      "afferent_mean_rates_per_synapse_hz": {
+        "E": 25.0,
+        "I": 33.333333333333336
+      },
+      "aggregation": "one net three-component dipole -> one scalp EEG channel",
+      "causally_pending_recurrent_events": 0,
+      "cells": 40,
+      "celsius": 6.3,
+      "channels": 1,
+      "common_event_fraction": 0.0,
+      "common_event_groups": 0,
+      "compartments": 880,
+      "compartments_by_mechanism": {
+        "extracellular": 880,
+        "hh_soma": 40,
+        "passive_apical": 840
+      },
+      "conditional_independent_poisson_generators_total": 2560,
+      "context_id": "s35000-p0000-R0",
+      "excluded_from_state_geometry": "future RNG state/seeds/schedules/drive paths; state arrays remain privileged audit only",
+      "external_contacts": 2560,
+      "generator_scope": "active conditional Poisson sources; c=1 retains contact arrays but private processes have zero rate",
+      "independent_private_event_generators": 2560,
+      "membrane_gate_coordinates": 1880,
+      "native_dt_ms": 0.0625,
+      "native_sha256": "8f2600bc534ebe58d490c747cee05f72a480e6fce9390d16904c62558a889910",
+      "per_neuron_voltage_current_trajectories": "not stored",
+      "population_sizes": {
+        "E": 32,
+        "I": 8
+      },
+      "possible_Exp2Syn_A_B_aggregation_redundancy": 4116,
+      "recurrent_contacts": 398,
+      "recurrent_output_statistics": "not assumed independent Poisson",
+      "shared_rate_phase_active": false,
+      "shared_rate_phase_groups": 1,
+      "stored_contact_event_streams": 2560,
+      "stored_state_coordinates": 7796,
+      "structure_id": "35000",
+      "synapse_kinetics_tau1_tau2_reversal": [
+        [
+          0.1,
+          9.0,
+          -80.0
+        ],
+        [
+          0.2,
+          1.8,
+          0.0
+        ]
+      ],
+      "total_synapses": 2958
+    },
+    "stored_synapse_coordinate_caveat": "Same compartment/reversal/kinetics Exp2Syn A/B states are additive; stored coordinate count is not minimal biological dimension.",
+    "scaling_caveat": "Sparse near-zero training synapse states dominate train-standardized pooled covariance; near-one participation ratio is not intrinsic dimension. Physical and within-circuit companions are retained.",
+    "missing_trajectories": "No full per-neuron voltage/current trajectories exist in the supplied archive; none invented."
+  },
+  "innovation": {
+    "contexts": 16,
+    "coordinates": 64,
+    "cross_covariance_rank_ceiling": 15,
+    "finite_sample_decomposition_residual": -7.711767326136283e-19,
+    "half_indices": [
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 0,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 1,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 2,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 3,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 4,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 5,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 6,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 7,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 8,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 9,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 10,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 11,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 12,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 13,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 14,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "conditional_rank_ceiling": 15,
+        "context_index": 15,
+        "first_half": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second_half": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      }
+    ],
+    "inference": "descriptive context-population geometry; regimes share corresponding streams, circuits remain population units",
+    "limitations": "finite noisy cross covariance can be nonsymmetric/indefinite; mean-response geometry omits variance-coded task information",
+    "negative_eigenvalues": 34,
+    "psd_clipping": false,
+    "sampling": "one first future per context for total covariance; disjoint fixed future halves for response covariance",
+    "status": "complete",
+    "symmetric_cross_eigenvalues": [
+      2.7014959009134355e-19,
+      1.0779061839855101e-19,
+      9.026497339534027e-20,
+      5.858057167010683e-20,
+      4.281184458367072e-20,
+      3.153002002980401e-20,
+      2.7657073217761126e-20,
+      2.440548689886584e-20,
+      1.663805357274051e-20,
+      1.3124254925956988e-20,
+      1.1598024612173613e-20,
+      5.440157885110089e-21,
+      4.2376536422240305e-21,
+      3.5535131537672934e-21,
+      2.2608624162112138e-21,
+      4.236895428216803e-35,
+      3.700517812044629e-35,
+      3.0487339483870206e-35,
+      2.7993577468262506e-35,
+      2.2474687461966113e-35,
+      1.7896721625222896e-35,
+      1.501003496539789e-35,
+      1.4115726546868335e-35,
+      1.304120060300106e-35,
+      9.574952805596845e-36,
+      7.183533706891031e-36,
+      6.282169914329644e-36,
+      4.971651724774948e-36,
+      3.626771430923701e-36,
+      1.9557065369008952e-36,
+      -8.118534630158072e-38,
+      -1.1446343211222111e-36,
+      -2.189983955845813e-36,
+      -3.0306210629863455e-36,
+      -3.872913869477297e-36,
+      -4.811203766539083e-36,
+      -6.758983407340567e-36,
+      -8.71297559585683e-36,
+      -9.447770107059709e-36,
+      -1.1307849121116485e-35,
+      -1.2557587860841527e-35,
+      -1.472025157097306e-35,
+      -1.8704069604089203e-35,
+      -2.474746726343551e-35,
+      -2.668555794906374e-35,
+      -3.069892319086117e-35,
+      -3.397397865552902e-35,
+      -3.7051599451612163e-35,
+      -5.180651981026978e-35,
+      -1.5408532322978434e-21,
+      -2.2134590911867176e-21,
+      -3.495837963090094e-21,
+      -4.35172479980608e-21,
+      -4.917637453358235e-21,
+      -5.958791752022228e-21,
+      -6.768885265963265e-21,
+      -9.15168469859549e-21,
+      -1.9529983528321082e-20,
+      -2.860633378734944e-20,
+      -4.0231264826401164e-20,
+      -4.709399648209076e-20,
+      -6.103766543259801e-20,
+      -9.736342444164919e-20,
+      -1.2260678162818628e-19
+    ],
+    "symmetry_residual_frobenius": 6.418552213746641e-19,
+    "trace_conditional_variance": 8.802006569369195e-18,
+    "trace_mean_response_estimate": 2.5517437411071127e-19,
+    "trace_total_one_future_estimate": 8.286004210866276e-18,
+    "units": "squared declared target units"
+  },
+  "nonlinear_id": {
+    "future_gate": "require circle/surface recovery plus sample-size, neighborhood-resolution, noise and Poisson sensitivity before applying any nonlinear ID estimator",
+    "gate_passed": false,
+    "reason": "No nonlinear estimator is qualified for noisy/discrete mixed populations; controls demonstrate linear rank is not intrinsic dimension",
+    "status": "unavailable"
+  },
+  "findings": [
+    "The complete-pipeline carrier contrast reproduces the historical feature18 versus forecast difference: about 1.406 bits of decoder cross entropy. All four circuit differences have the same sign; exact two-sided sign-flip p = 0.125. This remains exploratory and does not establish objective superiority.",
+    "Native, projected and unquantized controls show that projection and readout materially affect accessibility: feature18 improves from 10/12 correct at native width to 12/12 at unquantized d8, then 11/12 at B32. Discarding coordinates can improve a fitted decoder without increasing true information.",
+    "Masked native pooled carrier accuracy is 7/12 and falls to 5/12 after d8 projection; forecast native accuracy is 4/12 and falls to 2/12. Quantized rows alone cannot attribute these differences to training objectives.",
+    "The forecast full-token raw readout reaches 6/12 carrier contexts, but remains 2/12 at the same d8/B32 code budget. Token width 128, the full 63 x 128 sequence, the pooled 128-vector, and the fixed 512-vector are distinct objects.",
+    "The 84 low-label carrier rows are unavailable because eight labels cannot cover three classes across four training circuits. Feature18 d32 is explicitly unsupported. No dimensions or missing class results were fabricated.",
+    "State, EEG and representation covariance spectra describe declared sampled populations. Finite-half mean-response cross covariance retains negative eigenvalues and is never silently projected onto a positive-semidefinite matrix."
+  ],
+  "limitations": [
+    "Four evaluation circuits and 12 rhythmic contexts, all already inspected; repeated futures and optimizer repeats do not increase the independent sample size.",
+    "Few-label budgets concern downstream decoder labels, not total upstream encoder supervision.",
+    "The bootstrap interval is exploratory and has weak small-circuit guarantees; the exact p-value remains 0.125.",
+    "Class cross entropy measures this fitted decoder, not total mutual information.",
+    "CPU inference differs slightly from original CUDA float32 inference. Original pooled arrays remain unchanged; comparisons from the same recomputed tokens are saved separately.",
+    "The prospective 832 episodes and full three-repeat encoder diagnostics remain unrun. Optional common-event and phase-diffusion biological runs remain unrun."
+  ],
+  "next_steps": [
+    "Complete measurement and small-model qualification before freezing the prospective operator, target, calibration and learner grid.",
+    "Freeze one matched-code contrast: job A0__T0_l10_d128, d8/B32, native pooled bank, quantile_005_995 range, and linear all-label conditional carrier decoder.",
+    "Average prospective forecast optimizer-repeat losses within each circuit before pairing against the deterministic feature pipeline.",
+    "Remeasure the eight-episode full-network timing gate on the actual workstation before authorizing generation of the 832-episode panel."
+  ],
+  "final_geometry_verification": {
+    "geometry_seconds": 44.40592797519639,
+    "geometry_signature": "79bb27e1a4cbfe742e891983bef6fbd16559503a6bf6a1d17744f333eeed3ac5",
+    "geometry_module_sha256": "4064e3602902543e7263b015997fda68c75a1b37ff8959524930dcbc5bc4106c",
+    "source_archive_sha256": "c88d205875ca9b63770c48dc3f71ce46be9861b5c98973bcda662c7c940589aa",
+    "retention_resume_verified": true,
+    "geometry_resume_verified": true
+  }
+}

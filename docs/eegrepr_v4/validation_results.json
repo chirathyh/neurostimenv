@@ -1,0 +1,222 @@
+{
+  "analysis_source_hash": "971b1a57feedbbb4cfec19d2f52d6648fa77cf1840a45921dfc8f8efb40d8c78",
+  "environment": {
+    "cublas_workspace_config": null,
+    "host": "chirath-Latitude-7440",
+    "logical_cpus": 12,
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+    "python": "3.10.12",
+    "versions": {
+      "LFPy": "2.3",
+      "NEURON": "8.2.3",
+      "PyYAML": "6.0.3",
+      "h5py": "3.15.0",
+      "matplotlib": "3.10.7",
+      "numpy": "1.26.3",
+      "scikit-learn": "1.7.2",
+      "scipy": "1.15.3",
+      "torch": "2.4.1"
+    }
+  },
+  "expensive_runs": {
+    "cuda_fitting": "unrun; no local CUDA",
+    "old_confirmation": "unrun",
+    "old_expanded_reference": "unrun",
+    "prospective_832_episodes": "unrun",
+    "remote_eight_episode_gate": "unrun"
+  },
+  "final_expert_export": {
+    "attempted_bytes": 620526616,
+    "oversize_export_behavior": "failed explicitly without silently deleting evidence",
+    "reason": "upload-cap refinement in progress; not yet validated as a final <=512000000-byte package",
+    "small_analytical_export_verification": "completed separately; see numeric_archive_verification",
+    "status": "pending",
+    "upload_limit_bytes": 512000000
+  },
+  "historical_archive_sha256": "c88d205875ca9b63770c48dc3f71ce46be9861b5c98973bcda662c7c940589aa",
+  "legacy_smokes": {
+    "ab": "completed; three circuits; no discriminability claim",
+    "online_legacy": {
+      "relative_rms_error": 2.546350745429157e-11,
+      "samples": 8000,
+      "status": "passed",
+      "temperature_celsius": 6.3
+    },
+    "polarization": "passed",
+    "stimulation_reachability": "completed; NOT PASSED scientific endpoint, negative result retained"
+  },
+  "local_workflow": {
+    "analytical": {
+      "analysis_source_hash": "e4a537e05ea153ba6e63a4e6a3570555e4891f5791cf2dc1696d196a3f330a89",
+      "compact_and_full_native_exports": "passed",
+      "derived_jobs": 39,
+      "episodes": 80,
+      "root": "/tmp/eegrepr-v4-verified-release-20261113/analytic_smoke",
+      "stage_resume": "passed",
+      "status": "complete"
+    },
+    "default_reduced_neuron": {
+      "additional_privileged_replay": 1,
+      "analysis_source_hash": "1592fe6a4673fb6753c95733d9d77d3a90a0a43f565e41ef9187bffe14d95e5a",
+      "derived_jobs": 39,
+      "recorded_episodes": 7,
+      "root": "/tmp/eegrepr-v4-final-validation-20261113-r3/simulator_smoke",
+      "status": "complete"
+    },
+    "optional_common_neuron": {
+      "additional_privileged_replay": 1,
+      "analysis_source_hash": "e4a537e05ea153ba6e63a4e6a3570555e4891f5791cf2dc1696d196a3f330a89",
+      "common_event_fraction": 0.02,
+      "derived_jobs": 39,
+      "fork_audit": "passed",
+      "phase_diffusion": 0.5,
+      "recorded_episodes": 7,
+      "root": "/tmp/eegrepr-v4-verified-release-20261113/optional_common_smoke",
+      "status": "complete"
+    },
+    "optional_geometry": {
+      "analysis_source_hash": "971b1a57feedbbb4cfec19d2f52d6648fa77cf1840a45921dfc8f8efb40d8c78",
+      "derived_jobs": 39,
+      "fixed_issue": "stable scale-invariant participation ratio avoids squaring large finite covariance eigenvalues",
+      "root": "/tmp/eegrepr-v4-completed-release-20261113/optional-geometry",
+      "status": "complete"
+    },
+    "prospective_plan": {
+      "eligible_for_generation": false,
+      "episodes": 832,
+      "explicit_generation_attempt": "correctly rejected because measured same-host timing gate is absent",
+      "native_generation": "unrun",
+      "protocol_freeze": "complete",
+      "root": "/tmp/eegrepr-v4-completed-release-20261113/prospective-plan",
+      "status": "planned",
+      "summed_generation_hours_provisional": 23.416183595090693
+    },
+    "real_evidence": {
+      "analysis_source_hash": "971b1a57feedbbb4cfec19d2f52d6648fa77cf1840a45921dfc8f8efb40d8c78",
+      "candidates_per_job": 25,
+      "derived_jobs": {
+        "complete": 36,
+        "reason": "T3 requires future support absent from original recordings",
+        "unavailable": 3
+      },
+      "evidence_records": [
+        {
+          "path": "audit_existing.json",
+          "sha256": "0a2ad1b0c908368407a788bbf2ce86246a94b838da20742ca146c7cd825c5adc"
+        },
+        {
+          "path": "controls.json",
+          "sha256": "68ce99a7faf107a47cd67f31498b4f29f1a6c37ab34dcc0ddf38e1c234d7f910"
+        },
+        {
+          "path": "derived/manifest.json",
+          "sha256": "ce03d37af2968504fe16f5a2baf6e2d47f6e7a20f4ae2ec867add7876c8d3737"
+        },
+        {
+          "path": "models/manifest.json",
+          "sha256": "63674bd6588e94423b011a4e4355130aa8c4a0438514314b0d1fc3be0585f8b1"
+        },
+        {
+          "path": "scores/manifest.json",
+          "sha256": "b1c55cae8bc36f004780cce199782ba5bc93e5f7ef4e6d80157e147ce6bf0381"
+        },
+        {
+          "path": "replication/manifest.json",
+          "sha256": "77fc823dad1562ae29bbcd2ecf1e4ac2747739177e463d61a26db39c1564c66e"
+        },
+        {
+          "path": "retention/summary.json",
+          "sha256": "66e880623e11f37325945f6bb29ff08aeecb8532fac00b487f23581cf9f040a8"
+        },
+        {
+          "path": "geometry/summary.json",
+          "sha256": "0615a6b4b51424d68c2c351cceeed8b3b58757e91ded3cee33aef826749cf829"
+        },
+        {
+          "path": "report/findings.json",
+          "sha256": "ff70b52200012206a22461962a623415a7794d1fedc567edb671183820419281"
+        }
+      ],
+      "geometry": "complete; nonlinear intrinsic-dimension estimation explicitly unavailable",
+      "independent_reference_futures_in_existing_data": 0,
+      "maximum_saved_metric_absolute_difference": 2.220446049250313e-16,
+      "native_recordings_verified": 576,
+      "new_native_generation": false,
+      "original_model_scores_reproduced": 10,
+      "original_target_arrays": "exactly reproduced",
+      "qualification_jobs_complete": 6,
+      "replication_jobs_complete": 6,
+      "report": "complete",
+      "retention_rows": {
+        "complete": 1092,
+        "total": 1177,
+        "unavailable": 84,
+        "unsupported": 1
+      },
+      "retention_unavailable_reason": "84 label budgets cannot cover every required class-by-circuit cell",
+      "retention_unsupported_reason": "one requested dimension exceeds native width or K-1 rank ceiling; padding refused",
+      "root": "/tmp/eegrepr-v4-completed-release-20261113/existing",
+      "score_rows_complete": 450,
+      "status": "complete",
+      "total_candidate_fits": 150,
+      "variance_families": [
+        "uncalibrated",
+        "calibrated",
+        "matched_calibrated"
+      ]
+    }
+  },
+  "manuscript_v4_zip_sha256": "b0751d2b4921ac99753e64743455216c604a60a64839c7d7894248cb42bfaa7c",
+  "numeric_archive_verification": {
+    "archive": "/tmp/eegrepr-v4-release-validation-20261113/analytical-compact.zip",
+    "full_existing_standard_export": {
+      "npy_members_exact": true,
+      "original_export_bytes": 620526617,
+      "original_export_sha256": "26bb2b9045750cbcd8b07306c639bccda216963b35e2b2858def373928a6aa48",
+      "payload_files_verified": 21596,
+      "status": "complete",
+      "transformed_npz_files": 2350,
+      "upload_sized_package": "complete lossless verification trial; final delivery metadata and hash accompany the delivered ZIP"
+    },
+    "npy_members_exact": true,
+    "payload_files_verified": 3445,
+    "restored_container_bytes_may_differ": true,
+    "status": "complete",
+    "transformed_npz_files": 315,
+    "upload_package_trial": {
+      "bytes": 496443632,
+      "codec_counts": {
+        "byte-shuffle-xz": 829,
+        "float-predictor4-xor-shuffle-xz": 517,
+        "identity": 20251
+      },
+      "maximum_bytes": 512000000,
+      "numeric_precision_discarded": false,
+      "reports_directly_readable": true,
+      "sha256": "012cbe87d6d79fcf085e18a9feaca07b61fa8248a025956ee88e6a5442f968cb",
+      "source_members_verified_byte_exact": 21597,
+      "status": "complete"
+    }
+  },
+  "schema_version": "eegrepr-v4-implementation-verification-1",
+  "tests": {
+    "legacy_h1": {
+      "opt_in_native_passed": 1,
+      "regular_passed": 64
+    },
+    "lossless_transport_packaging": {
+      "passed": 6,
+      "seconds": 0.187
+    },
+    "online_stimulation": {
+      "passed": 7
+    },
+    "v4": {
+      "passed": 60,
+      "seconds": 10.959
+    }
+  },
+  "total_distinct_tests_passed": 138,
+  "validation_scope_note": "Final existing-data analysis and optional geometry use the recorded final source; older analytical/native engineering smokes retain their actual distinct source hashes. Final large expert export is pending.",
+  "workstation_authentication": "read-only batch SSH through configured gateway failed; remote paths must be checked by doctor and shell test commands"
+}

@@ -1,0 +1,31 @@
+schema_version: eegrepr-evaluation-v4.0
+name: optional_common_events_smoke
+claim_status: engineering
+backend: neuron
+namespace: eegrepr-evaluation-v4-optional-common-20261113
+simulation:
+  population_e: 2
+  population_i: 1
+  external_synapses_per_cell: 8
+data:
+  structures: {train: [36200], development: [36201], evaluation: [36202]}
+  prefixes_per_regime: {train: 2, development: 1, evaluation: 1}
+  regimes:
+  - {name: Ralpha, frequency_hz: 10.0, modulation_depth: 0.04}
+forks:
+  score_futures: 2
+  reference_futures: 2
+  reference_circuits: [36202]
+  reference_regimes: [Ralpha]
+optional:
+  common_event_fraction: 0.02
+  phase_diffusion: 0.5
+  instrumentation: false
+selected_job_ids: [A0__T0_l10_d128]
+models: {neural_seeds: [0], neural_hidden: [16], max_steps: 20, patience: 10}
+retention:
+  banks: [feature18, pca]
+  optimization_seeds: [0]
+  label_budgets: [all]
+  tasks: [waveform_reconstruction]
+budget: {require_measured_gate: false}

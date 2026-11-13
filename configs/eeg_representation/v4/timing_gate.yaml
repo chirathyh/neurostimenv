@@ -1,0 +1,18 @@
+schema_version: eegrepr-evaluation-v4.0
+name: timing_gate
+claim_status: timing_only
+namespace: eegrepr-evaluation-v4-timing-20261113
+data:
+  structures:
+    train: []
+    development: []
+    evaluation: [36080, 36081]
+  prefixes_per_regime: {train: 0, development: 0, evaluation: 1}
+  regimes:
+  - {name: R0, frequency_hz: 0.0, modulation_depth: 0.0}
+  - {name: Ralpha, frequency_hz: 10.0, modulation_depth: 0.04}
+forks:
+  score_futures: 2
+  reference_futures: 0
+  reference_circuits: []
+  reference_regimes: []

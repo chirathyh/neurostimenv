@@ -1,0 +1,10 @@
+schema_version: eegrepr-evaluation-v4.0
+name: existing_reanalysis
+claim_status: exploratory_existing
+selected_job_ids:
+- A0__T0_l2_d32
+- A1__T0_l2_d32
+- A2__T0_l2_d32
+- A0__T0_l10_d128
+- A1__T0_l10_d128
+- A2__T0_l10_d128

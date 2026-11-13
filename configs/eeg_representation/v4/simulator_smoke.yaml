@@ -1,0 +1,21 @@
+schema_version: eegrepr-evaluation-v4.0
+name: simulator_smoke
+claim_status: engineering
+backend: neuron
+namespace: eegrepr-evaluation-v4-neuron-smoke-20261113
+simulation: {population_e: 2, population_i: 1, external_synapses_per_cell: 8}
+data:
+  structures: {train: [36120], development: [36121], evaluation: [36122]}
+  prefixes_per_regime: {train: 2, development: 1, evaluation: 1}
+  regimes:
+  - {name: R0, frequency_hz: 0.0, modulation_depth: 0.0}
+forks:
+  score_futures: 2
+  reference_futures: 2
+  reference_circuits: [36122]
+  reference_regimes: [R0]
+selected_job_ids: [A0__T0_l10_d128]
+models: {max_steps: 20, patience: 10, eval_every: 5, neural_seeds: [0], neural_hidden: [16]}
+retention: {banks: [feature18, pca], optimization_seeds: [0], representation_steps: 10}
+replication: {repetitions: 4, bootstrap_samples: 16}
+budget: {require_measured_gate: false}

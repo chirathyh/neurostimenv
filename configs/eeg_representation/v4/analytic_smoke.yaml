@@ -1,0 +1,26 @@
+schema_version: eegrepr-evaluation-v4.0
+name: analytic_smoke
+claim_status: engineering
+backend: analytical
+namespace: eegrepr-evaluation-v4-analytical-smoke-20261113
+simulation: {population_e: 2, population_i: 1, external_synapses_per_cell: 8}
+data:
+  structures: {train: [36100, 36101, 36102], development: [36103, 36104], evaluation: [36105, 36106]}
+  prefixes_per_regime: {train: 2, development: 1, evaluation: 1}
+forks:
+  score_futures: 4
+  reference_futures: 4
+  reference_circuits: [36105, 36106]
+  reference_regimes: [R0, Ralpha]
+selected_job_ids: [A0__T0_l10_d128]
+models: {max_steps: 40, patience: 20, eval_every: 5, neural_seeds: [0], neural_hidden: [16]}
+retention:
+  banks: [feature18, pca]
+  dimensions: [8, 32]
+  code_bits: [32, 128]
+  optimization_seeds: [0]
+  representation_steps: 20
+  label_budgets: [all]
+  tasks: [waveform_reconstruction, rhythm, carrier]
+replication: {repetitions: 8, bootstrap_samples: 32}
+budget: {require_measured_gate: false}

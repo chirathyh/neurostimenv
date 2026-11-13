@@ -1,0 +1,14 @@
+{
+  "schema_version": "eegrepr-evaluation-v4-seeds-1.0",
+  "parent_registry": "configs/eeg_representation/h1/seed_registry.json",
+  "historical_inspected_bounded": [35000,35009],
+  "ranges": {
+    "bounded_prospective": [36000,36019],
+    "timing_gate": [36080,36081],
+    "analytic_smoke": [36100,36106],
+    "simulator_smoke": [36120,36122],
+    "optional_common_events_controls": [36200,36209]
+  },
+  "reservation_scope": "Circuit structure IDs and separately named event/phase namespaces. Original H1 registry and configs unchanged.",
+  "audit": "No prior circuit reservation for these IDs in tracked EEG-representation configs/seed registries at base061fe31. Numeric substrings in unrelated offsets/hashes are not circuit allocations. Runtime import overlap is checked before freezing a prospective protocol."
+}

@@ -1,0 +1,47 @@
+# Changed files
+
+All changes are new files in the isolated v4 branch. Existing pilot, COSYNE and historical H1 files are unchanged.
+
+- `configs/eeg_representation/v4/analytic_smoke.yaml`
+- `configs/eeg_representation/v4/bounded.yaml`
+- `configs/eeg_representation/v4/existing.yaml`
+- `configs/eeg_representation/v4/optional_common_smoke.yaml`
+- `configs/eeg_representation/v4/seed_registry.json`
+- `configs/eeg_representation/v4/simulator_smoke.yaml`
+- `configs/eeg_representation/v4/timing_gate.yaml`
+- `docs/eegrepr_v4/CHANGED_FILES.md`
+- `docs/eegrepr_v4/OBSERVED_FINDINGS.md`
+- `docs/eegrepr_v4/README.md`
+- `docs/eegrepr_v4/SCIENTIFIC_CONTRACT.md`
+- `docs/eegrepr_v4/VALIDATION.md`
+- `docs/eegrepr_v4/WORKSTATION.md`
+- `docs/eegrepr_v4/observed_h3_geometry.json`
+- `docs/eegrepr_v4/validation_results.json`
+- `experiments/eeg_representation/h1/v4/__init__.py`
+- `experiments/eeg_representation/h1/v4/artifacts.py`
+- `experiments/eeg_representation/h1/v4/cli.py`
+- `experiments/eeg_representation/h1/v4/config.py`
+- `experiments/eeg_representation/h1/v4/derivation.py`
+- `experiments/eeg_representation/h1/v4/driver.py`
+- `experiments/eeg_representation/h1/v4/evidence.py`
+- `experiments/eeg_representation/h1/v4/generation.py`
+- `experiments/eeg_representation/h1/v4/geometry.py`
+- `experiments/eeg_representation/h1/v4/measurement.py`
+- `experiments/eeg_representation/h1/v4/models.py`
+- `experiments/eeg_representation/h1/v4/planning.py`
+- `experiments/eeg_representation/h1/v4/replication.py`
+- `experiments/eeg_representation/h1/v4/reporting.py`
+- `experiments/eeg_representation/h1/v4/restore_export.py`
+- `experiments/eeg_representation/h1/v4/retention.py`
+- `experiments/eeg_representation/h1/v4/scoring.py`
+- `experiments/eeg_representation/h1/v4/targets.py`
+- `scripts/eegrepr/pack_v4_evidence.py`
+- `scripts/eegrepr/run_h1_h4_v4.sh`
+- `tests/test_eegrepr_v4_artifacts.py`
+- `tests/test_eegrepr_v4_geometry.py`
+- `tests/test_eegrepr_v4_measurement.py`
+- `tests/test_eegrepr_v4_models.py`
+- `tests/test_eegrepr_v4_packaging.py`
+- `tests/test_eegrepr_v4_planning.py`
+- `tests/test_eegrepr_v4_retention.py`
+- `tests/test_eegrepr_v4_statistics.py`
