@@ -24,7 +24,8 @@ DEFAULTS={
          'source_archive_sha256':'6818befa7ca70df3a0272bf69328f9e2d2316817493e49a13bac6e4b74a5817f','expected_episodes':320},
  'acquisition_ids':['A0','A1','A2'],
  'selected_job_ids':[a+'__'+t for a in ['A0','A1','A2'] for t in ANCHORS+ENERGIES],
- 'models':{},'retention':{},
+ 'models':{},'retention':{},'information_models':{},
+ 'extension':{'enabled':False,'version':'immediate-information-1','secondary_only':True},
  'energy':{'native_samples':16000,'log_floor_v2':1e-40,'log_reference_v2':1.,'bands':{'alpha':[8,12],'beta_low':[12,20],'beta_high':[20,30]}},
  'protocol':{'alpha_total':.05,'family_a_alpha':.025,'family_b_alpha':.025,
              'task_margin_bits':.20,'reconstruction_margin_nmse':.02,'forecast_margin_pp':1.,
@@ -42,18 +43,32 @@ DEFAULTS={
 }
 
 
+def target_ids(c):
+ if not c.get('extension',{}).get('enabled',False):return ANCHORS+ENERGIES
+ waveform=[f'T0_l{h}_d{w}' for h in (0,2,10) for w in (32,128)]
+ fourier=[f'T3_l{h}_d1000' for h in (0,10)]
+ energy=[f'T4_{kind}_{band}_l{h}_d1000' for h in (0,10) for kind in ('energy','log_energy') for band in ('alpha','beta_low','beta_high')]
+ return waveform+fourier+energy
+
+def required_job_ids(c):
+ return [a+'__'+t for a in c['acquisition_ids'] for t in target_ids(c)]
+
 def merge(base,update):
  out=deepcopy(base)
  for key,value in update.items():
   if key not in base:raise ValueError('Unknown v6 config key '+key)
-  if isinstance(value,dict) and isinstance(base[key],dict) and key not in ('models','retention'):
+  if isinstance(value,dict) and isinstance(base[key],dict) and key not in ('models','retention','information_models'):
    out[key]=merge(base[key],value)
   else:out[key]=deepcopy(value)
  return out
 
 
 def resolve(raw=None):
- c=merge(DEFAULTS,raw or {});d=c['data'];s=c['simulation'];f=c['forks'];p=c['protocol']
+ c=merge(DEFAULTS,raw or {})
+ if c['extension']['version']!='immediate-information-1' or c['extension']['secondary_only'] is not True:raise ValueError('Extension is a fixed secondary/descriptive amendment; primary families unchanged')
+ if not isinstance(c['extension']['enabled'],bool):raise ValueError('Extension enabled must be boolean')
+ if c['extension']['enabled'] and 'selected_job_ids' not in (raw or {}):c['selected_job_ids']=required_job_ids(c)
+ d=c['data'];s=c['simulation'];f=c['forks'];p=c['protocol']
  if c['schema_version']!=SCHEMA:raise ValueError('Unsupported v6 schema')
  if c['claim_status'] not in ('prospective_confirmation','exploratory_existing','engineering','timing_only','numerical_only'):raise ValueError('Unknown claim status')
  if c['backend'] not in ('neuron','analytical') or c['backend']=='analytical' and c['claim_status']!='engineering':raise ValueError('Analytical data are explicit engineering controls only')
@@ -67,7 +82,7 @@ def resolve(raw=None):
  for key in ('task_margin_bits','reconstruction_margin_nmse','forecast_margin_pp','forecast_interval_level','primary_job_id','forecast_halfwidth_pp','carrier_halfwidth_bits','reconstruction_halfwidth_nmse'):
   if c['claim_status']!='engineering' and p[key]!=DEFAULTS['protocol'][key]:raise ValueError('Frozen statistical protocol field changed: '+key)
  if c['claim_status']=='prospective_confirmation':
-  if c['acquisition_ids']!=DEFAULTS['acquisition_ids'] or c['selected_job_ids']!=DEFAULTS['selected_job_ids']:raise ValueError('Complete27-job fixed acquisition/target grid required')
+  if c['acquisition_ids']!=DEFAULTS['acquisition_ids'] or c['selected_job_ids']!=required_job_ids(c):raise ValueError('Complete'+str(len(required_job_ids(c)))+'-job fixed acquisition/target grid required')
   if d['regimes']!=REGIMES or d['prefixes_per_regime']!=DEFAULTS['data']['prefixes_per_regime']:raise ValueError('Frozen paired four-regime/prefix allocation changed')
   if len(d['structures']['train'])!=32 or len(d['structures']['development'])!=8:raise ValueError('Frozen32train/8development circuits required')
   if f['calibration_futures']!=4 or len(f['reference_circuits'])!=8 or f['reference_prefix']!=0 or f['reference_regimes']!=DEFAULTS['forks']['reference_regimes']:raise ValueError('Frozen calibration/H2 allocation changed')
@@ -83,6 +98,11 @@ def resolve(raw=None):
  if any(c['optional'].values()):raise ValueError('Optional biological/instrumented experiments are outside v6 core')
  if c['energy']['native_samples']!=16000 or c['energy']['log_floor_v2']!=1e-40 or c['energy']['log_reference_v2']!=1.:raise ValueError('Fixed physical energy convention required')
  if s['native_dt_ms']!=.0625 and c['reuse']['enabled']:raise ValueError('Coarse v4 reuse incompatible with finer integration; disable reuse and update measured plan')
+ # An absent amendment must not change legacy serialized configurations or their
+ # immutable generation hashes. Explicit amendment settings remain recorded.
+ if not c['extension']['enabled']:
+  for key in ('extension','information_models'):
+   if key not in (raw or {}):c.pop(key)
  return c
 
 

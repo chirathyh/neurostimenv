@@ -1,0 +1,31 @@
+# Bounded CPU implementation audit, not complete Phase0 qualification.
+# Neural candidates are explicitly unrun. This config cannot pass the core gate.
+name: existing_linear_audit
+claim_status: exploratory_existing
+namespace: eegrepr-evaluation-v6-existing-linear-audit
+models:
+  neural_enabled: false
+  run_controls: false
+data:
+  structures:
+    train: [36000,36001,36002,36003,36004,36005,36006,36007]
+    development: [36008,36009,36010,36011]
+    calibration: []
+    evaluation: [36012,36013,36014,36015,36016,36017,36018,36019]
+  prefixes_per_regime:
+    train: 8
+    development: 4
+    calibration: 2
+    evaluation: 1
+forks:
+  score_futures: 8
+  high_score_futures: 8
+  reference_futures: 32
+  reference_circuits: [36012,36013,36014,36015]
+  reference_regimes: [R0, Ralpha]
+reuse:
+  enabled: false
+  circuit_ids: []
+  expected_episodes: 0
+
+extension: {enabled: true, version: immediate-information-1, secondary_only: true}

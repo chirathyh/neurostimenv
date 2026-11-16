@@ -48,7 +48,11 @@ def report(c,root):
         'Unrounded JSON/NPZ files are authoritative. Figures are vector PDF/SVG plus 300-dpi PNG, with circuit-level intervals and explicit estimands. A figure is created only when the corresponding outcomes exist. Missing results are never drawn from plans. See figure_captions.txt for populations, units, support and uncertainty.','',
         'Compact exports retain target arrays, every saved prediction/variance/logit/code, IDs, normalization, coefficients, tables and protocol. Numeric NPY members are deduplicated without changing a byte. Native files and numeric fitted weights have checksummed omission records; request the separate full-native option to include them. No pickle loading is required.']
     (out/'FINDINGS.md').write_text('\n'.join(text)+'\n');atomic_json(out/'findings.json',findings)
-    figures(root,c,findings);return findings
+    figures(root,c,findings)
+    if c.get('extension',{}).get('enabled'):
+        from .extended_reporting import report as extended_report
+        findings['extension']=extended_report(c,root,findings)
+    return findings
 
 
 def figures(root,c,findings):

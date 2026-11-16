@@ -4,7 +4,7 @@ import argparse,json,os,sys,shutil,time,platform
 from .config import load_config,resolve,counts,registry_check
 from .artifacts import ROOT,initialize,atomic_json,read_json,canonical_hash,environment,output_lock,progress,failure,module_hash,file_hash
 
-MODES=('doctor','controls','import','audit','audit-existing','explore-existing','geometry-existing','numerical-check','plan','timing-gate','generate','derive','fit','predict','calibrate','score','retention','replication','confirm-statistics','report','export','run')
+MODES=('doctor','controls','import','audit','audit-existing','explore-existing','geometry-existing','numerical-check','plan','timing-gate','generate','derive','fit','predict','calibrate','score','retention','replication','confirm-statistics','report','export','information-fit','information','replay','run')
 
 
 def doctor(c,root,device):
@@ -58,8 +58,17 @@ def _stage(args,c,root):
         from .models import fit
         from .scoring import score
         from .reporting import report
-        source=_source(args,root);audit_existing(c,root,source,resume=args.resume);derive(c,root,source,resume=args.resume)
-        fit(c,root,jobs=args.jobs,device=args.device,resume=args.resume);score(c,root,jobs=args.jobs,resume=args.resume)
+        source=_source(args,root);audit_existing(c,root,source,resume=args.resume)
+        derive(c,root,source,resume=args.resume,native_source=args.native_source)
+        from ..v4.models import job_ids
+        jobs=args.jobs or job_ids(root)
+        fit(c,root,jobs=jobs,device=args.device,resume=args.resume);score(c,root,jobs=jobs,resume=args.resume)
+        if c.get('extension',{}).get('enabled'):
+            from . import information_models,information
+            from .replication import replication
+            information_models.fit(c,root,device=args.device,resume=args.resume,source=args.native_source or source)
+            information.run(c,root,jobs=jobs,resume=args.resume)
+            replication(c,root,jobs=jobs,resume=args.resume)
         return report(c,root)
     if mode=='geometry-existing':
         from .geometry import run
@@ -85,7 +94,7 @@ def _stage(args,c,root):
         return generate(c,root,execute=args.execute,resume=args.resume,source=args.native_source,split=args.split)
     if mode=='derive':
         from .derivation import derive
-        return derive(c,root,source=args.source,resume=args.resume)
+        return derive(c,root,source=args.source,resume=args.resume,native_source=args.native_source if args.source else None)
     if mode in ('fit','predict'):
         from . import models
         return getattr(models,mode)(c,root,jobs=args.jobs,device=args.device,resume=args.resume)
@@ -100,7 +109,17 @@ def _stage(args,c,root):
         return retention(c,root,device=args.device,resume=args.resume)
     if mode=='replication':
         from .replication import replication
-        return replication(c,root,jobs=args.jobs,resume=args.resume)
+        return replication(c,root,jobs=args.jobs or (c['selected_job_ids'] if c.get('extension',{}).get('enabled') else None),resume=args.resume)
+    if mode=='information-fit':
+        from .information_models import fit
+        return fit(c,root,device=args.device,resume=args.resume,source=args.source)
+    if mode=='information':
+        from .information import run
+        return run(c,root,jobs=args.jobs,resume=args.resume)
+    if mode=='replay':
+        from .replay import run
+        if not args.timing_root:raise ValueError('Replay requires the verified --timing-root')
+        return run(c,root,args.timing_root,execute=args.execute,resume=args.resume,qualification_root=args.phase0_root)
     if mode=='confirm-statistics':
         from .scoring import confirm_statistics
         return confirm_statistics(c,root)
@@ -136,7 +155,7 @@ def _campaign_implementation():
     paths=list((ROOT/'configs/eeg_representation').rglob('*.yaml'))
     paths+=list((ROOT/'configs/eeg_representation').rglob('*.json'))
     paths+=list((ROOT/'env/eeg').glob('*.py'))
-    paths+=[ROOT/'scripts/eegrepr/run_h1_h4_v6.sh']
+    paths+=[ROOT/'scripts/eegrepr/run_h1_h4_v6.sh',ROOT/'scripts/eegrepr/run_h1_h4_v6_extended.sh']
     return {'scientific_source_hash':source_hash(),
             'additional_dependencies':{str(p.relative_to(ROOT)):file_hash(p) for p in sorted(set(paths)) if p.is_file()}}
 
@@ -215,6 +234,10 @@ def campaign(args):
     existing=ROOT/'configs/eeg_representation/v6/existing.yaml';gate=ROOT/'configs/eeg_representation/v6/timing_gate.yaml'
     # Match prospective optimizer settings in qualification, even if dtype was explicitly configured.
     ec=load_config(existing);ec.update(models=original['models'],retention=original['retention']);ec['data']['workers']=workers
+    extended=bool(original.get('extension',{}).get('enabled'))
+    if extended:
+        ec.update(extension=original['extension'],selected_job_ids=original['selected_job_ids'])
+        if 'information_models' in original:ec['information_models']=original['information_models']
     ecpath=base/'phase0-config.json';atomic_json(ecpath,resolve(ec))
     call('doctor',phase0,ecpath);call('controls',phase0,ecpath)
     call('explore-existing',phase0,ecpath,source=args.source_archive)
@@ -237,6 +260,9 @@ def campaign(args):
     core=base/('confirmation-n'+str(chosen['protocol']['test_circuits']))
     gc=load_config(gate);gc.update(models=chosen['models'],retention=chosen['retention'],simulation=chosen['simulation'])
     gc['data']['workers']=workers
+    if extended:
+        gc.update(extension=chosen['extension'],selected_job_ids=chosen['selected_job_ids'])
+        if 'information_models' in chosen:gc['information_models']=chosen['information_models']
     gatepath=base/'timing-config.json';atomic_json(gatepath,resolve(gc))
     call('timing-gate',timing,gatepath)
     # Precision is decided from inspected evidence before any fresh test generation.
@@ -244,15 +270,21 @@ def campaign(args):
     pre=call('plan',core,**common)
     if not pre['eligible_numerical_execution']:
         call('report',core);return {'status':'blocked','stage':'pre-numerical','root':str(core),'reasons':pre['blocked_reasons']}
+    if extended:call('replay',core,**common)
     call('numerical-check',core,**common)
     final=call('plan',core,**common)
     if not final['eligible_for_generation']:
         call('report',core);return {'status':'blocked','stage':'pre-core','root':str(core),'reasons':final['blocked_reasons'],'proposal':str(core/'pretest_design_proposal.json')}
     for split in ('train','development'):call('generate',core,split=split,**common)
     call('derive',core,source=None);call('fit',core)
+    if extended:call('information-fit',core,source=None)
     call('generate',core,split='calibration',**common);call('derive',core,source=None);call('predict',core);call('calibrate',core)
+    if extended:call('information-fit',core,source=None)
     call('generate',core,split='evaluation',**common);call('derive',core,source=None);call('predict',core)
-    call('retention',core);call('score',core);call('replication',core);call('confirm-statistics',core);call('report',core)
+    if extended:call('information-fit',core,source=None)
+    call('retention',core);call('score',core);call('replication',core);call('confirm-statistics',core)
+    if extended:call('information',core)
+    call('report',core)
     if _campaign_request(original_args,original,base,workers)!=request:
         raise ValueError('Campaign execution request/source/implementation/environment changed during execution')
     result=call('export',core,destination=request['destination'])

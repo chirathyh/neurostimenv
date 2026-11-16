@@ -1,0 +1,4 @@
+schema_version: eegrepr-evaluation-v6.0
+name: confirmation
+
+extension: {enabled: true, version: immediate-information-1, secondary_only: true}

@@ -127,6 +127,7 @@ def export(config,root,destination,source=None,full_native=False,max_bytes=None,
                         with physical.open('rb') as stream:add(z,rec['path'],stream,rec)
                     else:omitted.append({**rec,'reason':'original reused native retained at original source; compact evidence contains derived numeric arrays','checksum_scope':'original generation manifest'})
             codepaths=list((ROOT/'experiments/eeg_representation').rglob('*.py'))+list((ROOT/'configs/eeg_representation/v6').glob('*'))+list((ROOT/'tests').glob('test_eegrepr_v6*.py'))+[ROOT/'scripts/eegrepr/run_h1_h4_v6.sh']+list((ROOT/'docs/eegrepr_v6').glob('*'))
+            codepaths += list((ROOT/'configs/eeg_representation/v6_extended').glob('*'))+list((ROOT/'docs/eegrepr_v6_extended').glob('*'))+[ROOT/'scripts/eegrepr/run_h1_h4_v6_extended.sh']
             # The NEURON implementation closure is necessary for independent review,
             # not just the evaluation package. Preserve these as source, never load.
             codepaths += list((ROOT/'setup/circuits/ballnstick').rglob('*'))+list((ROOT/'env/models/neuron').rglob('*'))

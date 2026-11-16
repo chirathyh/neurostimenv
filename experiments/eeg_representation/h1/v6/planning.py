@@ -25,7 +25,7 @@ def _resources(root,workers,peak_rss,numerical_root=None):
  if not logical or workers>logical:reasons.append('generation workers exceed observed logical CPUs')
  if not available:reasons.append('available RAM measurement absent')
  elif bound and bound>available:reasons.append('two-times measured worker RSS budget exceeds available RAM')
- folders=[root/'generation',root/'numerical']
+ folders=[root/'generation',root/'numerical',root/'replay/native']
  if numerical_root is not None:folders.append(Path(numerical_root)/'numerical')
  files={p.resolve() for folder in folders if folder.exists() for p in folder.rglob('*.h5')}
  # Credit only already-written allocation bytes on this filesystem; imported
@@ -64,7 +64,7 @@ def qualify_phase0(c,path):
  if not measurement or not measurement.get('passed'):missing.append('causal acquisition measurement qualification')
  elif measurement.get('conditions')!={a:metadata(a) for a in ('A0','A1','A2')}:missing.append('measurement design changed after qualification')
  required=set(c['selected_job_ids'])
- if not d or required-{r['id'] for r in d.get('jobs',[]) if r['status']=='complete'}:missing.append('complete fixed-target9cell and18energy/log derivations')
+ if not d or required-{r['id'] for r in d.get('jobs',[]) if r['status']=='complete'}:missing.append('complete configured acquisition/target derivations ('+str(len(required))+' jobs)')
  if not m or not m.get('neural_path_control',{}).get('passed'):missing.append('same full-history neural path positive control')
  if not m or required-{r['id'] for r in m.get('jobs',[]) if r['status']=='complete'}:missing.append('complete bounded full-history qualification grid')
  if d:
@@ -83,7 +83,11 @@ def qualify_phase0(c,path):
    if not guard or guard.get('settings')!=settings(c):missing.append('qualification learner grid differs from prospective '+j['id'])
    else:
     bind(guardpath);dm=read_json(p/'derived'/j['id']/'manifest.json')
-    expected=canonical_hash(dict(cfg=guard['settings'],device=guard['device'],environment=guard['numerical_environment'],
+    source_root=Path(__file__).parents[2]
+    paths=[Path(__file__).with_name('models.py'),Path(__file__).parents[1]/'v4/models.py',source_root/'training.py']
+    dependencies={str(q.relative_to(source_root)):file_hash(q) for q in paths}
+    if guard.get('analysis_dependencies')!=dependencies:missing.append('model source dependencies changed '+j['id'])
+    expected=canonical_hash(dict(cfg=guard['settings'],device=guard['device'],environment=guard['numerical_environment'],dependencies=dependencies,
         source=file_hash(Path(__file__).with_name('models.py')),target=dm['target_fingerprint'],
         train=file_hash(p/'derived'/j['id']/'train.npz'),development=file_hash(p/'derived'/j['id']/'development.npz')))
     if expected!=guard['signature']:missing.append('model implementation/training inputs changed '+j['id'])
@@ -91,6 +95,13 @@ def qualify_phase0(c,path):
   q=p/name
   if q.exists():bind(q)
  if not (p/'precision_inputs.json').exists():missing.append('phase0 circuit-level precision inputs')
+ if c.get('extension',{}).get('enabled'):
+  try:
+   from .information_models import verify_freeze
+   verify_freeze(c,p)
+   frozen=read_json(p/'information_models/freeze.json');bind(p/'information_models/freeze.json')
+   for record in frozen['files']:bind(verify_record(p,record))
+  except (ValueError,OSError,KeyError) as exc:missing.append('Phase0 information-readout qualification incomplete: '+str(exc))
  result={'status':'complete' if not missing else 'incomplete','passed':not missing,'missing':missing,'root':str(p.resolve()),'files':list(records.values())}
  result['evidence_hash']=canonical_hash(result);return result
 
@@ -229,13 +240,34 @@ def plan(c,root,*,timing_root=None,phase0_root=None,numerical_root=None,source=N
  else:reasons.append('coupled-event dt convergence not qualified')
  seconds=gate['mean_continuation_seconds'] if gate else c['budget']['provisional_seconds'];perbytes=gate['native_bytes']/8 if gate else c['budget']['provisional_episode_bytes']
  core=design['new_episodes']*seconds/3600
+ extension=None;replay_evidence=None
+ if c.get('extension',{}).get('enabled'):
+  from .extension_planning import estimate,secondary_fit_cost
+  extension=estimate(c,seconds_per_episode=seconds,bytes_per_episode=perbytes,phase0_root=phase0_root)
+  extension['secondary_fit_cost']=secondary_fit_cost(c,phase0_root,device=gate['fit_throughput']['device'] if gate else None)
+  try:
+   from .replay import verify_summary
+   replay_evidence=verify_summary(c,root,timing_root)
+   extension['replay_hours']=replay_evidence['summed_replay_seconds']/3600
+   extension['generation_overhead_hours']=8*seconds/3600+extension['replay_hours']
+   extension['generation_overhead_wall_hours']=8*seconds/3600/c['data']['workers']+max(replay_evidence['wall_seconds'],replay_evidence['summed_replay_seconds'])/3600
+   extension['generation_overhead_native_bytes']=math.ceil(8*perbytes)+replay_evidence['native_bytes']
+   extension['replay_timing_status']='measured serial exact-forcing replay; gate remains measured concurrency extrapolation'
+  except (OSError,ValueError,KeyError,TypeError) as exc:reasons.append('Privileged replay diagnostic not verified: '+str(exc))
  numeric_hours=sum(c['simulation']['native_dt_ms']/dt for dt in c['numerical']['dts_ms'])*design['numerical_episodes']/len(c['numerical']['dts_ms'])*seconds/3600
  if numeric:numeric_hours=sum(r['summed_generation_seconds'] for r in numeric['generation'])/3600
  native=math.ceil((design['new_episodes']+design['numerical_episodes'])*perbytes);summed=core+numeric_hours
+ if extension:
+  native+=extension['generation_overhead_native_bytes'];summed+=extension['generation_overhead_hours']
  topology=_resources(root,c['data']['workers'],gate.get('peak_process_rss_bytes',0) if gate else 0,numerical_root);free=topology['free_bytes'];resource=list(topology['blocked_reasons'])
+ if extension and extension['secondary_fit_cost']['status']=='unavailable':resource.append('Expanded secondary fitting cost not measured: '+extension['secondary_fit_cost']['reason'])
  if summed>c['budget']['max_generation_hours']:resource.append('summed generation exceeds500h cap')
  if native>c['budget']['max_native_bytes']:resource.append('native projection exceeds120GB cap')
- if free+topology['completed_native_storage_credit_bytes']<c['budget']['minimum_free_bytes']:resource.append('free plus already-written allocation is below250GB storage reserve')
+ required_storage=c['budget']['minimum_free_bytes'];extra_credit=0
+ if extension:
+  required_storage=max(required_storage,2*native+2*extension['working_nonnative_bytes'])
+  extra_credit=sum(q.stat().st_size for q in root.rglob('*') if q.is_file() and q.suffix not in ('.h5','.hdf5') and not q.name.startswith('.'))
+ if free+topology['completed_native_storage_credit_bytes']+extra_credit<required_storage:resource.append('free plus already-written allocation is below required working-data/lossless-export storage reserve ('+str(required_storage)+' bytes)')
  if gate and c['data']['workers']!=gate['workers']:resource.append('requested workers differ from measured gate concurrency')
  reasons.extend(resource)
  result={'status':'planned','config_hash':canonical_hash(c),'counts':design,'registry':registry,
@@ -246,7 +278,8 @@ def plan(c,root,*,timing_root=None,phase0_root=None,numerical_root=None,source=N
   'phase0':phase,'measured_gate':gate,'numerical_qualification':numeric,'precision_binding':precision,
   'precision_certificate_sha256':precision['certificate_sha256'] if precision else None,
   'generation_core_summed_hours':core,'generation_numerical_summed_hours':numeric_hours,'summed_generation_hours':summed,
-  'estimated_generation_wall_hours':summed/c['data']['workers'],'workers':c['data']['workers'],
+  'estimated_generation_wall_hours':(core+numeric_hours)/c['data']['workers']+(extension['generation_overhead_wall_hours'] if extension else 0.),'workers':c['data']['workers'],
+  'extension':extension,'replay_qualification':replay_evidence,'required_working_export_storage_bytes':required_storage,
   'native_bytes_estimate':native,'lossless_export_bytes_reserve':native,'model_export_storage_reserve_bytes':max(0,c['budget']['minimum_free_bytes']-2*native),
   'free_bytes':free,'measured_topology':topology,'cost_status':'measured same-host extrapolation; fine dt cost observed' if numeric else 'same-host coarse extrapolation; fine dt scaled until observed' if gate else 'provisional only; no execution authorization',
   'fit_calibration_cost':gate['fit_throughput'] if gate else {'status':'unmeasured'},
@@ -261,6 +294,9 @@ def plan(c,root,*,timing_root=None,phase0_root=None,numerical_root=None,source=N
    'calibration':'24 separate circuits; equal-circuit constant diagonal family per frozen mean; no calibration model selection',
    'freeze_sequence':'Protocol precedes fresh data. Final means freeze before calibration; calibration policy frozen before evaluation.',
    'no_new_test_selection':True,'claim':'Two predeclared families conditional on training/model selection; no human EEG ceiling or H5/H6 result'}
+  if extension:
+   from .extension_planning import protocol as extension_protocol
+   payload['descriptive_amendment']=extension_protocol(c);payload['replay_evidence_hash']=replay_evidence['evidence_hash']
   payload['protocol_hash']=canonical_hash(payload);old=_read(root/'protocol.json')
   if old and old!=payload:raise ValueError('Protocol immutable; changed qualification requires new root')
   atomic_json(root/'protocol.json',payload);result['protocol_hash']=payload['protocol_hash']
@@ -278,6 +314,10 @@ def _mean_freeze(c,root):
   for candidate in fit['candidates']:
    record=next(r for r in candidate['files'] if r['path']==candidate['state_file'])
    p=verify_record(root,record);records[record['path']]=_record(root,p)
+ if c.get('extension',{}).get('enabled'):
+  from .information_models import verify_freeze
+  verify_freeze(c,root)
+  records['information_models/freeze.json']=_record(root,root/'information_models/freeze.json')
  result={'status':'frozen','files':list(records.values()),'selection_split':'development',
          'policy':'All numeric mean candidates and selection fixed before calibration generation; no later refitting'}
  result['freeze_hash']=canonical_hash(result);path=root/'mean_freeze.json'
@@ -305,8 +345,16 @@ def require_execution(c,root,execute,timing=False,numerical=False,split=None):
  if not phase['passed'] or phase['evidence_hash']!=p['phase0']['evidence_hash']:raise ValueError('Phase0 artifacts changed after plan')
  topology=_resources(root,c['data']['workers'],p['measured_gate'].get('peak_process_rss_bytes',0),p.get('numerical_root'))
  if topology['blocked_reasons']:raise ValueError('Current worker topology blocks execution: '+ '; '.join(topology['blocked_reasons']))
- if topology['free_bytes']+topology['completed_native_storage_credit_bytes']<c['budget']['minimum_free_bytes']:raise ValueError('Free storage below measured allocation reserve')
+ extra_credit=sum(q.stat().st_size for q in root.rglob('*') if q.is_file() and q.suffix not in ('.h5','.hdf5') and not q.name.startswith('.')) if c.get('extension',{}).get('enabled') else 0
+ if topology['free_bytes']+topology['completed_native_storage_credit_bytes']+extra_credit<p.get('required_working_export_storage_bytes',c['budget']['minimum_free_bytes']):raise ValueError('Free storage below measured working-data/export allocation reserve')
+ if c.get('extension',{}).get('enabled'):
+  from .extension_planning import secondary_fit_cost
+  current_cost=secondary_fit_cost(c,p['phase0_root'],device=p['measured_gate']['fit_throughput']['device'])
+  if current_cost!=p['extension']['secondary_fit_cost']:raise ValueError('Secondary fitting cost evidence changed after plan')
  if numerical:return
+ if c.get('extension',{}).get('enabled'):
+  from .replay import verify_summary
+  if verify_summary(c,root,p['timing_root'])['evidence_hash']!=p['replay_qualification']['evidence_hash']:raise ValueError('Replay evidence changed after plan')
  if _precision_binding(c,root,p['source_path'],p['phase0_root'])!=p['precision_binding']:raise ValueError('Precision certificate binding changed after plan')
  if numerical_qualification(c,p['numerical_root'],p['phase0_root'])['evidence_hash']!=p['numerical_qualification']['evidence_hash']:raise ValueError('Numerical evidence changed after plan')
  if _reuse(c,p['native_source'])!=p['native_reuse']:raise ValueError('Native reuse source changed after plan')
