@@ -1,0 +1,9 @@
+schema_version: eegrepr-evaluation-v6.0
+name: timing_gate
+claim_status: timing_only
+namespace: eegrepr-evaluation-v6-timing-20261116
+data:
+  structures: {train: [], development: [], calibration: [], evaluation: [37510,37511]}
+  prefixes_per_regime: {train: 0, development: 0, calibration: 0, evaluation: 1}
+forks: {score_futures: 1, high_score_futures: 1, reference_futures: 0, reference_circuits: []}
+reuse: {enabled: false}

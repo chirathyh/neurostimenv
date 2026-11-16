@@ -1,0 +1,56 @@
+{
+  "schema_version": "eegrepr-v6-seeds-1",
+  "parent_registries": [
+    "configs/eeg_representation/seed_registry.json",
+    "configs/eeg_representation/h1/seed_registry.json",
+    "configs/eeg_representation/v4/seed_registry.json"
+  ],
+  "ranges": {
+    "new_training": [
+      37000,
+      37023
+    ],
+    "new_development": [
+      37024,
+      37027
+    ],
+    "calibration": [
+      37028,
+      37051
+    ],
+    "fresh_evaluation": [
+      37052,
+      37243
+    ],
+    "numerical_convergence": [
+      37500,
+      37503
+    ],
+    "timing_gate": [
+      37510,
+      37511
+    ],
+    "engineering": [
+      37600,
+      37609
+    ],
+    "fresh_evaluation_pretest_precision_extension": [
+      37244,
+      37443
+    ]
+  },
+  "reuse_train": [
+    36000,
+    36007
+  ],
+  "reuse_development": [
+    36008,
+    36011
+  ],
+  "inspected_test_excluded": [
+    36012,
+    36019
+  ],
+  "audit": "Exact circuit allocations checked against tracked configs and parent registries at base0928678. Unrelated numeric hash/offset substrings are not circuit reservations. Runtime import overlap remains mandatory before freeze.",
+  "precision_extension": "Reserved only for outcome-independent pretest precision revision; default N192 unchanged. No fresh evaluation result may be inspected to choose N."
+}
