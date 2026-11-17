@@ -1,0 +1,8 @@
+schema_version: eegrepr-v6-reporting-pilot-1
+name: eight-worker-reporting-pilot-v1
+purpose: exploratory_reporting_pilot
+workers: 8
+threads_per_worker: 1
+max_new_invocations: 160
+neural_max_steps: 500
+forecast_updates: 200

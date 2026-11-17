@@ -1,0 +1,100 @@
+{
+  "schema_version": "eegrepr-pilot-implementation-invocations-1",
+  "recorded_utc": "2026-11-16T23:53:43.052136+00:00",
+  "host": "chirath-Latitude-7440",
+  "scope": "local implementation engineering; not workstation pilot evidence",
+  "actual_neuron_invocations": 21,
+  "pre_neuron_import_failures": 1,
+  "steps": [
+    {
+      "stage": "live mechanism inventory probe",
+      "actual_neuron_invocations": 1,
+      "outcome": "complete"
+    },
+    {
+      "stage": "initial state adapter import",
+      "actual_neuron_invocations": 0,
+      "outcome": "MAIN_PATH missing before NEURON initialization; corrected"
+    },
+    {
+      "stage": "first cutoff capture",
+      "actual_neuron_invocations": 1,
+      "outcome": "failed: NEURON8.2.3 lacks exposed usetable_hh; corrected version-aware metadata"
+    },
+    {
+      "stage": "state sibling/replay v1",
+      "actual_neuron_invocations": 3,
+      "outcome": "simulations and state invariance completed; report helper rejected unavailable four-second history in tiny80ms control"
+    },
+    {
+      "stage": "state sibling/replay v2",
+      "actual_neuron_invocations": 3,
+      "outcome": "complete; h0/h2/h10W32 exact replay"
+    },
+    {
+      "stage": "strict coverage/source bindings",
+      "actual_neuron_invocations": 3,
+      "outcome": "complete; all live fields/contacts/layers audited"
+    },
+    {
+      "stage": "actual emitting detector correction",
+      "actual_neuron_invocations": 3,
+      "outcome": "complete; true source NetCon distinct from target NetCons"
+    },
+    {
+      "stage": "actual queue/prior-step detector v1",
+      "actual_neuron_invocations": 2,
+      "outcome": "first completed; second NEURON initialization segfault from temporary Python bound-method reference cycle"
+    },
+    {
+      "stage": "actual queue/prior-step detector v2",
+      "actual_neuron_invocations": 2,
+      "outcome": "first completed; second initialization segfault persisted; final fix deletes instance hook before cleanup"
+    },
+    {
+      "stage": "actual queue/prior-step detector final",
+      "actual_neuron_invocations": 3,
+      "outcome": "complete; repeated same-process invocation, sibling invariance and exactforcing replay passed"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "/tmp/eegrepr-pilot-state-actual/result.json",
+      "sha256": "2819c3a8007e504c7b2db0fef0e7ae2a6fb7655a74833edd66dc043889c4f464",
+      "bytes": 14947
+    },
+    {
+      "path": "/tmp/eegrepr-pilot-state-actual/one/schema.json",
+      "sha256": "9fa6290ee0693ed7488b3bb428da5ae1113e57cad4302f380760245d1234859e",
+      "bytes": 195790
+    },
+    {
+      "path": "/tmp/eegrepr-pilot-state-actual/one/fields.npz",
+      "sha256": "5268f52147ee8c797f12cf5d93805a4ecaf2b757e2b41d87fdbbe8a01fe9b878",
+      "bytes": 149906
+    },
+    {
+      "path": "/tmp/eegrepr-pilot-state-actual/two/schema.json",
+      "sha256": "9fa6290ee0693ed7488b3bb428da5ae1113e57cad4302f380760245d1234859e",
+      "bytes": 195790
+    },
+    {
+      "path": "/tmp/eegrepr-pilot-state-actual/two/fields.npz",
+      "sha256": "5268f52147ee8c797f12cf5d93805a4ecaf2b757e2b41d87fdbbe8a01fe9b878",
+      "bytes": 149906
+    },
+    {
+      "path": "/tmp/pilot_state_actual.py",
+      "sha256": "d97309fd8dc26547847ab09082f1a6a9aa5205b37a1e2bbb3c28fdc7b0385e9d",
+      "bytes": 1277
+    },
+    {
+      "path": "/tmp/pilot_state_actual.log",
+      "sha256": "1be37f2c0d248651ea19207e06cf1de870118fd70109f6d16189aa394e8af6ef",
+      "bytes": 18315
+    }
+  ],
+  "all_simulations": "2E/1I toy engineering networks,12externalcontacts,total40or80ms; no full40cell study or biological result",
+  "budget_policy": "Debit21 against total160 request; default106 workstation calls =>127combined; only139 workstation calls remain without explicit new authorization.",
+  "receipt_basis": "Agent-observed execution journal; final three-call evidence hashed. Earlier diagnostic logs were overwritten during fixes, which is disclosed rather than represented as independently archived proof."
+}

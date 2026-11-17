@@ -14,7 +14,7 @@ class EvidenceSource:
    names=self.archive.namelist()
    if len(names)!=len(set(names)):raise ValueError('Duplicate archive paths')
    for name in names:safe(name)
-   self.prefix='evidence/' if 'evidence/resolved_config.json' in names else ''
+   self.prefix='evidence/' if any('evidence/'+n in names for n in ('resolved_config.json','pilot_config.json')) else ''
    self._names={n[len(self.prefix):] for n in names if n.startswith(self.prefix)}
    if 'EXPORT_MANIFEST.json' in names:
     self.export=json.loads(self.archive.read('EXPORT_MANIFEST.json'))
@@ -30,7 +30,7 @@ class EvidenceSource:
    else:self.export=None;self.payload={}
   else:
    if not self.path.is_dir():raise FileNotFoundError(self.path)
-   if not (self.path/'resolved_config.json').exists() and (self.path/'evidence/resolved_config.json').exists():self.path=self.path/'evidence'
+   if not any((self.path/n).exists() for n in ('resolved_config.json','pilot_config.json')) and any((self.path/'evidence'/n).exists() for n in ('resolved_config.json','pilot_config.json')):self.path=self.path/'evidence'
    self.prefix='';self.export=None;self.payload={};self._names={p.relative_to(self.path).as_posix() for p in self.path.rglob('*') if p.is_file()}
   # A v4 campaign has native records under generation/, while legacy roots have native/.
   self.aliases={n[len('generation/'):]:n for n in self._names if n.startswith('generation/native/')}
@@ -85,7 +85,7 @@ class EvidenceSource:
   self._verified[name]=r;return r
  def provenance(self):
   if self._identity is None:
-   roots=['provenance.json','resolved_config.json','generation/provenance.json','native/manifest.json','derived/manifest.json']
+   roots=['provenance.json','resolved_config.json','pilot_provenance.json','pilot_config.json','generation/provenance.json','native/manifest.json','derived/manifest.json']
    records=[self.verify(n) for n in roots if self.exists(n)]
    p={'kind':'zip' if self.archive else 'directory','path':str(self.path),'archive_sha256':file_hash(self.path) if self.archive else None,
       'identity_records':records,'native_present':sum(n.endswith('.h5') for n in self._names if not n.startswith('generation/')),
@@ -111,7 +111,7 @@ def import_evidence(source,root,verify_all=False):
  # Retain original generation metadata and the omission ledger, not only links
  # to a large local archive that the recipient may not have.
  original=dest/'sources'/identity['content_id'];records=[]
- for name in ('resolved_config.json','provenance.json','generation/provenance.json','generation/resolved_config.json','native/manifest.json'):
+ for name in ('resolved_config.json','provenance.json','pilot_config.json','pilot_provenance.json','generation/provenance.json','generation/resolved_config.json','native/manifest.json'):
   if source.exists(name):
    blob=source.read_bytes(name);target=original/name;target.parent.mkdir(parents=True,exist_ok=True)
    if target.exists() and target.read_bytes()!=blob:raise ValueError('Imported original metadata changed')

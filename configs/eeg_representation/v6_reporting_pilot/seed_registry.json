@@ -1,0 +1,8 @@
+{
+  "schema_version": "eegrepr-v6-reporting-pilot-seeds-1",
+  "historical_contexts": "Original context/history/circuit seeds are preserved for all reused and extended contexts.",
+  "fallback_circuit_id": 37700,
+  "fallback_namespace": "eegrepr-v6-reporting-pilot-fallback-20261117",
+  "fallback_use": "One separate M32/L32 H2 context only if legacy continuation fails compatibility; never mixed with old state pools.",
+  "registry_check": "37700 absent from prior tracked EEG representation configurations and registries at base ac4b93c8fe924091418b7bb499566ce8d27a83a5."
+}
