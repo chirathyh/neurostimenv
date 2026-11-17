@@ -1,0 +1,108 @@
+Recovery of the 17 November 2026 workstation reporting-pilot abort
+
+Evidence reviewed
+The downloaded diagnostic ZIP SHA256 is
+cf79b12916df180777102a5b462599deca494072fedc8db1a4ce1724142d9fee.
+All 1,219 included payload hashes were reverified locally. This ZIP contains
+metadata and logs, not the full raw arrays; workstation recovery must verify the
+original files before using them.
+
+The workstation was on commit 9e8740635f7585066c1e6903999c022bf634003a.
+All 106 new workstation native calls completed: 8 concurrency-gate calls,
+48 remaining state recoveries, 2 exact-forcing replays and 48 H2 extension calls.
+The ledger has zero failed/unresolved calls, a 21-call implementation debit,
+127 total charged calls and 33 remaining under the unchanged 160-call cap.
+Both replay/future-invariance checks passed. All 60 complete-state fits passed
+the saved model gate. H2 has the two original contexts at M32/L32.
+
+164 ordinary matched-cohort ridge readouts were saved: 20 A0 settings times eight
+readout methods, plus short/full EEG ridge for the first two A1 settings.
+The last selection was matched/learners/A1__T0_l0_d128/eeg_full at
+2026-11-17 03:54:00.327 UTC. The fatal log's last timestamp was 03:54:01.527 UTC.
+The next prescribed operation is the FIRST CUDA TCN: A1 input, immediate128-ms
+waveform target,64-sample history. There were no saved TCN artifacts, broad-cohort
+learners or retention results. No pilot process was found in the diagnostic
+snapshot. The ordinary_fit=running marker is stale, not evidence of a live job.
+Scoring, final PDF and export were not completed.
+
+The exact allocator/native routine is unknown. The host uses Apport, coredumpctl
+is absent, and kernel-log access was denied. Available memory/disk at collection
+were ample, but that does not establish peak memory at the instant of failure.
+The earlier connection messages do not identify a simulator failure.
+
+A separate code defect found by local CPU execution
+The original TCN completed training and saved numeric outputs but then assembled
+its completion dictionary with history_samples/device/selection_split supplied
+twice. This raises TypeError. The patch fixes that dictionary merge without
+changing the model, loss, candidate grid, optimizer, seed, checkpoint selection,
+normalization, precision or device. It does not establish the cause of the earlier
+SIGABRT, which occurred before any TCN numeric outputs were saved.
+
+Recovery design
+Use the additive recovery entry point; do not rerun complete-pilot for this case.
+It verifies upstream receipts, source/config/runtime identity and original file
+hashes. Native simulator imports and invocation entry points are blocked. It does
+not call generation, state recovery or complete-state fitting. The original
+ledger, generation provenance and completed state-model evidence remain unchanged.
+Each unfinished TCN runs once in a fresh Python subprocess, with the same CUDA
+configuration and a separate fault-handler log. Failure stops rather than retrying
+or silently switching to CPU. This isolation is a recovery measure; success on the
+workstation is not claimed from CPU tests.
+
+The completion-record fix changes the learning module's hash. Existing ridge
+readouts are reused only through a narrowly validated compatibility adapter: the
+current source must equal the exact approved patch of the hash-checked original
+commit. It verifies the original input/settings signature and all saved output
+hashes. Old results are not relabeled as newly fitted or overwritten. New fits use
+the current implementation signature. The compatibility record is saved separately.
+
+Commands on neuroinformaticsgpu01, one line at a time
+
+cd /home/u7041472/Documents/chirath/depression-simulator/neurostimenv-v6-reporting-pilot
+source /home/u7041472/Documents/chirath/depression-simulator/bin/activate
+git pull --ff-only origin codex/eeg-v6-eight-worker-reporting-pilot
+bash scripts/eegrepr/recover_v6_reporting_pilot.sh check
+
+Proceed only if check completes successfully. Then:
+
+bash scripts/eegrepr/recover_v6_reporting_pilot.sh run
+
+The wrapper's verified defaults are:
+root=/data/u7041472/eegrepr-results/v6-reporting-pilot-v1
+source=/data/u7041472/eegrepr-results/evaluation-v4/bounded-prospective-standard.zip
+device=cuda
+
+For long work, use a persistent terminal/session. The run prints its log path and
+exit status. Per-TCN diagnostics are under root/recovery/<timestamp>/tcn/.
+The completion receipt is root/pilot_completed.json, the report is
+root/report/pilot_findings.pdf, and the default recovered export is
+/data/u7041472/eegrepr-results/v6-reporting-pilot-v1-recovered-evidence.zip
+with a SHA256 sidecar. Final completion requires successful scoring, report
+verification and export, not just all models having fit.
+
+If checking or a child fit fails, stop; preserve its log and rerun the laptop
+collect_workstation_diagnostics.py collector. Do not delete the root/ledger,
+change packages, change CUDA precision/device, or spend remaining native budget.
+No additional native calls are needed for this recovery.
+
+Local validation for this recovery patch
+- 78 reporting-pilot tests passed; the 17 recovery/compatibility tests were rerun
+  after final integration and passed.
+- Actual isolated CPU child completed25 synthetic optimizer updates; a second
+  call reused the completed fit without a subprocess, preserving hashes/mtimes.
+- Production TCN CPU checks covered64- and2000-sample histories with64 target
+  coordinates. Local CUDA is unavailable, so workstation CUDA remains untested.
+- The actual diagnostic metadata schema probe checked106 tasks,60 state fits,
+ 120 derived settings and56 state contexts.646 real metadata files were hashed.
+  Missing native/model arrays and remote runtime checks were explicitly mocked
+  for that probe; the real check command must verify them on the workstation.
+- No NEURON/LFPy simulation was launched and no experiment ledger was changed.
+
+Files changed
+experiments/eeg_representation/h1/v6_pilot/learning.py
+experiments/eeg_representation/h1/v6_pilot/learning_compatibility.py
+experiments/eeg_representation/h1/v6_pilot/recovery.py
+scripts/eegrepr/recover_v6_reporting_pilot.sh
+tests/test_eegrepr_v6_pilot_learning_compatibility.py
+tests/test_eegrepr_v6_pilot_recovery.py
+docs/eegrepr_v6_reporting_pilot/RECOVERY_20261118.txt

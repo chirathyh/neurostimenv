@@ -10,11 +10,11 @@ from ..v6.information_models import fit_design,_digest
 def numeric(path):
     with np.load(path,allow_pickle=False) as z:return {k:z[k] for k in z.files}
 
-def signature(panel,values,manifest,settings):
+def signature(panel,values,manifest,settings,*,implementation_sha256=None):
     return canonical_hash(dict(inputs={s:_digest({**{k:p[k] for k in ('context_id','structure_id','Y','future_mask')},'features':values[s]}) for s,p in panel.items()},
-        risk_contract=manifest['risk_contract'],settings=settings,implementation=file_hash(Path(__file__))))
+        risk_contract=manifest['risk_contract'],settings=settings,implementation=file_hash(Path(__file__)) if implementation_sha256 is None else implementation_sha256))
 
-def ridge(panel,values,manifest,destination,config,*,resume=False,mechanism_scaled=False,design=None):
+def ridge(panel,values,manifest,destination,config,*,resume=False,mechanism_scaled=False,design=None,signature_implementation_sha256=None):
     """All candidate predictions saved; development alone chooses mean or ridge.
 
     The predeclared alpha10 candidate is retained even if selection prefers mean.
@@ -22,7 +22,7 @@ def ridge(panel,values,manifest,destination,config,*,resume=False,mechanism_scal
     """
     dest=Path(destination);marker=dest/'selection.json'
     settings=dict(alphas=config['ridge_alphas'],predeclared_alpha=config['state_candidate_alpha'],mechanism_scaled=mechanism_scaled)
-    sig=signature(panel,values,manifest,settings)
+    sig=signature(panel,values,manifest,settings,implementation_sha256=signature_implementation_sha256)
     if marker.exists():
         if not resume:raise FileExistsError(marker)
         old=json.loads(marker.read_text())
@@ -103,9 +103,9 @@ def tcn(panel,manifest,destination,config,history,device='cpu',resume=False):
     state.update(baseline=baseline,residual_shrinkage=np.asarray(shrink),selected_mean_fallback=np.asarray(not use))
     atomic_npz(dest/'state.npz',**state);atomic_npz(dest/'predictions.npz',**arrays)
     atomic_json(dest/'learning_curve.json',account)
-    result=dict(status='complete',signature=sig,selected_id='tcn' if use else 'train_mean',history_samples=history,
+    result=dict(account,status='complete',signature=sig,selected_id='tcn' if use else 'train_mean',history_samples=history,
         device=device,optimizer_budget=cfg['max_steps'],fitting_repeats=1,residual_shrinkage=shrink,
         training_contexts=len(panel['train']['context_id']),training_circuits=len(np.unique(panel['train']['structure_id'])),
-        selection_split='development',mean_fallback_retained=True,**account,
+        selection_split='development',mean_fallback_retained=True,
         files={n:file_hash(dest/n) for n in ('state.npz','predictions.npz','learning_curve.json')})
     atomic_json(marker,result);return result
