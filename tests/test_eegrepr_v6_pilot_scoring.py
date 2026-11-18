@@ -57,6 +57,11 @@ class ArtifactPipelineTests(unittest.TestCase):
                 self.assertIsNotNone(row['carrier_cross_entropy_bits'])
             self.assertEqual(tables['h4_targets'][0]['physical_units'],'V')
             self.assertEqual(tables['h4_targets'][0]['risk_units'],'V^2')
+            # Exercise the actual scoring/report boundary, including mean fallback.
+            from experiments.eeg_representation.h1.v6_pilot import reporting
+            normalized=reporting.normalize_results(dict(tables=tables))
+            self.assertEqual(len(normalized['tables']['h1_information']),len(tables['h1_information']))
+            self.assertEqual(reporting.normalize_results(normalized),normalized)
             # Scoring may not silently accept a modified prediction artifact.
             path=root/'matched/learners'/job/'eeg_short/predictions.npz'
             data=learning.numeric(path);data['evaluation_prediction'][0,0]+=1

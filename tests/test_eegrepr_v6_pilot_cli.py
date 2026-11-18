@@ -96,7 +96,7 @@ class PilotCliTests(unittest.TestCase):
             root=Path(temp);atomic_json(root/'pilot_results.json',results);(root/'report/rendered').mkdir(parents=True)
             (root/'report/pilot_findings.pdf').write_bytes(b'fixture-pdf');(root/'report/rendered/page-1.png').write_bytes(b'fixture-image')
             receipt=dict(status='complete',experimental_completion_eligible=True,pdf_sha256=file_hash(root/'report/pilot_findings.pdf'),
-                results_hash=cli.reporting._canonical(cli.reporting.normalize_results(results)),config_hash=cli.reporting._canonical(c),
+                results_hash=cli.reporting._canonical(cli.reporting.prepare_report_results(results,c)),config_hash=cli.reporting._canonical(c),
                 pdf_verification=dict(status='complete',all_pages_rendered=True,errors=[],pages=[dict(render='rendered/page-1.png',render_sha256=file_hash(root/'report/rendered/page-1.png'))]))
             with patch.object(cli.reporting,'completion_checks',return_value={'experimental_completion_eligible':True}):
                 cli.verify_report(root,c,receipt)

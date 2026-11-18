@@ -123,7 +123,7 @@ def verify_state_fit(c,root,cohorts,jobs,statefit):
 
 
 def verify_report(root,c,receipt):
-    root=Path(root);results=_read(root/'pilot_results.json')
+    root=Path(root);results=reporting.prepare_report_results(_read(root/'pilot_results.json'),c)
     checked=reporting.completion_checks(root,results)
     if not checked['experimental_completion_eligible']:raise ValueError('Experimental completion gates failed: '+str(checked['issues']))
     if not receipt or receipt.get('status')!='complete' or receipt.get('experimental_completion_eligible') is not True:
@@ -135,7 +135,7 @@ def verify_report(root,c,receipt):
     for page in qa['pages']:
         image=(root/'report'/page['render']).resolve()
         if not image.is_relative_to((root/'report').resolve()) or file_hash(image)!=page['render_sha256']:raise ValueError('Rendered PDF page missing or altered')
-    if receipt['results_hash']!=reporting._canonical(reporting.normalize_results(results)) or receipt['config_hash']!=reporting._canonical(c):
+    if receipt['results_hash']!=reporting._canonical(results) or receipt['config_hash']!=reporting._canonical(c):
         raise ValueError('PDF report was built from different numerical results or configuration')
     return receipt
 

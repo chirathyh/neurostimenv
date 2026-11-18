@@ -84,6 +84,20 @@ def _same(a, b):
     return math.isclose(float(a), float(b), rel_tol=5e-10, abs_tol=5e-10*max(abs(float(a)),abs(float(b)),1e-30))
 
 
+def _same_reduction(supplied,derived,error_baseline100):
+    """Check percentage-point algebra at its operand scale, including zero skill.
+
+    Producers use 100*(1-risk/reference), while the display identity uses
+    100-error_baseline100. Near zero skill these subtract quantities near100;
+    a relative tolerance on the small result cannot account for float64
+    cancellation. Eight epsilon times the sum of operand magnitudes bounds
+    rounding of these short arithmetic paths. This is a display-unit bound,
+    never an absolute tolerance for physical V^2/V^4 risks or target arrays.
+    """
+    roundoff=8*float(np.finfo(np.float64).eps)*(100.+abs(float(error_baseline100)))
+    return _same(supplied,derived) or abs(float(supplied)-float(derived))<=roundoff
+
+
 def normalize_results(results):
     """Validate display identities and retain all supplied precision and fields."""
     r = json.loads(json.dumps(results, allow_nan=False)); r.setdefault('schema_version', SCHEMA)
@@ -96,7 +110,7 @@ def normalize_results(results):
         rows = r['tables'].setdefault(name, r.get(name, []))
         if not isinstance(rows,list) or any(not isinstance(row,dict) for row in rows):
             raise ValueError('Report table must contain records: '+name)
-        for row in rows:
+        for index,row in enumerate(rows):
             row.setdefault('status','unavailable')
             for old,new in aliases.items():
                 if new not in row and old in row:row[new]=row[old]
@@ -111,13 +125,20 @@ def normalize_results(results):
             if _number(risk) and _number(ref) and ref>0:
                 scaled = 100*float(risk)/float(ref)
                 if _number(row.get('error_baseline100')) and not _same(row['error_baseline100'],scaled):
-                    raise ValueError('Display/physical risk mismatch: '+str(row.get('job',name)))
-                row['error_baseline100']=scaled
+                    raise ValueError(f'Display/physical risk mismatch: table={name}, row={index}, '
+                        f'job={row.get("job")}, method={row.get("method")}, '
+                        f'supplied={row["error_baseline100"]!r}, expected={scaled!r}, '
+                        f'risk={risk!r}, reference={ref!r}')
+                if not _number(row.get('error_baseline100')):row['error_baseline100']=scaled
             if _number(row.get('error_baseline100')):
                 gain=100-row['error_baseline100']
-                if _number(row.get('relative_mse_reduction_pp')) and not _same(row['relative_mse_reduction_pp'],gain):
-                    raise ValueError('Relative MSE reduction mismatch')
-                row['relative_mse_reduction_pp']=gain
+                if _number(row.get('relative_mse_reduction_pp')):
+                    if not _same_reduction(row['relative_mse_reduction_pp'],gain,row['error_baseline100']):
+                        raise ValueError(f'Relative MSE reduction mismatch: table={name}, row={index}, '
+                            f'job={row.get("job")}, method={row.get("method")}, '
+                            f'supplied={row["relative_mse_reduction_pp"]!r}, expected={gain!r}, '
+                            f'error_baseline100={row["error_baseline100"]!r}')
+                else:row['relative_mse_reduction_pp']=gain
             floor=row.get('state_variance_physical')
             if _number(risk) and _number(floor): row['unresolved_excess_physical']=risk-floor
             if row.get('evidence_type') in ('unknown','theoretical') and row.get('status') in ('complete','measured'):
@@ -133,6 +154,19 @@ def normalize_results(results):
                 comparisons.append(extra)
         else:comparisons.append(row)
     r['tables']['h1_comparisons']=comparisons
+    return r
+
+
+def prepare_report_results(results,config=None):
+    """One canonical rendered input for both report creation and verification.
+
+    Learner settings are report metadata derived from the frozen configuration;
+    they need not already be present in the immutable numerical result file.
+    """
+    r=normalize_results(results)
+    r.setdefault('learner_protocol',{k:(config or {})[k] for k in
+        ('ridge_alphas','state_candidate_alpha','neural_seed','neural_max_steps',
+         'neural_patience','histories','forecast_updates','score_futures') if k in (config or {})})
     return r
 
 
@@ -263,8 +297,7 @@ def report(root, config=None, results=None, *, render=True):
     if results is None:
         p=root/'pilot_results.json'
         results=json.loads(p.read_text()) if p.exists() else {'status':'incomplete','tables':{}}
-    results=normalize_results(results)
-    results.setdefault('learner_protocol',{k:(config or {})[k] for k in ('ridge_alphas','state_candidate_alpha','neural_seed','neural_max_steps','neural_patience','histories','forecast_updates','score_futures') if k in (config or {})})
+    results=prepare_report_results(results,config)
     checks=completion_checks(root,results)
     _json(out/'report_input.json',results); tables=write_tables(out/'tables',results)
     from .report_figures import create_figures

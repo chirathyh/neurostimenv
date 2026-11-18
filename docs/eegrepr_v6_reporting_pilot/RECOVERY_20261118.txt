@@ -160,3 +160,56 @@ measured error for identical replay traces. One-ULP frozen-target corruption,
 substantive value changes and shape changes still fail with saved diagnostics.
 These are numerical engineering tests; no native simulator was invoked. The
 workstation rerun remains required to verify its latest physical target arrays.
+
+Report-stage cancellation and receipt correction, 18 November 2026
+
+The next user recovery reached "Relative MSE reduction mismatch", after all
+ordinary fitting/scoring and H2/replay scoring returned. This error comes from
+report input validation. The original detailed failing row was not printed.
+
+The reporting defect is reproducible even for a training-mean predictor whose
+risk exactly equals its reference. For risk=reference=1.234567891234e-18,
+100*risk/reference rounds to100.00000000000001. The scoring calculation
+100*(1-risk/reference) is exactly0, but the report's alternative100-error is
+-1.4210854715202004e-14 percentage points. A relative tolerance scaled only to
+these near-zero results falsely rejects mathematically consistent metrics.
+
+The report now checks this display identity using the existing comparison plus
+a float64 roundoff allowance of8*epsilon*(100+abs(error_baseline100)). Near the
+baseline this is about3.55e-13 percentage points. This allowance applies only to
+the percentage-point display identity. Physical-risk/denominator checks and exact
+native/frozen-target equality remain unchanged. Verified supplied risks, display
+errors and gains retain their original unrounded values, including zero and tiny
+negative gains. Incorrect signs, percentage/fraction conventions and altered
+physical denominators still fail. Any mismatch now identifies table/row/job,
+method and both numerical values.
+
+Independent downstream review also found that report creation appended the
+learner_protocol metadata before hashing, while completion verification hashed
+the raw result without that enrichment. Both now call the same canonical input
+preparation. No metrics, fit configuration or saved pilot_results.json are changed
+by report preparation. The configuration hash, PDF hash and every rendered-page
+hash remain required. Regression coverage includes real report creation followed
+by the actual completion verifier and a verified ZIP export, not just separate
+report and verifier mocks.
+
+Use the same git pull, recovery check and recovery run commands above. The runner
+verifies and reuses completed fits, recomputes downstream summaries, then creates
+and verifies the PDF and export. It does not generate native episodes or refit the
+complete-state models. A local reproduction cannot establish the exact offending
+workstation row without its latest pilot_results.json; completion still requires
+Recovery exit code:0 and the final pilot_completed.json receipt on that host.
+
+Validation of this report-stage patch
+All88 reporting-pilot tests passed. Five new arithmetic tests exercise the actual
+summarize/_prediction_row producers, waveform/energy/log-energy units, exact mean
+fallback, positive/negative near-zero gains, adjacent float64 ratios, all eight
+report tables, repeat normalization and unrounded JSON/CSV/NPZ preservation.
+Wrong-sign, factor100 and changed tiny physical-risk/denominator inputs still fail.
+The existing fitted-artifact scoring test now crosses the report-normalization
+boundary. A new full60-job synthetic handoff test creates and renders the actual
+PDF, calls the real CLI completion verifier, rejects changed configuration/results,
+exports and verifies the ZIP, and roundtrips all eight numeric tables exactly.
+These fixtures are explicitly synthetic engineering tests and temporary; no native
+simulation or workstation fitting was performed. The learning.py and recovery.py
+source fingerprints are unchanged, preserving completed-model resume compatibility.
