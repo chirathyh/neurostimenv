@@ -106,3 +106,57 @@ scripts/eegrepr/recover_v6_reporting_pilot.sh
 tests/test_eegrepr_v6_pilot_learning_compatibility.py
 tests/test_eegrepr_v6_pilot_recovery.py
 docs/eegrepr_v6_reporting_pilot/RECOVERY_20261118.txt
+Replay-target scoring correction, following the first recovery attempt
+
+Observed user output
+The recovery passed native/state/derived verification and ran all four TCN
+children. It then stopped at "Native replay target differs from frozen matched
+target". This assertion is inside precision.replay_tables, after ordinary fitting,
+ordinary scoring and the H2 finite-future summaries. Reaching it means those prior
+functions returned successfully; the final report/export are still pending.
+
+Reproduced implementation defect
+Waveforms and Fourier coefficients are extracted one native trial at a time.
+Frozen T4 energy/log-energy targets are then derived in a three-dimensional
+(context, future, Fourier coordinate) array. The old replay check instead applied
+the band-energy sum to a single one-dimensional coefficient vector. NumPy's
+advanced-indexing layout changes the reduction order, so identical coefficients
+can produce an energy differing by a few float64 ULPs.
+
+Using the verified original source archive's A0 T3 lead10 evaluation coefficients,
+the registered s36012-p0000-R0-score-0001 low-beta energy differs by exactly one
+ULP (3.76158192263132e-37 V^2) between these two calculations. High-beta energy
+also differs by one ULP for both registered replay observations. Applying the
+original multi-record arithmetic reproduces all three bands and their logarithms
+exactly for both observations. This is a local reproduction using saved Fourier
+coefficients, not a new examination of the latest workstation native recordings.
+The old error omitted the failing job; the workstation must pass its exact checks
+before this recovery can be declared complete.
+
+Correction and boundaries
+precision.py now extracts native T3 coefficients per trial, then computes replay
+T4 energy/log energy with the same multi-record reduction as frozen derivation.
+It requires at least two records; the pilot has exactly two registered replay
+contexts. No scientific replicate is fabricated. Native T0/T3 transforms, all
+frozen arrays, normalization, learning.py, model signatures and simulator code are
+unchanged. Exact array equality remains mandatory. No np.allclose tolerance was
+introduced. A true mismatch now records the job/context/future, exact physical
+arrays, support and difference in precision/replay_target_failures/. Each verified
+job writes precision/replay/<job>/target_consistency.json, included in the export.
+
+Resume using the same check/run commands above after pulling this branch. Existing
+completed model records retain their original hashes and are verified/reused; no
+new NEURON generation or complete-state fitting is available through recovery.
+H2/scoring tables are recomputed before report/export. A successful run prints
+Recovery exit code: 0 and writes pilot_completed.json. Do not treat model completion
+alone or a partially written precision directory as full pilot completion.
+
+Validation of the replay-target correction
+All82 reporting-pilot regression tests passed, including the unchanged recovery,
+learning-compatibility, report and export tests. New tests use nontrivial numeric
+traces with the actual historical _energy_panel derivation for all20 targets,
+exercise H5 reads/writes and reversed context order, and retain exactly zero
+measured error for identical replay traces. One-ULP frozen-target corruption,
+substantive value changes and shape changes still fail with saved diagnostics.
+These are numerical engineering tests; no native simulator was invoked. The
+workstation rerun remains required to verify its latest physical target arrays.

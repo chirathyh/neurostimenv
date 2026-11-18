@@ -9,7 +9,7 @@ import json
 import numpy as np
 from ..artifacts import atomic_json,atomic_npz,file_hash
 from ..targets import canonical_hash
-from ..v6.targets import extract_physical_target,target_metadata,parse_target_id,timing_metadata
+from ..v6.targets import extract_physical_target,target_metadata,parse_target_id,timing_metadata,energy_from_coefficients,target_spec,axes
 from ..v6.replication import analyze_futures
 from ..v6.derivation import load_panel
 from ..v6 import models as vm
@@ -109,6 +109,50 @@ def finite_future_tables(config,root,jobs):
     atomic_json(root/'precision/h2_summary.json',result);return result
 
 
+def _replay_physical_targets(trials,target):
+    """Reproduce frozen target arithmetic without relaxing exact comparisons.
+
+    T0/T3 were derived one native trial at a time. T4 was derived from a
+    (contexts, futures, 54) coefficient tensor. NumPy's masked band selection
+    changes strides: the multi-record reduction sums along a strided axis,
+    whereas the single-vector reduction can use pairwise summation. The latter
+    differs by a few float64 ULPs. Keep the original multi-record arithmetic;
+    the two registered replay contexts are actual records, not new replicates.
+    This changes neither the target operator nor any saved target or learner.
+    """
+    family,h,_=parse_target_id(target)
+    base=f'T3_l{h:g}_d1000' if family.startswith('T4_') else target
+    values=np.stack([extract_physical_target(t['eeg_v'],t['time_ms'],base,
+        float(t['metadata']['fork']['cutoff_ms'])) for t in trials])
+    if not family.startswith('T4_'):return values
+    if len(values)<2:raise ValueError('Replay energy arithmetic requires the two registered contexts')
+    a=axes(target_spec(base))
+    return energy_from_coefficients(values[:,None,:],a['target_frequency_hz'],a['target_component'],
+        family.split('energy_',1)[1],log=family.startswith('T4_log_'))[:,0]
+
+
+def _verify_replay_target(root,job,cid,tid,frozen,observed):
+    """Keep exact equality and retain actionable evidence for any real mismatch."""
+    if np.array_equal(frozen,observed):return
+    same_shape=frozen.shape==observed.shape
+    delta=np.abs(frozen-observed) if same_shape else np.array([])
+    finite=delta[np.isfinite(delta)]
+    details=dict(status='failed',job=job,context_id=cid,future_id=tid,
+        frozen_shape=list(frozen.shape),native_shape=list(observed.shape),
+        frozen_dtype=str(frozen.dtype),native_dtype=str(observed.dtype),
+        different_coordinates=int(np.count_nonzero(frozen!=observed)) if same_shape else None,
+        max_absolute_difference=float(finite.max()) if finite.size else None,
+        target_metadata=target_metadata(job.split('__')[1]),
+        comparison='Exact array equality; no tolerance or replacement of frozen targets')
+    directory=Path(root)/'precision/replay_target_failures'/job/tid
+    atomic_npz(directory/'comparison.npz',frozen_physical=frozen,native_physical=observed)
+    details['arrays']=_record(Path(root),directory/'comparison.npz')
+    atomic_json(directory/'comparison.json',details)
+    raise ValueError(f'Native replay target differs from frozen matched target: job={job}, '
+        f'context={cid}, future={tid}, max_absolute_difference={details["max_absolute_difference"]}; '
+        f'diagnostic={directory / "comparison.json"}')
+
+
 def replay_tables(config,root,jobs):
     root=Path(root);controls=_read(root/'replay_controls.json');plan=_read(root/'design.json')
     raw={r['trial_id']:r for r in plan['historical_rows']};audits=controls['audits']
@@ -126,7 +170,7 @@ def replay_tables(config,root,jobs):
         target=job.split('__')[1];family,h,w=parse_target_id(target)
         panel,manifest=load_panel(root/'matched',job);norm=manifest['normalization'];scale=float(norm['y_scale']);offset=np.asarray(norm['y_offset'])
         if target not in physical:
-            physical[target]=tuple(np.stack([extract_physical_target(t['eeg_v'],t['time_ms'],target,float(t['metadata']['fork']['cutoff_ms'])) for t in pool]) for pool in (originals,replicas))
+            physical[target]=tuple(_replay_physical_targets(pool,target) for pool in (originals,replicas))
         y,replayed=physical[target]
         indices=[];evalp=panel['evaluation']
         for cid,tid,observed in zip(cids,tids,y):
@@ -134,7 +178,7 @@ def replay_tables(config,root,jobs):
             if len(where)!=1:raise ValueError('Replay context absent/duplicated in matched evaluation panel')
             ix=int(where[0]);future=np.flatnonzero(evalp['future_id'][ix]==tid)
             if len(future)!=1 or not evalp['future_mask'][ix,int(future[0])]:raise ValueError('Replay future absent from matched target pool')
-            if not np.array_equal(evalp['Y_physical'][ix,int(future[0])],observed):raise ValueError('Native replay target differs from frozen matched target')
+            _verify_replay_target(root,job,cid,tid,evalp['Y_physical'][ix,int(future[0])],observed)
             indices.append(ix)
         baseline_std=vm.context_weights(panel['train'])@vm.first_targets(panel['train'])
         baseline=baseline_std*scale+offset
@@ -153,6 +197,11 @@ def replay_tables(config,root,jobs):
                 methods[method]=np.asarray(pred[key])[indices]*scale+offset;inputs[method]=_record(root,predpath)
         if 'complete_state_candidate' not in methods:raise ValueError('Replay comparison lacks fitted complete-state candidate')
         directory=root/'precision/replay'/job
+        atomic_json(directory/'target_consistency.json',dict(status='verified',job=job,
+            context_ids=cids,future_ids=tids,comparison='Exact array equality for every frozen physical target',
+            native_target_arithmetic='Original per-trial T0/T3; original multi-record T4 reduction',
+            frozen_targets_changed=False,implementation_sha256=file_hash(Path(__file__))))
+        consistency=_record(root,directory/'target_consistency.json');artifacts.append(consistency)
         arrays=dict(Y_physical=y,replayed_physical=replayed,baseline_physical=np.broadcast_to(baseline,y.shape),context_id=np.asarray(cids),structure_id=np.asarray(sids),future_id=np.asarray(tids),
             reference_loss_per_context=base_losses)
         for method,prediction in methods.items():arrays[method+'__prediction_physical']=prediction;arrays[method+'__loss_per_context']=np.mean((y-prediction)**2,axis=1)
@@ -161,7 +210,7 @@ def replay_tables(config,root,jobs):
             circuits=len(set(sids)),contexts=len(cids),futures=1,context_ids=cids,future_ids=tids,physical_units=_risk_units(target),
             reference_risk_physical=reference,target_fingerprint=manifest['target_fingerprint'],normalization_id=norm['id'],
             uncertainty=dict(status='deferred',reason='Only two contexts on two circuits and one realised future each; no empirical future-variance estimate or meaningful population precision'),
-            source=[artifact],replay_provenance=provenance)
+            source=[artifact,consistency],replay_provenance=provenance)
         for method,prediction in methods.items():
             losses=np.mean((y-prediction)**2,axis=1);risk=float(losses.mean());evidence='privileged_replay' if method=='measured_replay' else 'fitted'
             rows.append(dict(common,method=method,information='complete present state plus actual realised future forcing' if method=='measured_replay' else method,
