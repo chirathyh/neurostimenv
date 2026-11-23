@@ -1,0 +1,10 @@
+defaults:
+  - l23net_s1
+  - _self_
+
+mode: qualification
+condition: mdd
+arm: sham
+dose_suite: null
+resource_request:
+  walltime_hours: 2.0
