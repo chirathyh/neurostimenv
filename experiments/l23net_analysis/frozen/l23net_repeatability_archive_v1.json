@@ -1,0 +1,55 @@
+{
+  "dose_summary_sha256": "24404623d26e0cb4508417b022bead46d4e750b5fcb06652a7384a4fbdd21d44",
+  "original_commit": "c30f169e6dc81d125f195f0ead8d65c9847ce376",
+  "rows": [
+    {
+      "seed": 8611,
+      "report_sha256": "ace8ccda5b06ca861f88e27b913eb015ab829a7fa07b94c4f9672e5381fafe5f",
+      "structure_sha256": "df4f347319728c8ebeade4f6e5d0e5dcb344647d8d8bf1001750b41395a99f56",
+      "build_sha256": "12b028cd0196877f803eb1c2ef20aa7dc0652dd2b141b069feb34587760ba0d1",
+      "legacy_prefix_sha256": "88fcf314f13ba05513d494441ec3b0318a7b90c8b430c630f1f342861736cff5",
+      "benefit": {"dose_02": 0.9676205704992795, "dose_04": 0.6488473461840236}
+    },
+    {
+      "seed": 8612,
+      "report_sha256": "d91c4332f04930903a587697659a10a2884588ec88f96eadf9ce45bccbfb9b58",
+      "structure_sha256": "c0926fd25c01b919b6dbeb9888e942e95a7d862b8a39e156c5fa327baafdd661",
+      "build_sha256": "d73850a45ad3a7484f50df2810bf2c5de1688873dbc6c57fe87b7bd59e2bf4ce",
+      "legacy_prefix_sha256": "693dad4c32ab2545b6dfeee0b94c58f3c8b885e9d187b8e2bed5166746b53cbe",
+      "benefit": {"dose_02": -0.5583897211865185, "dose_04": -0.06080943103965142}
+    },
+    {
+      "seed": 8613,
+      "report_sha256": "784fe3041bea292debbc491390131b81b931fa9a34b2d550263d0712db04a8e3",
+      "structure_sha256": "710448b05b0a9fd1cc96d9d72ee137ecc4f27b317cb6ed7aa0355031be8545c0",
+      "build_sha256": "cec90339f717d21dd9c1c10ddbefcdc56cca0ebe527529211b13d0c2c15dd989",
+      "legacy_prefix_sha256": "5b6545c1259b9ec09113b4538e45bcb2c390cf598e89c89e69ef2fe4e869b717",
+      "benefit": {"dose_02": 0.2408140439134292, "dose_04": 0.04336030592947848}
+    },
+    {
+      "seed": 8614,
+      "report_sha256": "0e30488031942bfa3f7f52e9e39d0c7c45dfa06266154fab9c85ab091276fa16",
+      "structure_sha256": "43acb3c57264142d2a971364a171bc4d5b98780ab7d9a80229eec0376c15e041",
+      "build_sha256": "34f019ae61bd52023fc34c71b121176fb490f3124baabce0121f5d493b0b5178",
+      "legacy_prefix_sha256": "ccc6822c01b0e89dcc13d3631a207a9e034f106e44426642bf8985b2483299db",
+      "benefit": {"dose_02": 2.610827808762091, "dose_04": 1.0380078239722965}
+    },
+    {
+      "seed": 8615,
+      "report_sha256": "322744d2edb3ba6898fb0607b5b8f985c43c959481d78b2277d9b3f662563341",
+      "structure_sha256": "b2fab892780e2848ab10f3b7af0c27aa303cac5d2d824b2916906eb504ebb3db",
+      "build_sha256": "2fc62835c8141c89bdd51115f9eeb72a59e9ba9a0daa76487ccfeacc17ad3316",
+      "legacy_prefix_sha256": "6b511fe8aa2f70e4c3f9688d6e6e6a925e75d19cfbc82f02781adef0aed03da1",
+      "benefit": {"dose_02": 0.31737007505340165, "dose_04": 0.5545052181847279}
+    },
+    {
+      "seed": 8616,
+      "report_sha256": "f8ef63bcb3726c85d88975e0116adaf2300a3deb8b930aa59296d4e9622f06c2",
+      "structure_sha256": "9484fd99f899fd823335a3811d657187ac8750f5c18a47fc4163d420e722322f",
+      "build_sha256": "26f80f72fda8920878645707577bce94c98b667995c8d3025e6a6ee404afbf5f",
+      "legacy_prefix_sha256": "2eeb68c95185eae4f6934d96c673f9f78b274bb7a8b15bbba2285782f63e9e6d",
+      "benefit": {"dose_02": -0.6451542873835749, "dose_04": -0.421467409455341}
+    }
+  ],
+  "sha256": "5d5a18f5f6b5477b27f082914dcb0fbaeb9bcfcff4a31cb786a6193fa85c7bc6"
+}

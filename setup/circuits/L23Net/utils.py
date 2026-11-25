@@ -305,6 +305,10 @@ def setup_network(network, args, MPI_VAR):
     COMM.Barrier()
 
     addStimulus(args, network, circuit_params, stimuli, cell_names, MPI_VAR)
+    history_seed = getattr(getattr(args.env, 'online', None), 'l23net_history_seed', None)
+    if history_seed is not None:
+        from setup.circuits.L23Net.background_history import bind_background_history
+        network.l23net_background_history = bind_background_history(network, history_seed)
     COMM.Barrier()
     #print('\n ####### not adding the stimulus ####### \n') if RANK == 0 else None
 
